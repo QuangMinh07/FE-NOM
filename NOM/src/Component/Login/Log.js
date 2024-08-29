@@ -6,7 +6,8 @@ const Log = () => {
     <View>
       <Text>Log</Text>
       <Text>Log</Text>
-
+      <Text>Log</Text>
+      <Text>Log</Text>
     </View>
   )
 }
