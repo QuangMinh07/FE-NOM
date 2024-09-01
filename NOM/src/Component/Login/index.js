@@ -1,4 +1,6 @@
-import Start from "../Login/Start";
+import WelcomeScreen from "../Login/WelcomeScreen";
 import Log from "../Login/Log";
+import Login from "../Login/Login";
 
-export { Start, Log };
+
+export { WelcomeScreen, Log, Login };
