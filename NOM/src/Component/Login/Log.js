@@ -22,7 +22,7 @@ const Log = () => {
         flatListRef.current.scrollToIndex({ animated: true, index: nextIndex });
         return nextIndex;
       });
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
@@ -99,7 +99,7 @@ const Log = () => {
       </View>
 
       <TouchableOpacity
-        onPress={() => navigation.navigate('SignUp')}  // Điều hướng tới trang SignUp
+        onPress={() => navigation.navigate('Login')}  // Điều hướng tới trang SignUp
         style={{
           backgroundColor: '#E53935',
           borderRadius: 30,
@@ -122,7 +122,7 @@ const Log = () => {
       </TouchableOpacity>
       
       <TouchableOpacity
-        onPress={() => navigation.navigate('Login')}  // Điều hướng tới trang Login
+        onPress={() => navigation.navigate('SignUp')}  // Điều hướng tới trang Login
         style={{
           borderColor: '#E53935',
           borderWidth: 2,
