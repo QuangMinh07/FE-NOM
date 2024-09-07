@@ -1,10 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import icons
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 const { width } = Dimensions.get('window'); // Lấy kích thước chiều rộng của màn hình
 
 const HomeKH = () => {
+  const [userData, setUserData] = useState(null); // Tạo state để lưu thông tin người dùng
+
+  // Hàm lấy thông tin người dùng từ API
+  const getUserProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token'); // Lấy token từ AsyncStorage
+      if (!token) {
+        console.log('Token không tồn tại');
+        return;
+      }
+
+      const response = await axios.get('http://192.168.1.21:5000/v1/user/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`, // Gửi token trong header
+        },
+      });
+
+      if (response.data.success) {
+        setUserData(response.data.user); // Lưu thông tin người dùng vào state
+        console.log('Thông tin người dùng:', response.data.user);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy thông tin người dùng:', error);
+    }
+  };
+
+  // Gọi hàm lấy thông tin người dùng khi component được load
+  useEffect(() => {
+    getUserProfile();
+  }, []);
+
   const categories = [
     { id: 1, name: 'Món chính', image: require('../../img/Menu1.png') },
     { id: 2, name: 'Ăn kèm', image: require('../../img/Menu2.png') },
@@ -30,9 +63,11 @@ const HomeKH = () => {
         {/* Thông tin người dùng */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ width: 50, height: 50, backgroundColor: '#fff', borderRadius: 25, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>N</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{userData ? userData.fullName.charAt(0) : 'N'}</Text>
           </View>
-          <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>Nguyễn Thị Kiều Nghi</Text>
+          <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>
+            {userData ? userData.fullName : 'Nguyễn Thị Kiều Nghi'}
+          </Text>
         </View>
 
         {/* Icons */}
@@ -50,7 +85,7 @@ const HomeKH = () => {
 
       {/* Thanh tìm kiếm và trái tim */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 15, marginTop: -30, alignItems: 'center' }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, height:50 }}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, height: 50 }}>
           {/* Icon tìm kiếm */}
           <Ionicons name="search-outline" size={25} color="#E53935" />
           <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />

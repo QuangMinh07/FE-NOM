@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const baseURL = "https://localhost:5000/v1";
+const baseURL = "http://192.168.1.21:5000/v1";
 
 export const typeHTTP = {
   POST: "post",
@@ -25,16 +25,22 @@ export const api = async ({ method, url, body, sendToken }) => {
   try {
     switch (method) {
       case typeHTTP.POST:
-        const postResponse = await axios.post(`${baseURL}${url}`, body, { headers });
+        const postResponse = await axios.post(`${baseURL}${url}`, body, {
+          headers,
+        });
         return postResponse.data;
       case typeHTTP.PUT:
-        const putResponse = await axios.put(`${baseURL}${url}`, body, { headers });
+        const putResponse = await axios.put(`${baseURL}${url}`, body, {
+          headers,
+        });
         return putResponse.data;
       case typeHTTP.GET:
         const getResponse = await axios.get(`${baseURL}${url}`, { headers });
         return getResponse.data;
       case typeHTTP.DELETE:
-        const deleteResponse = await axios.delete(`${baseURL}${url}`, { headers });
+        const deleteResponse = await axios.delete(`${baseURL}${url}`, {
+          headers,
+        });
         return deleteResponse.data;
       default:
         throw new Error("Invalid method");
