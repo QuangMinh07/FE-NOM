@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const baseURL = "https://aloper.fun:8081/api";
+const baseURL = "https://localhost:5000/v1";
 
 export const typeHTTP = {
   POST: "post",
