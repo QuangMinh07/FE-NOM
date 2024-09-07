@@ -122,7 +122,7 @@ const Log = () => {
       </TouchableOpacity>
       
       <TouchableOpacity
-        onPress={() => navigation.navigate('SignUp')}  // Điều hướng tới trang Login
+        onPress={() => navigation.navigate('Route')}  // Điều hướng tới trang Login
         style={{
           borderColor: '#E53935',
           borderWidth: 2,

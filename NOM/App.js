@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
-import { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone, ForgotPassword, ResetPassword, OTPMail, OTPPhone } from "./src/Component/Login";
+import { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone, ForgotPassword, ResetPassword, OTPMail, OTPPhone, Route , SignUpSeller} from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
 import {UpdateAccount} from "./src/Component/Profile";
 import MyTabs from "./src/Component/Home/MyTabs"; // Import MyTabs từ file vừa tạo
@@ -32,6 +32,10 @@ const App = () => {
         {/* <Stack.Screen name="MyTabs" component={MyTabs} /> */}
 
         <Stack.Screen name="UpdateAccount" component={UpdateAccount} />
+        <Stack.Screen name="Route" component={Route} />
+        <Stack.Screen name="SignUpSeller" component={SignUpSeller} />
+
+
 
       </Stack.Navigator>
     </NavigationContainer>
