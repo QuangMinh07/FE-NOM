@@ -7,6 +7,10 @@ import ForgotPassword from "../Login/ForgotPassword";
 import ResetPassword from "../Login/ResetPassword";
 import OTPMail from "../Login/OTPMail";
 import OTPPhone from "../Login/OTPPhone";
+import Route from "../Login/Route";
+import SignUpSeller from "../Login/SignUpSeller";
 
 
-export { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone ,ForgotPassword,ResetPassword,OTPMail,OTPPhone };
+
+
+export { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone ,ForgotPassword,ResetPassword,OTPMail,OTPPhone, Route, SignUpSeller };
