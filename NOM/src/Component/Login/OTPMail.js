@@ -1,147 +1,270 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';  // Import useNavigation
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Pressable,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
-// Lấy kích thước màn hình
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
-export default function OTPMail() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']); // 6 ô OTP
-  const [timeLeft, setTimeLeft] = useState(50); // Optional timer
-  const navigation = useNavigation();  // Sử dụng useNavigation
+export default function OTPMail({ route }) {
+  const { email } = route.params; // Get email from params
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]); // 6 ô OTP
+  const [timeLeft, setTimeLeft] = useState(60); // Countdown timer for OTP validation, set to 1 minute
+  const [canResend, setCanResend] = useState(false); // Controls when user can resend OTP
+  const navigation = useNavigation();
+
+  const otpInputRefs = useRef([]); // Create refs for the OTP inputs
+
+  // Countdown for the OTP verification timer
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true); // Enable resend button when countdown finishes
+    }
+  }, [timeLeft]);
 
   const handleOTPChange = (value, index) => {
     const newOtp = [...otp];
     newOtp[index] = value;
+
+    // If the value is entered and it's not the last input, move to the next input
+    if (value.length === 1 && index < 5) {
+      otpInputRefs.current[index + 1].focus();
+    }
+
+    // Set the new OTP state
     setOtp(newOtp);
   };
 
+  const handleVerifyOTP = async () => {
+    const verificationCode = otp.join(""); // Combine OTP digits into a single string
+
+    if (!email || verificationCode.length !== 6) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ mã OTP!");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://192.168.1.21:5000/v1/user/verify-email",
+        {
+          email,
+          verificationCode,
+        },
+        { timeout: 10000 } // Set the timeout to 10 seconds (10000 milliseconds)
+      );
+
+      // Log the response data
+      console.log("Response data:", response.data);
+
+      if (response.data.success) {
+        Alert.alert("Thành công", response.data.message);
+        navigation.navigate("Login"); // Navigate to the login screen after successful verification
+      } else {
+        Alert.alert("Lỗi", response.data.message);
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Xác thực không thành công";
+      Alert.alert("Lỗi", errorMessage);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!canResend) return; // Do not allow resend if timer is active
+
+    try {
+      const response = await axios.post(
+        "http://192.168.1.21:5000/v1/user/resend-verification-code",
+        { email },
+        { timeout: 10000 }
+      );
+
+      console.log("Response data:", response.data);
+
+      if (response.data.success) {
+        Alert.alert("Thành công", "Mã xác thực đã được gửi lại");
+        setTimeLeft(60); // Restart the 1-minute resend timer
+        setCanResend(false); // Disable the resend button until the timer completes
+      } else {
+        Alert.alert("Lỗi", response.data.message);
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Gửi lại mã xác thực không thành công");
+    }
+  };
+
   return (
-    <View style={{
-      flex: 1,
-      paddingHorizontal: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#fff',
-    }}>
-      {/* Logo */}
-      <Image 
-        source={require('../../img/LOGOBLACK.png')} 
-        style={{ 
-          width: width * 0.4, // Tỷ lệ theo kích thước màn hình
-          height: width * 0.4, 
-          marginBottom: 20, // Tăng khoảng cách dưới logo
-        }} 
-      />
+    // Dismiss keyboard when tapping outside the input fields
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#fff",
+        }}
+      >
+        {/* Logo */}
+        <Image
+          source={require("../../img/LOGOBLACK.png")}
+          style={{
+            width: width * 0.4,
+            height: width * 0.4,
+            marginBottom: 20,
+          }}
+        />
 
-      {/* Main Title */}
-      <Text style={{ 
-        fontSize: width * 0.045, // Kích thước chữ linh hoạt theo chiều rộng
-        textAlign: 'center',
-        marginBottom: 20, // Tăng khoảng cách giữa tiêu đề chính và phần xác minh
-        color: '#777',
-        paddingHorizontal: 10, // Thêm padding ngang để căn giữa cho màn hình rộng hơn
-      }}>
-        Đặt Ngay, Ăn Ngon, Hạnh Phúc Mỗi Ngày
-      </Text>
-
-      {/* Verification Text */}
-      <Text style={{ 
-        fontSize: width * 0.06, 
-        fontWeight: 'bold', 
-        color: '#E53935', 
-        marginBottom: 10 
-      }}>
-        Xác minh
-      </Text>
-      <Text style={{ 
-        fontSize: width * 0.03, 
-        textAlign: 'center', 
-        marginBottom: 20, 
-        color: '#E53935',
-        paddingHorizontal: 20, // Thêm padding ngang để khoảng cách từ lề đều hơn
-      }}>
-        NOM đã gửi một mã để xác minh tới tài khoản của bạn
-      </Text>
-      
-      {/* Email OTP Text */}
-      <Text style={{ 
-        fontSize: width * 0.04, 
-        marginBottom: 22, 
-        color: '#999',
-        textAlign: 'left', // Căn trái
-        width: '100%', // Đảm bảo chiều rộng của text để căn trái
-      }}>
-        Email OTP
-      </Text>
-
-      {/* OTP Input */}
-      <View style={{ 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        marginBottom: 30, // Điều chỉnh khoảng cách dưới để tạo độ thoáng
-        paddingHorizontal: width * 0.05, // Thêm padding ngang cho container OTP
-      }}>
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            value={digit}
-            style={{
-              width: width * 0.12, // Điều chỉnh kích thước theo chiều rộng
-              height: width * 0.12,
-              borderWidth: 1,
-              borderColor: '#E53935',
-              borderRadius: 10,
-              textAlign: 'center',
-              fontSize: width * 0.05, // Kích thước chữ dựa trên chiều rộng
-              color: '#E53935',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 2,
-              elevation: 5,
-              marginHorizontal: width * 0.015, // Khoảng cách giữa các ô được điều chỉnh đều hơn
-            }}
-            keyboardType="number-pad"
-            maxLength={1}
-            onChangeText={(value) => handleOTPChange(value, index)}
-          />
-        ))}
-      </View>
-
-      {/* Countdown */}
-      <Text style={{ 
-        fontSize: width * 0.04, 
-        color: '#E53935', 
-        marginBottom: 30, // Tăng khoảng cách để thoáng hơn
-      }}>
-        Gửi lại : <Text>{`00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft}`}</Text>
-      </Text>
-
-      {/* Confirm Button */}
-      <TouchableOpacity 
-              onPress={() => navigation.navigate('Login')}
-
-      style={{
-        backgroundColor: '#E53935',
-        paddingHorizontal: width * 0.2, // Điều chỉnh padding theo chiều rộng màn hình
-        paddingVertical: height * 0.02, // Điều chỉnh padding theo chiều cao
-        borderRadius: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
-        elevation: 5,
-        marginBottom: 20, // Tăng khoảng cách dưới nút xác nhận
-      }}>
-        <Text style={{ 
-          color: '#fff', 
-          fontSize: width * 0.05, 
-          fontWeight: 'bold' 
-        }}>
-          Xác nhận
+        {/* Main Title */}
+        <Text
+          style={{
+            fontSize: width * 0.045,
+            textAlign: "center",
+            marginBottom: 20,
+            color: "#777",
+            paddingHorizontal: 10,
+          }}
+        >
+          Đặt Ngay, Ăn Ngon, Hạnh Phúc Mỗi Ngày
         </Text>
-      </TouchableOpacity>
-    </View>
+
+        {/* Verification Text */}
+        <Text
+          style={{
+            fontSize: width * 0.06,
+            fontWeight: "bold",
+            color: "#E53935",
+            marginBottom: 10,
+          }}
+        >
+          Xác minh
+        </Text>
+        <Text
+          style={{
+            fontSize: width * 0.03,
+            textAlign: "center",
+            marginBottom: 20,
+            color: "#E53935",
+            paddingHorizontal: 20,
+          }}
+        >
+          NOM đã gửi một mã để xác minh tới tài khoản của bạn
+        </Text>
+
+        {/* Email OTP Text */}
+        <Text
+          style={{
+            fontSize: width * 0.04,
+            marginBottom: 22,
+            color: "#999",
+            textAlign: "left",
+            width: "100%",
+          }}
+        >
+          Email OTP
+        </Text>
+
+        {/* OTP Input */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 30,
+            paddingHorizontal: width * 0.05,
+          }}
+        >
+          {otp.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={(ref) => (otpInputRefs.current[index] = ref)} // Set the ref for each input
+              value={digit}
+              style={{
+                width: width * 0.12,
+                height: width * 0.12,
+                borderWidth: 1,
+                borderColor: "#E53935",
+                borderRadius: 10,
+                textAlign: "center",
+                fontSize: width * 0.05,
+                color: "#E53935",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 2,
+                elevation: 5,
+                marginHorizontal: width * 0.015,
+              }}
+              keyboardType="number-pad"
+              maxLength={1}
+              onChangeText={(value) => handleOTPChange(value, index)}
+              // Move to previous input if backspace is pressed and it's not the first input
+              onKeyPress={({ nativeEvent }) => {
+                if (
+                  nativeEvent.key === "Backspace" &&
+                  index > 0 &&
+                  !otp[index]
+                ) {
+                  otpInputRefs.current[index - 1].focus();
+                }
+              }}
+            />
+          ))}
+        </View>
+
+        {/* Countdown */}
+        <Pressable onPress={handleResendCode} disabled={!canResend}>
+          <Text
+            style={{
+              fontSize: width * 0.04,
+              color: "#E53935",
+              marginBottom: 30,
+            }}
+          >
+            Gửi lại :
+            <Text>{`00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft}`}</Text>
+          </Text>
+        </Pressable>
+
+        {/* Confirm Button */}
+        <TouchableOpacity
+          onPress={handleVerifyOTP} // Call handleVerifyOTP on press
+          style={{
+            backgroundColor: "#E53935",
+            paddingHorizontal: width * 0.2,
+            paddingVertical: height * 0.02,
+            borderRadius: 30,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 2,
+            elevation: 5,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: width * 0.05,
+              fontWeight: "bold",
+            }}
+          >
+            Xác nhận
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
