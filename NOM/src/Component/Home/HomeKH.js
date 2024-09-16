@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import icons
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import { api, typeHTTP } from '../../utils/api'; // Import the reusable API function
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window'); // Lấy kích thước chiều rộng của màn hình
 
@@ -12,31 +12,26 @@ const HomeKH = () => {
   // Hàm lấy thông tin người dùng từ API
   const getUserProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token'); // Lấy token từ AsyncStorage
-      if (!token) {
-        console.log('Token không tồn tại');
-        return;
-      }
-
-      const response = await axios.get('http://192.168.1.21:5000/v1/user/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`, // Gửi token trong header
-        },
+      const response = await api({
+        method: typeHTTP.GET,
+        url: '/user/profile',
+        sendToken: true,
       });
 
-      if (response.data.success) {
-        setUserData(response.data.user); // Lưu thông tin người dùng vào state
-        console.log('Thông tin người dùng:', response.data.user);
+      if (response.success) {
+        setUserData(response.user); // Lưu thông tin người dùng vào state
+        console.log('Thông tin người dùng:', response.user);
       }
     } catch (error) {
       console.error('Lỗi khi lấy thông tin người dùng:', error);
     }
   };
 
-  // Gọi hàm lấy thông tin người dùng khi component được load
-  useEffect(() => {
-    getUserProfile();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getUserProfile();
+    }, [])
+  );
 
   const categories = [
     { id: 1, name: 'Món chính', image: require('../../img/Menu1.png') },
@@ -48,8 +43,8 @@ const HomeKH = () => {
   ];
 
   const banners = [
-    { id: 1, name: 'TIMMON1', image: require('../../img/TIMMON1.png') }, 
-    { id: 2, name: 'TIMMON2', image: require('../../img/TIMMON2.png') }, 
+    { id: 1, name: 'TIMMON1', image: require('../../img/TIMMON1.png') },
+    { id: 2, name: 'TIMMON2', image: require('../../img/TIMMON2.png') },
     { id: 3, name: 'TIMMON3', image: require('../../img/TIMMON3.png') },
     { id: 4, name: 'TIMMON4', image: require('../../img/TIMMON4.png') },
     { id: 5, name: 'TIMMON5', image: require('../../img/TIMMON5.png') },
@@ -72,11 +67,9 @@ const HomeKH = () => {
 
         {/* Icons */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {/* Icon giỏ hàng */}
           <TouchableOpacity style={{ marginRight: 15 }}>
             <Ionicons name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
-          {/* Icon thông báo */}
           <TouchableOpacity>
             <Ionicons name="notifications-outline" size={30} color="#fff" />
           </TouchableOpacity>
@@ -86,11 +79,9 @@ const HomeKH = () => {
       {/* Thanh tìm kiếm và trái tim */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 15, marginTop: -30, alignItems: 'center' }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, height: 50 }}>
-          {/* Icon tìm kiếm */}
           <Ionicons name="search-outline" size={25} color="#E53935" />
           <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
         </View>
-        {/* Icon trái tim */}
         <TouchableOpacity style={{ marginLeft: 10 }}>
           <View style={{ backgroundColor: '#fff', width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 25 }}>
             <Ionicons name="heart-outline" size={25} color="#E53935" />
@@ -122,19 +113,22 @@ const HomeKH = () => {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
         {banners.map(banner => (
           <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
-            <Image 
-              source={banner.image} 
-              style={{ 
-                width: width * 0.8,  // Chiều rộng của banner bằng 80% màn hình
-                height: undefined,   // Tự động tính chiều cao dựa trên aspectRatio
-                aspectRatio: 4.8 /2,  // Tỷ lệ khung hình 2:1 (Chiều rộng:Chiều cao)
-                borderRadius: 10 
-              }} 
+            <Image
+              source={banner.image}
+              style={{
+                width: width * 0.8,
+                height: undefined,
+                aspectRatio: 4.8 / 2,
+                borderRadius: 10
+              }}
             />
           </TouchableOpacity>
         ))}
+
       </ScrollView>
+
     </View>
+
   );
 };
 

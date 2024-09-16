@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  AppState,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Thay đổi từ Cookies sang AsyncStorage
-import { globalContext } from "../../context/globalContext"; // Import global context
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { globalContext } from "../../context/globalContext";
+import { api, typeHTTP } from "../../utils/api"; // Import API module
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,18 +24,58 @@ export default function Login() {
   const [isRememberMeChecked, setRememberMeChecked] = useState(false);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const { globalHandler } = useContext(globalContext); // Access global context
+  const { globalHandler } = useContext(globalContext);
   const navigation = useNavigation();
+  const [appState, setAppState] = useState(AppState.currentState); // Theo dõi trạng thái ứng dụng
 
-  // Kiểm tra token trong AsyncStorage
-  const checkTokenInStorage = async () => {
-    const token = await AsyncStorage.getItem("auth_token"); // Lấy token từ AsyncStorage
-    if (token) {
-      console.log("Token đã được lưu vào AsyncStorage:", token);
-    } else {
-      console.log("Token chưa được lưu vào AsyncStorage.");
-    }
-  };
+  // Tải thông tin tài khoản và mật khẩu từ AsyncStorage khi vào trang login
+  useEffect(() => {
+    const loadRememberedCredentials = async () => {
+      try {
+        const savedPhone = await AsyncStorage.getItem("saved_phone");
+        const savedPassword = await AsyncStorage.getItem("saved_password");
+        const rememberMe = await AsyncStorage.getItem("remember_me");
+        if (savedPhone && savedPassword && rememberMe === "true") {
+          setPhone(savedPhone);
+          setPassword(savedPassword);
+          setRememberMeChecked(true); // Nếu có dữ liệu, đặt checkbox "Ghi nhớ mật khẩu" thành true
+        }
+      } catch (error) {
+        console.log("Lỗi khi tải thông tin đã lưu:", error);
+      }
+    };
+
+    loadRememberedCredentials();
+
+    // Theo dõi khi trạng thái của ứng dụng thay đổi
+    const handleAppStateChange = async (nextAppState) => {
+      if (appState.match(/inactive|background/) && nextAppState === "active") {
+        // Ứng dụng được mở lại, cập nhật trạng thái isOnline
+        await api({
+          method: typeHTTP.PUT,
+          url: "/user/setOnlineStatus",
+          body: { isOnline: true },
+          sendToken: true,
+        });
+      } else if (nextAppState === "background") {
+        // Ứng dụng bị đóng hoặc chuyển sang background, cập nhật trạng thái isOnline
+        await api({
+          method: typeHTTP.PUT,
+          url: "/user/setOnlineStatus",
+          body: { isOnline: false },
+          sendToken: true,
+        });
+      }
+      setAppState(nextAppState);
+    };
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+    return () => {
+      // Hủy bỏ subscription khi component bị unmount
+      subscription.remove();
+    };
+  }, [appState]);
 
   const handleLogin = async () => {
     if (!phone || !password) {
@@ -43,37 +84,60 @@ export default function Login() {
     }
 
     try {
-      const response = await axios.post(
-        "http://192.168.1.21:5000/v1/user/login",
-        {
-          phone,
-          password,
-        },
-        { withCredentials: true }
-      );
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/login",
+        body: { phone, password },
+        sendToken: false,
+      });
 
-      if (response.data.success) {
-        // Lưu thông tin user vào global context
-        globalHandler.setUser(response.data.user);
+      if (response.success) {
+        globalHandler.setUser(response.user);
+        console.log("User data set in global context:", response.user);
 
-        // Lưu token vào AsyncStorage với thời gian tồn tại là 7 ngày
-        await AsyncStorage.setItem('auth_token', response.data.token);
+        // Lưu token và user vào AsyncStorage
+        await AsyncStorage.setItem("auth_token", response.token);
+        await AsyncStorage.setItem("user", JSON.stringify(response.user));
 
-        // Kiểm tra token trong AsyncStorage
-        checkTokenInStorage();
+        console.log("Token saved:", response.token); // Log token để kiểm tra
+        console.log("User saved:", response.user);   // Log user để kiểm tra
 
-        Alert.alert("Thành công", response.data.message);
-        navigation.navigate("HomeKH"); // Chuyển hướng đến trang Home
+        if (isRememberMeChecked) {
+          await AsyncStorage.setItem("saved_phone", phone);
+          await AsyncStorage.setItem("saved_password", password);
+          await AsyncStorage.setItem("remember_me", "true");
+        } else {
+          await AsyncStorage.removeItem("saved_phone");
+          await AsyncStorage.removeItem("saved_password");
+          await AsyncStorage.setItem("remember_me", "false");
+        }
+
+        // Cập nhật trạng thái online sau khi đăng nhập thành công
+        await api({
+          method: typeHTTP.PUT,
+          url: "/user/setOnlineStatus",
+          body: { isOnline: true },
+          sendToken: true,
+        });
+
+        // Kiểm tra role và điều hướng tới trang phù hợp
+        const userRole = response.user.roleId; // Giả sử role là trường trong user
+        if (userRole === "customer") {
+          console.log("Điều hướng đến HomeKH");
+          navigation.navigate("HomeKH");
+        } else if (userRole === "seller") {
+          console.log("Điều hướng đến HomeSeller");
+          navigation.navigate("HomeSeller");
+        } else {
+          Alert.alert("Lỗi", "Không xác định được vai trò người dùng!");
+        }
       } else {
-        Alert.alert("Lỗi", response.data.message);
+        Alert.alert("Lỗi", response.message);
       }
     } catch (error) {
       let errorMessage = "Đăng nhập không thành công";
       if (error.response && error.response.data) {
-        errorMessage =
-          error.response.data.message ||
-          error.response.data.error ||
-          errorMessage;
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
       }
       Alert.alert("Lỗi", errorMessage);
     }
@@ -135,7 +199,7 @@ export default function Login() {
             onChangeText={setPhone}
           />
 
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5, marginTop: 10 }}>
             Mật khẩu
           </Text>
           <View style={{ position: "relative", marginBottom: 10 }}>
@@ -202,7 +266,7 @@ export default function Login() {
 
         {/* Nút đăng nhập */}
         <TouchableOpacity
-          onPress={handleLogin} // Call the handleLogin function on press
+          onPress={handleLogin}
           style={{
             width: "100%",
             height: 60,
@@ -249,13 +313,13 @@ export default function Login() {
         >
           <TouchableOpacity>
             <Image
-              source={require("../../img/logos_facebook.png")} // Thay bằng đường dẫn đúng đến logo Facebook
+              source={require("../../img/logos_facebook.png")}
               style={{ width: 50, height: 50, resizeMode: "contain" }}
             />
           </TouchableOpacity>
           <TouchableOpacity>
             <Image
-              source={require("../../img/flat-color-icons_google.png")} // Thay bằng đường dẫn đúng đến logo Google
+              source={require("../../img/flat-color-icons_google.png")}
               style={{ width: 50, height: 50, resizeMode: "contain" }}
             />
           </TouchableOpacity>
@@ -267,9 +331,7 @@ export default function Login() {
             Chưa có tài khoản?{" "}
           </Text>
           <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <Text
-              style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}
-            >
+            <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}>
               Đăng ký
             </Text>
           </TouchableOpacity>

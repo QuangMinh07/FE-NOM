@@ -12,7 +12,7 @@ import {
   Pressable,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
+import { api, typeHTTP } from "../../utils/api"; // Import API module
 
 const { width, height } = Dimensions.get("window");
 
@@ -57,28 +57,32 @@ export default function OTPMail({ route }) {
     }
 
     try {
-      const response = await axios.post(
-        "http://192.168.1.21:5000/v1/user/verify-email",
-        {
-          email,
-          verificationCode,
-        },
-        { timeout: 10000 } // Set the timeout to 10 seconds (10000 milliseconds)
-      );
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/verify-email",
+        body: { email, verificationCode },
+        sendToken: false,
+      });
 
       // Log the response data
-      console.log("Response data:", response.data);
+      console.log("Response data:", response);
 
-      if (response.data.success) {
-        Alert.alert("Thành công", response.data.message);
+      if (response.success) {
+        Alert.alert("Thành công", response.message);
         navigation.navigate("Login"); // Navigate to the login screen after successful verification
       } else {
-        Alert.alert("Lỗi", response.data.message);
+        Alert.alert("Lỗi", response.message);
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Xác thực không thành công";
-      Alert.alert("Lỗi", errorMessage);
+      // Kiểm tra chi tiết lỗi từ backend và hiển thị chính xác
+      let errorMessage = "Xác thực không thành công";
+
+      // Kiểm tra nếu backend trả về thông tin trong trường 'error'
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+      }
+
+      Alert.alert("Lỗi", errorMessage); // Hiển thị thông báo lỗi đầy đủ
     }
   };
 
@@ -86,25 +90,32 @@ export default function OTPMail({ route }) {
     if (!canResend) return; // Do not allow resend if timer is active
 
     try {
-      const response = await axios.post(
-        "http://192.168.1.21:5000/v1/user/resend-verification-code",
-        { email },
-        { timeout: 10000 }
-      );
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/resend-verification-code",
+        body: { email },
+        sendToken: false,
+      });
 
-      console.log("Response data:", response.data);
+      console.log("Response data:", response);
 
-      if (response.data.success) {
+      if (response.success) {
         Alert.alert("Thành công", "Mã xác thực đã được gửi lại");
         setTimeLeft(60); // Restart the 1-minute resend timer
         setCanResend(false); // Disable the resend button until the timer completes
       } else {
-        Alert.alert("Lỗi", response.data.message);
+        Alert.alert("Lỗi", response.message);
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Gửi lại mã xác thực không thành công");
+      // Hiển thị thông báo lỗi chi tiết từ backend
+      let errorMessage = "Gửi lại mã xác thực không thành công";
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+      }
+      Alert.alert("Lỗi", errorMessage); // Hiển thị thông báo lỗi đầy đủ
     }
   };
+
 
   return (
     // Dismiss keyboard when tapping outside the input fields
