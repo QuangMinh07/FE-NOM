@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,65 +6,75 @@ import {
   ScrollView,
   Dimensions,
   Modal,
+  Pressable,
   Alert,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import { api, typeHTTP } from "../../utils/api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get("window");
 
 export default function ProfileScreen() {
-  const [modalVisible, setModalVisible] = useState(false); // Trạng thái để kiểm soát modal
-  const navigation = useNavigation(); // Sử dụng useNavigation
+  const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation();
+  const [userData, setUserData] = useState(null);
 
-  const [userData, setUserData] = useState(null); // Tạo state để lưu thông tin người dùng
-
-  // Hàm lấy thông tin người dùng từ API
   const getUserProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem("auth_token"); // Lấy token từ AsyncStorage
-      if (!token) {
-        console.log("Token không tồn tại");
-        return;
-      }
+      const response = await api({
+        method: typeHTTP.GET,
+        url: "/user/profile",
+        sendToken: true,
+      });
 
-      const response = await axios.get(
-        "http://192.168.1.21:5000/v1/user/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Gửi token trong header
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setUserData(response.data.user); // Lưu thông tin người dùng vào state
-        console.log("Thông tin người dùng:", response.data.user);
+      if (response && response.success) {
+        setUserData(response.user);
+        console.log("Thông tin người dùng:", response.user);
       }
     } catch (error) {
       console.error("Lỗi khi lấy thông tin người dùng:", error);
     }
   };
 
-  // Gọi hàm lấy thông tin người dùng khi component được load
-  useEffect(() => {
-    getUserProfile();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getUserProfile();
+    }, [])
+  );
 
-  // Hàm xử lý đăng xuất
   const handleLogout = async () => {
     try {
-      console.log("Đang đăng xuất..."); // Log khi bắt đầu đăng xuất
-      await AsyncStorage.removeItem("auth_token"); // Xóa token khỏi AsyncStorage
-      console.log("Token đã được xóa khỏi AsyncStorage"); // Log khi token đã được xóa
-      setModalVisible(false); // Đóng modal
+      // Gọi API để cập nhật trạng thái isOnline về false
+      await api({
+        method: typeHTTP.PUT,
+        url: "/user/setOnlineStatus",
+        body: { isOnline: false },
+        sendToken: true,
+      });
+
+      // Xóa token khỏi AsyncStorage
+      await AsyncStorage.removeItem("auth_token");
+      setModalVisible(false);  // Đóng modal trước khi chuyển màn hình
+
       Alert.alert("Đăng xuất thành công!");
-      navigation.navigate("WelcomeScreen"); // Điều hướng về màn hình đăng nhập
-      console.log("Đã điều hướng về màn hình đăng nhập"); // Log khi đã điều hướng
+      navigation.navigate("WelcomeScreen");
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
+      Alert.alert("Lỗi", "Đăng xuất không thành công. Vui lòng thử lại.");
+    }
+  };
+
+  const handleForgotPassword = () => {
+    setModalVisible(false);
+
+    // Ensure userData is defined and has a valid userId
+    if (userData && userData._id) {
+      navigation.navigate("UpdateAccount", { userId: userData._id }); // Pass only the serializable userId
+    } else {
+      Alert.alert("Lỗi", "Không tìm thấy ID người dùng.");
     }
   };
 
@@ -116,10 +126,9 @@ export default function ProfileScreen() {
 
       {/* Body */}
       <ScrollView contentContainerStyle={{ padding: width * 0.05 }}>
-        {/* Các mục thông tin */}
         {[
           "Thông tin cá nhân",
-          "Nâng cấp tài khoản",
+          "Chuyển đổi tài khoản",
           "Ngân hàng liên kết",
           "Ngôn ngữ",
           "Nhận xét đánh giá",
@@ -141,8 +150,24 @@ export default function ProfileScreen() {
               elevation: 3,
             }}
             onPress={() => {
-              if (item === "Nâng cấp tài khoản") {
-                navigation.navigate("UpdateAccount");
+              switch (item) {
+                case "Thông tin cá nhân":
+                  navigation.navigate("InformationUser"); // Navigate to personal info screen
+                  break;
+                case "Chuyển đổi tài khoản":
+                  navigation.navigate("Route"); // Navigate to seller login/sign-up screen
+                  break;
+                case "Ngân hàng liên kết":
+                  navigation.navigate("HomeSeller"); // Navigate to linked bank screen
+                  break;
+                case "Ngôn ngữ":
+                  navigation.navigate("LanguageSettingsScreen"); // Navigate to language settings screen
+                  break;
+                case "Nhận xét đánh giá":
+                  navigation.navigate("ReviewsScreen"); // Navigate to reviews screen
+                  break;
+                default:
+                  console.log("No action assigned for this item");
               }
             }}
           >
@@ -161,17 +186,18 @@ export default function ProfileScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)} // Đóng modal khi nhấn nút back
+        onRequestClose={() => setModalVisible(false)}
       >
-        <View
+        <Pressable
           style={{
             flex: 1,
-            justifyContent: "flex-end", // Đặt modal ở dưới cùng màn hình
+            justifyContent: "flex-end",
             alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền mờ
+            backgroundColor: "rgba(0, 0, 0, 0)",
           }}
+          onPress={() => setModalVisible(false)}  // Đóng modal khi nhấn ra ngoài
         >
-          <View
+          <Pressable
             style={{
               width: "100%",
               backgroundColor: "#fff",
@@ -179,6 +205,7 @@ export default function ProfileScreen() {
               borderTopRightRadius: 20,
               padding: height * 0.03,
             }}
+            onPress={(e) => e.stopPropagation()}  // Ngăn modal đóng khi nhấn vào nội dung bên trong
           >
             {/* Nút Logout */}
             <TouchableOpacity
@@ -203,20 +230,30 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Nút Đóng Modal */}
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            {/* Nút Quên mật khẩu */}
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              style={{
+                backgroundColor: "#ffa500",
+                paddingVertical: height * 0.02,
+                paddingHorizontal: width * 0.1,
+                borderRadius: 10,
+                alignItems: "center",
+                marginBottom: height * 0.02,
+              }}
+            >
               <Text
                 style={{
-                  color: "#000",
+                  color: "#fff",
                   fontSize: height * 0.02,
-                  textAlign: "center",
+                  fontWeight: "bold",
                 }}
               >
-                Đóng
+                Đổi mật khẩu
               </Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );

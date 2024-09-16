@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { HomeKH, OrdersScreen, MessagesScreen, ProfileScreen } from '../Home';
+import { HomeKH, OrdersScreen, MessagesScreen, ProfileScreen } from '../Home/';
 
 const Tab = createBottomTabNavigator();
 
-function MyTabs() {
+// Tạo cấu hình Tab cho Customer
+function CustomerTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -29,7 +30,7 @@ function MyTabs() {
             iconComponent = (
               <View style={{ marginTop: 6 }}>
                 <Ionicons
-                  name="home-outline" // Icon cho Trang Chủ
+                  name="home-outline"
                   size={24}
                   color={focused ? '#B91C1C' : '#6B7280'}
                   style={{ width: 30 }}
@@ -37,12 +38,7 @@ function MyTabs() {
               </View>
             );
             labelComponent = (
-              <Text
-                style={{
-                  marginTop: 4,
-                  color: focused ? "#B91C1C" : "#6B7280"
-                }}
-              >
+              <Text style={{ marginTop: 4, color: focused ? "#B91C1C" : "#6B7280" }}>
                 Trang Chủ
               </Text>
             );
@@ -50,7 +46,7 @@ function MyTabs() {
             iconComponent = (
               <View style={{ marginTop: 6 }}>
                 <Ionicons
-                  name="file-tray-outline" // Icon cho Đơn Hàng
+                  name="file-tray-outline"
                   size={24}
                   color={focused ? '#B91C1C' : '#6B7280'}
                   style={{ width: 30 }}
@@ -58,12 +54,7 @@ function MyTabs() {
               </View>
             );
             labelComponent = (
-              <Text
-                style={{
-                  color: focused ? "#B91C1C" : "#6B7280",
-                  marginTop: 4
-                }}
-              >
+              <Text style={{ color: focused ? "#B91C1C" : "#6B7280", marginTop: 4 }}>
                 Đơn Hàng
               </Text>
             );
@@ -71,7 +62,7 @@ function MyTabs() {
             iconComponent = (
               <View style={{ marginTop: 6 }}>
                 <Ionicons
-                  name="chatbubble-outline" // Icon cho Tin nhắn
+                  name="chatbubble-outline"
                   size={24}
                   color={focused ? '#B91C1C' : '#6B7280'}
                   style={{ width: 30 }}
@@ -79,12 +70,7 @@ function MyTabs() {
               </View>
             );
             labelComponent = (
-              <Text
-                style={{
-                  color: focused ? "#B91C1C" : "#6B7280",
-                  marginTop: 4
-                }}
-              >
+              <Text style={{ color: focused ? "#B91C1C" : "#6B7280", marginTop: 4 }}>
                 Tin Nhắn
               </Text>
             );
@@ -92,7 +78,7 @@ function MyTabs() {
             iconComponent = (
               <View style={{ marginTop: 6 }}>
                 <Ionicons
-                  name="person-outline" // Icon cho Hồ sơ/Người dùng
+                  name="person-outline"
                   size={24}
                   color={focused ? '#B91C1C' : '#6B7280'}
                   style={{ width: 30 }}
@@ -100,25 +86,14 @@ function MyTabs() {
               </View>
             );
             labelComponent = (
-              <Text
-                style={{
-                  marginTop: 4, // Căn chỉnh khoảng cách giống các thành phần khác
-                  color: focused ? "#B91C1C" : "#6B7280"
-                }}
-              >
+              <Text style={{ marginTop: 4, color: focused ? "#B91C1C" : "#6B7280" }}>
                 Hồ Sơ
               </Text>
             );
           }
 
           return (
-            <View
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                width: 80
-              }}
-            >
+            <View style={{ alignItems: "center", justifyContent: "center", width: 80 }}>
               {iconComponent}
               {labelComponent}
             </View>
@@ -134,4 +109,5 @@ function MyTabs() {
   );
 }
 
-export default MyTabs;
+
+export default CustomerTabs;

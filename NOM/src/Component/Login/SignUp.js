@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
+import { api, typeHTTP } from "../../utils/api"; // Import module API
 
 const { width, height } = Dimensions.get("window");
 
@@ -31,31 +31,37 @@ export default function SignUp() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường!");
       return;
     }
-
+  
     try {
-      const response = await axios.post(
-        "http://192.168.1.21:5000/v1/user/register",
-        {
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/register",
+        body: {
           username,
           phone,
           email,
           password,
-        }
-      );
-
-      if (response.data.success) {
-        Alert.alert("Thành công", response.data.message);
+        },
+        sendToken: false,
+      });
+  
+      if (response.success) {
+        Alert.alert("Thành công", response.message);
         navigation.navigate("SignUpMailOrPhone", { email });
       } else {
-        Alert.alert("Lỗi", response.data.message);
+        Alert.alert("Lỗi", response.message);
       }
     } catch (error) {
-      Alert.alert(
-        "Lỗi",
-        error.response?.data?.message || "Đăng ký không thành công"
-      );
+      // Kiểm tra và hiển thị chi tiết lỗi từ backend
+      let errorMessage = "Đăng ký không thành công";
+      if (error.response && error.response.data) {
+        errorMessage =
+          error.response.data.message || error.response.data.error || errorMessage;
+      }
+      Alert.alert("Lỗi", errorMessage);
     }
   };
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

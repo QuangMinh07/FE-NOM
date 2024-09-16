@@ -1,372 +1,506 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Dimensions, Modal, FlatList, ScrollView } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Modal, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
-
-const { width, height } = Dimensions.get('window');
+import { useNavigation } from "@react-navigation/native";
+import { globalContext } from "../../context/globalContext";
+import { api, typeHTTP } from "../../utils/api";
 
 export default function SignUpSeller() {
-  const [isPasswordVisible, setPasswordVisible] = useState(false);
-  const [selectedCity, setSelectedCity] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [selectedFoodTypes, setSelectedFoodTypes] = useState([]);
-  const [cityModalVisible, setCityModalVisible] = useState(false);
-  const [districtModalVisible, setDistrictModalVisible] = useState(false);
-  const [foodModalVisible, setFoodModalVisible] = useState(false);
-  const [storeCount, setStoreCount] = useState(''); // Số lượng cửa hàng
-  const [specificAddress, setSpecificAddress] = useState(''); // Địa chỉ cụ thể
-  const [businessType, setBusinessType] = useState(''); // Loại/Hình thức kinh doanh
-  const [businessModalVisible, setBusinessModalVisible] = useState(false); // Modal cho loại hình kinh doanh
+  const [currentStep, setCurrentStep] = useState(1); // Quản lý bước hiện tại
+  const [shopRepresentative, setShopRepresentative] = useState('');
+  const [cccd, setCCCD] = useState('');
+  const [storeAddress, setStoreAddress] = useState('');
+  const [businessType, setBusinessType] = useState(''); // Loại hình kinh doanh
+  const [shopName, setShopName] = useState('');
+  const [selectedFoodTypes, setSelectedFoodTypes] = useState([]); // Lưu loại món ăn đã chọn
+  const [bankAccount, setBankAccount] = useState('');
+  const [isChecked, setIsChecked] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal trạng thái cho Loại kinh doanh
+  const [isFoodModalVisible, setIsFoodModalVisible] = useState(false); // Modal trạng thái cho Loại món ăn
   const navigation = useNavigation();
 
-  // Danh sách các quận theo thành phố
-  const districtOptions = {
-    Hanoi: ['Quận Hoàn Kiếm', 'Quận Hai Bà Trưng', 'Quận Đống Đa', 'Quận Cầu Giấy'],
-    HCM: ['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7'],
-  };
+  const { globalData } = useContext(globalContext);
 
-  // Danh sách các loại món ăn
-  const foodTypes = ['Món chính', 'Ăn kèm', 'Đồ uống', 'Tráng miệng', 'Món chay', 'Combo'];
-
-  // Danh sách các loại hình kinh doanh
   const businessTypes = [
-    'Công ty 1 thành viên',
-    'Công ty hợp danh',
-    'Công ty tư nhân',
-    'Công ty cổ phần',
-    'Công ty quỹ từ thiện hiệp hội & CLB',
-    'Cá nhân/Hộ kinh doanh'
+    { id: '1', label: 'Hộ kinh doanh/cá nhân' },
+    { id: '2', label: 'Công ty trách nhiệm hữu hạn' },
+    { id: '3', label: 'Công ty cổ phần' },
+    { id: '4', label: 'Doanh nghiệp tư nhân' },
   ];
 
-  // Hàm xử lý chọn loại món ăn (cho phép nhiều loại món ăn)
-  const toggleFoodTypeSelection = (foodType) => {
-    if (selectedFoodTypes.includes(foodType)) {
-      setSelectedFoodTypes(selectedFoodTypes.filter(item => item !== foodType));
+  const foodTypes = [
+    { id: '1', label: 'Món chính' },
+    { id: '2', label: 'Ăn kèm' },
+    { id: '3', label: 'Đồ uống' },
+    { id: '4', label: 'Tráng miệng' },
+    { id: '5', label: 'Món chay' },
+    { id: '6', label: 'Ăn vặt' },
+    { id: '7', label: 'Combo' },
+    { id: '8', label: 'Khác' },
+
+  ];
+
+  // Hàm chọn loại hình kinh doanh và đóng Modal
+  const handleSelectBusinessType = (type) => {
+    setBusinessType(type); // Cập nhật loại kinh doanh đã chọn
+    setIsModalVisible(false); // Đóng Modal
+  };
+
+  // Hàm chọn hoặc bỏ chọn loại món ăn và đóng Modal
+  const handleSelectFoodType = (type) => {
+    if (selectedFoodTypes.includes(type)) {
+      setSelectedFoodTypes(selectedFoodTypes.filter((item) => item !== type)); // Bỏ chọn món
     } else {
-      setSelectedFoodTypes([...selectedFoodTypes, foodType]);
+      setSelectedFoodTypes([...selectedFoodTypes, type]); // Chọn thêm món
     }
   };
 
-  return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 20 }}>
+  // Kiểm tra dữ liệu của bước hiện tại
+  const validateCurrentStep = () => {
+    if (currentStep === 1) {
+      return shopRepresentative && cccd && storeAddress && businessType;
+    } else if (currentStep === 2) {
+      return shopName && selectedFoodTypes.length > 0 && bankAccount;
+    }
+    return true;
+  };
 
-      {/* Logo và Slogan */}
-      <View style={{ alignItems: 'center', marginBottom: height * 0.05 }}>
-        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
-          NOM - NGON ĐỒNG Ý
-        </Text>
-        <Text style={{ fontSize: 12, color: '#888888', textAlign: 'center', marginTop: 20 }}>
-          Đặt Ngay, Ăn Ngon, Hạnh Phúc Mỗi Ngày
-        </Text>
-      </View>
+  // Hàm để chuyển sang bước tiếp theo
+  const handleNextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      alert('Vui lòng nhập đầy đủ thông tin.');
+    }
+  };
 
-      {/* Form đăng ký */}
-      <View style={{ width: '100%', marginBottom: 20 }}>
-        {/* Tên nhà hàng và Tên người đại diện - Hàng ngang */}
-        <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Tên Nhà hàng</Text>
-            <TextInput
-              placeholder="Nhập tên nhà hàng"
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-            />
-          </View>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Tên người đại diện</Text>
-            <TextInput
-              placeholder="Nhập tên người đại diện"
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-            />
-          </View>
-        </View>
+  const handleRegisterSeller = async () => {
+    if (!isChecked) {
+      alert("Vui lòng chấp nhận điều khoản trước khi tiếp tục.");
+      return;
+    }
 
-        {/* Thành phố và Quận - Hàng ngang */}
-        <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Thành phố</Text>
-            <TouchableOpacity onPress={() => setCityModalVisible(true)} style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              height: 50,
-              borderColor: '#E53935',
-              borderWidth: 2,
-              borderRadius: 10,
-              paddingHorizontal: 15,
-            }}>
-              <Text>{selectedCity ? selectedCity : 'Chọn Thành phố'}</Text>
-              <Icon name="arrow-drop-down" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
+    try {
+      const body = {
+        userId: globalData.user?.id,
+        representativeName: shopRepresentative,
+        cccd,
+        storeName: shopName,
+        foodType: selectedFoodTypes.join(', '), // Gửi danh sách món ăn đã chọn
+        businessType,
+        bankAccount,
+        storeAddress,
+        idImage: null,
+      };
 
-          {/* Quận */}
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Quận</Text>
-            {selectedCity && (
-              <TouchableOpacity onPress={() => setDistrictModalVisible(true)} style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-              }}>
-                <Text>{selectedDistrict ? selectedDistrict : 'Chọn Quận'}</Text>
-                <Icon name="arrow-drop-down" size={24} color="#000" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+      console.log("User ID:", globalData.user?.id);
+      console.log("Request body:", body);
 
-        {/* Số lượng cửa hàng và Địa chỉ cụ thể - Hàng ngang */}
-        <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Số lượng cửa hàng</Text>
-            <TextInput
-              placeholder="Nhập số lượng cửa hàng"
-              value={storeCount}
-              onChangeText={setStoreCount}
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Địa chỉ cụ thể</Text>
-            <TextInput
-              placeholder="Nhập địa chỉ cụ thể"
-              value={specificAddress}
-              onChangeText={setSpecificAddress}
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-            />
-          </View>
-        </View>
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/register-seller",
+        body,
+        sendToken: true,
+      });
 
-        {/* Email và Số điện thoại - Hàng ngang */}
-        <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Số điện thoại</Text>
-            <TextInput
-              placeholder="Nhập số điện thoại"
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-              keyboardType="phone-pad"
-            />
-          </View>
-          <View style={{ width: '48%' }}>
-            <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Email</Text>
-            <TextInput
-              placeholder="Nhập email"
-              style={{
-                width: '100%',
-                height: 50,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                borderRadius: 10,
-                paddingHorizontal: 15,
-                backgroundColor: '#FFFFFF',
-              }}
-              keyboardType="email-address"
-            />
-          </View>
-        </View>
+      if (response) {
+        alert("Đăng ký người bán thành công!");
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      console.error("Lỗi khi đăng ký người bán:", error);
 
-        {/* Loại món ăn */}
-        <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Loại món ăn</Text>
-        <TouchableOpacity onPress={() => setFoodModalVisible(true)} style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-          height: 50,
-          borderColor: '#E53935',
-          borderWidth: 2,
-          borderRadius: 10,
-          paddingHorizontal: 15,
-          marginBottom: 15,
-        }}>
-          <Text>{selectedFoodTypes.length > 0 ? selectedFoodTypes.join(', ') : 'Chọn Loại món ăn'}</Text>
-          <Icon name="arrow-drop-down" size={24} color="#000" />
-        </TouchableOpacity>
+      // Trích xuất thông báo lỗi từ phản hồi của backend
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.");
+      }
+    }
+  };
 
-        {/* Loại hình kinh doanh */}
-        <Text style={{ fontSize: 14, color: '#000', marginBottom: 5 }}>Loại hình kinh doanh</Text>
-        <TouchableOpacity onPress={() => setBusinessModalVisible(true)} style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-          height: 50,
-          borderColor: '#E53935',
-          borderWidth: 2,
-          borderRadius: 10,
-          paddingHorizontal: 15,
-          marginBottom: 15,
-        }}>
-          <Text>{businessType ? businessType : 'Chọn loại hình kinh doanh'}</Text>
-          <Icon name="arrow-drop-down" size={24} color="#000" />
-        </TouchableOpacity>
 
-      </View>
+  // Hàm để render từng bước
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      default:
+        return renderStep1();
+    }
+  };
 
-      {/* Nút đăng ký */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate('SignUpMailOrPhone')}
-        style={{
-          width: '100%',
-          height: 60,
-          backgroundColor: '#E53935',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderRadius: 30,
-          marginBottom: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3.84,
-          elevation: 5,
-        }}
-      >
-        <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' }}>Đăng ký</Text>
+  // Bước 1
+  const renderStep1 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Thông tin cửa hàng</Text>
+
+      <Text style={styles.label}>Tên người đại diện</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập tên người đại diện"
+        value={shopRepresentative}
+        onChangeText={setShopRepresentative}
+      />
+
+      <Text style={styles.label}>CCCD/CMND</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập CCCD/CMND"
+        value={cccd}
+        onChangeText={setCCCD}
+      />
+
+      <Text style={styles.label}>Địa chỉ cửa hàng</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập địa chỉ cửa hàng"
+        value={storeAddress}
+        onChangeText={setStoreAddress}
+      />
+
+      <Text style={styles.label}>Loại kinh doanh</Text>
+      <TouchableOpacity style={styles.input} onPress={() => setIsModalVisible(true)}>
+        <Text>{businessType || 'Chọn loại kinh doanh'}</Text>
       </TouchableOpacity>
 
-      {/* Đã có tài khoản */}
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ color: '#000', fontSize: 14 }}>Đã có tài khoản? </Text>
-        <TouchableOpacity>
-          <Text
-            onPress={() => navigation.navigate('Login')}
-            style={{ color: '#E53935', fontSize: 14, fontWeight: 'bold' }}>Đăng nhập</Text>
+      <TouchableOpacity style={styles.button} onPress={handleNextStep}>
+        <Text style={styles.buttonText}>Xác nhận</Text>
+      </TouchableOpacity>
+
+      {/* Modal chọn loại kinh doanh */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chọn loại kinh doanh</Text>
+            <FlatList
+              data={businessTypes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => handleSelectBusinessType(item.label)}
+                >
+                  <Text>{item.label}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+
+  // Bước 2
+  const renderStep2 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Thông tin cửa hàng</Text>
+
+      <Text style={styles.label}>Tên cửa hàng</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập tên cửa hàng"
+        value={shopName}
+        onChangeText={setShopName}
+      />
+
+      <Text style={styles.label}>Loại món ăn</Text>
+      <TouchableOpacity style={styles.input} onPress={() => setIsFoodModalVisible(true)}>
+        <Text>{selectedFoodTypes.length > 0 ? selectedFoodTypes.join(', ') : 'Chọn loại món ăn'}</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.label}>Tài khoản ngân hàng</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nhập tài khoản ngân hàng"
+        value={bankAccount}
+        onChangeText={setBankAccount}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleNextStep}>
+        <Text style={styles.buttonText}>Xác nhận</Text>
+      </TouchableOpacity>
+
+      {/* Modal chọn loại món ăn */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFoodModalVisible}
+        onRequestClose={() => setIsFoodModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalContainer}
+          activeOpacity={1}
+          onPressOut={() => setIsFoodModalVisible(false)} // Đóng modal khi nhấn bên ngoài
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chọn loại món ăn</Text>
+            <FlatList
+              data={foodTypes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => handleSelectFoodType(item.label)}
+                >
+                  <Text style={{ color: selectedFoodTypes.includes(item.label) ? 'red' : 'black' }}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
+  );
+
+  // Bước 3: Điều khoản sử dụng
+  const renderStep3 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Điều khoản và Điều kiện Sử dụng</Text>
+
+      <View style={styles.viewTerms3}>
+        <TouchableOpacity onPress={() => navigation.navigate('TermsDetails')}>
+          <Text style={styles.linkText3}>Xem chi tiết điều khoản</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal for selecting city */}
-      <Modal visible={cityModalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: '80%', backgroundColor: '#fff', borderRadius: 10, padding: 20 }}>
-            <FlatList
-              data={Object.keys(districtOptions)}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { setSelectedCity(item); setCityModalVisible(false); }}>
-                  <Text style={{ fontSize: 18, marginBottom: 15 }}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
+      <View style={styles.termsBox3}>
+        <Text style={styles.termsText3}>1. Chấp nhận Điều khoản</Text>
+        <Text style={styles.termsText3}>2. Điều kiện Sử dụng</Text>
+        <Text style={styles.termsText3}>3. Quyền và Trách nhiệm của Người dùng</Text>
+        <Text style={styles.termsText3}>4. Bảo mật Thông tin</Text>
+        <Text style={styles.termsText3}>5. Sử dụng Dịch vụ</Text>
+        <Text style={styles.termsText3}>6. Thanh toán và Phí Dịch vụ</Text>
+        <Text style={styles.termsText3}>7. Chính sách Hoàn tiền</Text>
+        <Text style={styles.termsText3}>8. Giới hạn Trách nhiệm</Text>
+        <Text style={styles.termsText3}>9. Quy định về Ngôn từ và Hình ảnh</Text>
+        <Text style={[styles.termsText3, { fontWeight: 'bold' }]}>11. Đồng ý và Tiếp tục</Text>
+      </View>
 
-      {/* Modal for selecting districts */}
-      <Modal visible={districtModalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: '80%', backgroundColor: '#fff', borderRadius: 10, padding: 20 }}>
-            <FlatList
-              data={districtOptions[selectedCity]}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { setSelectedDistrict(item); setDistrictModalVisible(false); }}>
-                  <Text style={{ fontSize: 18, marginBottom: 15, color: selectedDistrict === item ? 'red' : 'black' }}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity onPress={() => setDistrictModalVisible(false)}>
-              <Text style={{ color: 'blue', textAlign: 'right' }}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Checkbox điều khoản */}
+      <View style={styles.checkboxContainer3}>
+        <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
+          <Icon
+            name={isChecked ? 'check-box' : 'check-box-outline-blank'}
+            size={24}
+            color="#E53935"
+          />
+        </TouchableOpacity>
+        <Text style={styles.checkboxLabel3}>Tôi đã đọc và đồng ý với điều khoản của NOM</Text>
+      </View>
 
-      {/* Modal for selecting food types */}
-      <Modal visible={foodModalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: '80%', backgroundColor: '#fff', borderRadius: 10, padding: 20 }}>
-            <FlatList
-              data={foodTypes}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => toggleFoodTypeSelection(item)}>
-                  <Text style={{ fontSize: 18, marginBottom: 15, color: selectedFoodTypes.includes(item) ? 'red' : 'black' }}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity onPress={() => setFoodModalVisible(false)}>
-              <Text style={{ color: 'blue', textAlign: 'right' }}>Đóng</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Nút Đăng ký */}
+      <TouchableOpacity
+        style={[styles.button3]}
+        onPress={handleRegisterSeller}
+        disabled={!isChecked}
+      >
+        <Text style={styles.buttonText3}>Đăng ký</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      {/* Modal for selecting business types */}
-      <Modal visible={businessModalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: '80%', backgroundColor: '#fff', borderRadius: 10, padding: 20 }}>
-            <FlatList
-              data={businessTypes}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { setBusinessType(item); setBusinessModalVisible(false); }}>
-                  <Text style={{ fontSize: 18, marginBottom: 15, color: businessType === item ? 'red' : 'black' }}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity onPress={() => setBusinessModalVisible(false)}>
-              <Text style={{ color: 'blue', textAlign: 'right' }}>Đóng</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+  const handleSelectStep = (step) => {
+    setCurrentStep(step);
+  };
 
+  const renderProgressBar = () => (
+    <View style={styles.progressBarContainer}>
+      <View style={styles.progressBar}>
+        <TouchableOpacity onPress={() => handleSelectStep(1)}>
+          <View style={[styles.progressDot, currentStep >= 1 && styles.activeDot]} />
+        </TouchableOpacity>
+        <View style={[styles.progressLine, currentStep >= 2 && styles.activeLine]} />
+        <TouchableOpacity onPress={() => handleSelectStep(2)}>
+          <View style={[styles.progressDot, currentStep >= 2 && styles.activeDot]} />
+        </TouchableOpacity>
+        <View style={[styles.progressLine, currentStep >= 3 && styles.activeLine]} />
+        <TouchableOpacity onPress={() => handleSelectStep(3)}>
+          <View style={[styles.progressDot, currentStep >= 3 && styles.activeDot]} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
+  return (
+    <View style={styles.container}>
+      <Image source={require('../../img/LOGOBLACK.png')} style={styles.logo} />
 
-    </ScrollView>
+      {renderProgressBar()}
+
+      {renderStep()}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    backgroundColor: '#fff',
+  },
+  stepContainer: {
+    marginBottom: 20,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: 'center',
+    color: 'black',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E53935',
+    padding: 14,
+    borderRadius: 8,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    color: '#000',
+  },
+  button: {
+    backgroundColor: '#E53935',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  progressBarContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  progressBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#ccc',
+  },
+  progressLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: '#ccc',
+  },
+  activeDot: {
+    backgroundColor: '#E53935',
+  },
+  activeLine: {
+    backgroundColor: '#E53935',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 8,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  viewTerms3: {
+    marginVertical: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Căn hai đầu cho text và icon
+    paddingHorizontal: 20,
+  },
+  linkText3: {
+    fontSize: 16,
+    color: '#E53935',
+    fontWeight: 'bold', // Tăng độ đậm của chữ
+    marginLeft: 150,
+  },
+  termsBox3: {
+    padding: 20,
+    borderColor: '#E53935', // Đường viền đỏ
+    borderWidth: 2, // Độ dày đường viền
+    backgroundColor: '#fff', // Nền trắng
+    borderRadius: 10, // Bo tròn góc
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3, // Tạo đổ bóng cho hộp
+    shadowRadius: 5,
+    elevation: 5, // Đổ bóng cho Android
+  },
+  termsText3: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 18, // Giãn dòng cho dễ đọc
+    marginBottom: 8,
+  },
+  checkboxContainer3: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    paddingHorizontal: 20, // Căn chỉnh khoảng cách hai bên
+  },
+  checkboxLabel3: {
+    fontSize: 14,
+    marginLeft: 8,
+    color: '#333',
+    fontWeight: '600', // Tăng độ đậm cho text checkbox
+  },
+  button3: {
+    backgroundColor: '#E53935',
+    paddingVertical: 18,
+    paddingHorizontal: 80, // Độ rộng nút lớn hơn
+    borderRadius: 30, // Bo tròn nhiều hơn cho nút
+    alignItems: 'center',
+    marginTop: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  buttonText3: {
+    color: '#fff',
+    fontSize: 20, // Tăng kích thước chữ của nút
+    fontWeight: 'bold',
+  },
+});

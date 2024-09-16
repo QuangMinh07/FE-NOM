@@ -28,15 +28,15 @@ const Log = () => {
   }, []);
 
   const renderItem = ({ item }) => (
-    <Image 
-      source={item} 
+    <Image
+      source={item}
       style={{
         width: width * 0.8,
         height: undefined,
         aspectRatio: 1,
         resizeMode: 'contain',
         marginHorizontal: (width * 0.1),
-      }} 
+      }}
     />
   );
 
@@ -92,14 +92,14 @@ const Log = () => {
               borderLeftColor: 'transparent',
               borderRightColor: 'transparent',
               transform: [{ skewX: '-30deg' }],
-              
+
             }}
           />
         ))}
       </View>
 
       <TouchableOpacity
-        onPress={() => navigation.navigate('Login')}  // Điều hướng tới trang SignUp
+        onPress={() => navigation.navigate('Login')}
         style={{
           backgroundColor: '#E53935',
           borderRadius: 30,
@@ -120,9 +120,9 @@ const Log = () => {
           fontWeight: 'bold',
         }}>Đăng nhập</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity
-        onPress={() => navigation.navigate('Route')}  // Điều hướng tới trang Login
+        onPress={() => navigation.navigate('SignUp')}
         style={{
           borderColor: '#E53935',
           borderWidth: 2,

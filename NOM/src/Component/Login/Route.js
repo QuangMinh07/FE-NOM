@@ -30,15 +30,15 @@ const Route = () => {
   }, []);
 
   const renderItem = ({ item }) => (
-    <Image 
-      source={item} 
+    <Image
+      source={item}
       style={{
         width: width * 0.8,
         height: undefined,
         aspectRatio: 1,
         resizeMode: 'contain',
         marginHorizontal: (width * 0.1),
-      }} 
+      }}
     />
   );
 
@@ -73,7 +73,7 @@ const Route = () => {
         }}
         style={{ marginBottom: height * 0.02 }}
       />
-
+      <Text style={{ fontSize: 12, color: "#999" }}>Bạn muốn trợ thành cộng tác của NOM ở phương diện nào?</Text>
       <View style={{
         flexDirection: 'row',
         justifyContent: 'center',
@@ -93,38 +93,6 @@ const Route = () => {
         ))}
       </View>
 
-      {/* Nút cho Khách hàng */}
-      <TouchableOpacity
-        onPress={() => {
-          setSelectedRole('customer');
-          navigation.navigate('SignUp');
-        }}  // Điều hướng tới trang đăng ký Khách hàng và chọn nút
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          backgroundColor: selectedRole === 'customer' ? '#E53935' : '#FFFFFF',  // Chọn màu nền dựa trên trạng thái
-          paddingVertical: 15,
-          paddingHorizontal: 15,
-          borderRadius: 10,
-          borderColor: '#ffff', 
-          borderWidth: 1,
-          shadowColor: '#555',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3.84,
-          elevation: 10,
-          marginBottom: height * 0.02,
-          width: '80%',
-        }}
-      >
-        <Text style={{
-          fontSize: 16,
-          color: selectedRole === 'customer' ? '#FFFFFF' : '#000',  // Đổi màu chữ khi được chọn
-        }}>Khách hàng</Text>
-        <Icon name="chevron-right" size={24} color={selectedRole === 'customer' ? '#FFFFFF' : '#E53935'} />
-      </TouchableOpacity>
-
       {/* Nút cho Đối tác */}
       <TouchableOpacity
         onPress={() => {
@@ -139,9 +107,9 @@ const Route = () => {
           paddingVertical: 15,
           paddingHorizontal: 15,
           borderRadius: 10,
-          borderColor: '#ffff', 
+          borderColor: '#ffff',
           borderWidth: 1,
-          shadowColor: '#555',
+          shadowColor: '#E53935',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.3,
           shadowRadius: 3.84,
@@ -171,7 +139,7 @@ const Route = () => {
           paddingVertical: 15,
           paddingHorizontal: 15,
           borderRadius: 10,
-          borderColor: '#ffff', 
+          borderColor: '#ffff',
           borderWidth: 1,
           shadowColor: '#E53935',
           shadowOffset: { width: 0, height: 2 },
