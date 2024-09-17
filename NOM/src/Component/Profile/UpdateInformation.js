@@ -37,11 +37,12 @@ export default function UpdateInformation() {
   const [image, setImage] = useState(null); // Để lưu ảnh tạm trước khi tải lên
 
   useEffect(() => {
-    fetchUserData();
+    fetchUserProfile();
+    fetchUserPersonalInfo();
   }, []);
 
-  // Hàm lấy dữ liệu từ API khi giao diện được tải
-  const fetchUserData = async () => {
+  // Hàm lấy dữ liệu hồ sơ người dùng
+  const fetchUserProfile = async () => {
     try {
       const profileResponse = await api({
         method: typeHTTP.GET,
@@ -49,27 +50,45 @@ export default function UpdateInformation() {
         sendToken: true,
       });
 
+      const userProfile = profileResponse.user;
+
+      if (userProfile) {
+        // Cập nhật dữ liệu profile người dùng
+        setFormData(prevState => ({
+          ...prevState,
+          fullName: userProfile.fullName || '',
+          phone: userProfile.phoneNumber || '',
+          email: userProfile.email || '',
+        }));
+      }
+    } catch (error) {
+      // Xử lý lỗi nếu cần, không cần hiện thông báo
+    }
+  };
+
+  // Hàm lấy dữ liệu cá nhân của người dùng
+  const fetchUserPersonalInfo = async () => {
+    try {
       const personalInfoResponse = await api({
         method: typeHTTP.GET,
         url: '/userPersonal/personal-info',
         sendToken: true,
       });
 
-      const userProfile = profileResponse.user;
       const userPersonalInfo = personalInfoResponse.userPersonalInfo;
 
-      // Cập nhật formData với dữ liệu từ API và định dạng ngày sinh
-      setFormData({
-        fullName: userProfile.fullName,
-        phone: userProfile.phoneNumber,
-        email: userProfile.email,
-        dateOfBirth: formatDate(userPersonalInfo.dateOfBirth),
-        gender: userPersonalInfo.gender,
-        state: userPersonalInfo.state,
-        profilePictureURL: userPersonalInfo.profilePictureURL || null, // URL ảnh từ API
-      });
+      if (userPersonalInfo) {
+        // Cập nhật dữ liệu cá nhân của người dùng
+        setFormData(prevState => ({
+          ...prevState,
+          dateOfBirth: formatDate(userPersonalInfo.dateOfBirth) || '',
+          gender: userPersonalInfo.gender || '',
+          state: userPersonalInfo.state || '',
+          profilePictureURL: userPersonalInfo.profilePictureURL || null,
+        }));
+      }
     } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu:', error);
+      // Xử lý lỗi nếu cần, không cần hiện thông báo
     }
   };
 
@@ -78,14 +97,14 @@ export default function UpdateInformation() {
     try {
       // Chuẩn hóa URI để đảm bảo nó tương thích với Cloudinary và Multer
       const cleanUri = imageUri.replace('file://', '');
-  
+
       const formDataUpload = new FormData();
       formDataUpload.append('image', {
         uri: cleanUri,
         type: 'image/png', // Thay đổi type phù hợp nếu là ảnh JPEG
         name: 'photo.png',
       });
-  
+
       const response = await api({
         method: typeHTTP.POST,
         url: '/upload/upload', // Đảm bảo URL đúng
@@ -95,7 +114,7 @@ export default function UpdateInformation() {
         },
         sendToken: true,
       });
-  
+
       if (response.success) {
         return response.imageUrl;
       } else {
@@ -107,8 +126,8 @@ export default function UpdateInformation() {
       return null;
     }
   };
-  
-  
+
+
 
   // Hàm mở thư viện ảnh
   const openImageLibrary = async () => {

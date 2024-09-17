@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View, AppState } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import {
   WelcomeScreen,
@@ -128,43 +129,45 @@ const App = () => {
   }
 
   return (
-    <GlobalContext>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
-          <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-          <Stack.Screen name="Log" component={Log} />
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="SignUp" component={SignUp} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-          <Stack.Screen name="ResetPassword" component={ResetPassword} />
-          <Stack.Screen name="OTPMail" component={OTPMail} />
-          <Stack.Screen name="OTPPhone" component={OTPPhone} />
-          <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
-          {/* Điều hướng cho CustomerTabs */}
-          <Stack.Screen name="HomeKH" component={CustomerTabs} />
-          {/* Điều hướng cho SellerTabs */}
-          <Stack.Screen name="HomeSeller" component={SellerTabs} />
-          <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
-          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-          <Stack.Screen name="UpdateAccount" component={UpdateAccount} />
-          <Stack.Screen name="SignUpSeller" component={SignUpSeller} />
-          <Stack.Screen name="SignUpMailOrPhone" component={SignUpMailOrPhone} />
-          <Stack.Screen name="Route" component={Route} />
-          <Stack.Screen name="LoginSeller" component={LoginSeller} />
-          <Stack.Screen name="InformationUser" component={InformationUser} />
-          <Stack.Screen name="Information" component={Information} />
-          <Stack.Screen name="UpdateInformation" component={UpdateInformation} />
-          <Stack.Screen name="TermsDetails" component={TermsDetails} />
-          <Stack.Screen name="Comment" component={Comment} />
-          <Stack.Screen name="UpdateHome" component={UpdateHome} />
-          <Stack.Screen name="ListFood" component={ListFood} />
-          <Stack.Screen name="TimeClose" component={TimeClose} />
-          <Stack.Screen name="Staff" component={Staff} />
-          <Stack.Screen name="AddEat" component={AddEat} />
-          <Stack.Screen name="AddDishGroup" component={AddDishGroup} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GlobalContext>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GlobalContext>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+            <Stack.Screen name="Log" component={Log} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="SignUp" component={SignUp} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+            <Stack.Screen name="ResetPassword" component={ResetPassword} />
+            <Stack.Screen name="OTPMail" component={OTPMail} />
+            <Stack.Screen name="OTPPhone" component={OTPPhone} />
+            <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
+            {/* Điều hướng cho CustomerTabs */}
+            <Stack.Screen name="HomeKH" component={CustomerTabs} />
+            {/* Điều hướng cho SellerTabs */}
+            <Stack.Screen name="HomeSeller" component={SellerTabs} />
+            <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
+            <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+            <Stack.Screen name="UpdateAccount" component={UpdateAccount} />
+            <Stack.Screen name="SignUpSeller" component={SignUpSeller} />
+            <Stack.Screen name="SignUpMailOrPhone" component={SignUpMailOrPhone} />
+            <Stack.Screen name="Route" component={Route} />
+            <Stack.Screen name="LoginSeller" component={LoginSeller} />
+            <Stack.Screen name="InformationUser" component={InformationUser} />
+            <Stack.Screen name="Information" component={Information} />
+            <Stack.Screen name="UpdateInformation" component={UpdateInformation} />
+            <Stack.Screen name="TermsDetails" component={TermsDetails} />
+            <Stack.Screen name="Comment" component={Comment} />
+            <Stack.Screen name="UpdateHome" component={UpdateHome} />
+            <Stack.Screen name="ListFood" component={ListFood} />
+            <Stack.Screen name="TimeClose" component={TimeClose} />
+            <Stack.Screen name="Staff" component={Staff} />
+            <Stack.Screen name="AddEat" component={AddEat} />
+            <Stack.Screen name="AddDishGroup" component={AddDishGroup} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GlobalContext>
+    </GestureHandlerRootView>
   );
 };
 
