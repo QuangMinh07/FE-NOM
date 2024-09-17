@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';  // Import icon library
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from "@react-navigation/native";
+import { api, typeHTTP } from "../../utils/api";  // Import API functions
+import { globalContext } from "../../context/globalContext"; // Import GlobalContext
 
 export default function AddEat() {
+  const [foodName, setFoodName] = useState('');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(''); // Lưu trữ nhóm món đã chọn
   const navigation = useNavigation();
+
+  const { globalData } = useContext(globalContext); // Lấy dữ liệu từ GlobalContext
+
+  // Lấy storeId từ globalData
+  const storeId = globalData.storeData?._id; // Lấy storeId từ GlobalContext
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -41,146 +51,197 @@ export default function AddEat() {
 
   const foodGroups = ['Canh', 'Tráng miệng', 'Món chính', 'Nước']; // Danh sách nhóm món ăn
 
+  // Hàm gọi API thêm món ăn mới
+  const addFoodItem = async () => {
+    if (!storeId) {
+      Alert.alert("Lỗi", "Không tìm thấy thông tin cửa hàng");
+      return;
+    }
+
+    try {
+      const body = {
+        storeId, // Sử dụng storeId từ GlobalContext
+        foodName,
+        price: parseFloat(price), // Chuyển giá thành số
+        description,
+        imageUrl: image || null,  // Nếu không có ảnh thì truyền null
+        foodGroup: selectedGroup,
+        isAvailable,
+        sellingTime: "08:00 - 20:00", // Bạn có thể tùy chỉnh thời gian bán
+      };
+
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/food/add-food",  // URL của API thêm món ăn
+        body,
+        sendToken: true, // Gửi token trong header
+      });
+
+      if (response) {
+        Alert.alert("Thành công", "Món ăn đã được thêm!");
+        navigation.navigate("ListFood");  // Điều hướng về danh sách món ăn
+      } else {
+        Alert.alert("Lỗi", "Không thể thêm món ăn.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
+    }
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <AntDesign name="arrowleft" size={24} color="#fff" style={{ marginRight: 10 }} />
-          <Text style={styles.headerText}>Thêm món ăn</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Food Name and Price */}
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Tên món</Text>
-        <TextInput 
-          style={styles.input} 
-          placeholder="Cơm tấm sườn" 
-        />
-
-        <Text style={[styles.label, { marginTop: 10 }]}>Giá món ăn</Text>
-        <TextInput 
-          style={styles.input} 
-          placeholder="Nhập giá" 
-        />
-
-        <Text style={[styles.label, { marginTop: 10 }]}>Ảnh món ăn</Text>
-        <TouchableOpacity 
-          style={styles.imagePicker} 
-          onPress={() => setModalVisible(true)}
-        >
-          {image ? (
-            <Image source={{ uri: image }} style={styles.image} />
-          ) : (
-            <Text style={{ color: '#ccc', fontSize: 16 }}>Chọn ảnh món ăn</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Description */}
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Mô tả món ăn</Text>
-        <TextInput
-          style={[styles.input, { height: 80 }]}
-          multiline
-          placeholder="Mô tả món ăn"
-        />
-      </View>
-
-      {/* Group and Availability */}
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>Nhóm món</Text>
-        <TouchableOpacity 
-          style={styles.selectButton}
-          onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
-        >
-          <Text>{selectedGroup || 'Chọn'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>Còn món</Text>
-        <Switch value={isAvailable} onValueChange={setIsAvailable} />
-      </View>
-
-      {/* Time Selling */}
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>Thời gian bán</Text>
-        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 16 }}>Tùy chỉnh</Text>
-          <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.deleteButton}>
-          <Text style={styles.buttonText}>Xóa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.buttonText}>Lưu</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Modal for Image Upload */}
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)} // for Android back button
-      >
-        <Pressable
-          style={styles.modalBackground}
-          onPress={() => setModalVisible(false)} // Close modal when tapping outside
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={() => {}} // Prevent closing when tapping inside
-          >
-            <Text style={styles.modalTitle}>Chọn ảnh</Text>
-            <TouchableOpacity onPress={pickImage}>
-              <Text style={styles.modalOption}>Chọn ảnh từ thư viện</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior="padding" // Tự động đẩy nội dung lên khi bàn phím mở
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <AntDesign name="arrowleft" size={24} color="#fff" style={{ marginRight: 10 }} />
+              <Text style={styles.headerText}>Thêm món ăn</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={takePhoto}>
-              <Text style={styles.modalOption}>Chụp ảnh</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          </View>
 
-      {/* Modal for Group Selection */}
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={groupModalVisible}
-        onRequestClose={() => setGroupModalVisible(false)} // for Android back button
-      >
-        <Pressable
-          style={styles.modalBackground}
-          onPress={() => setGroupModalVisible(false)} // Close modal when tapping outside
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={() => {}} // Prevent closing when tapping inside
+          {/* Food Name and Price */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Tên món</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Cơm tấm sườn"
+              value={foodName}
+              onChangeText={setFoodName}
+            />
+
+            <Text style={[styles.label, { marginTop: 10 }]}>Giá món ăn</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập giá"
+              value={price}
+              onChangeText={setPrice}
+              keyboardType="numeric" // Chỉ cho phép nhập số
+            />
+
+            <Text style={[styles.label, { marginTop: 10 }]}>Ảnh món ăn</Text>
+            <TouchableOpacity
+              style={styles.imagePicker}
+              onPress={() => setModalVisible(true)}
+            >
+              {image ? (
+                <Image source={{ uri: image }} style={styles.image} />
+              ) : (
+                <Text style={{ color: '#ccc', fontSize: 16 }}>Chọn ảnh món ăn</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Description */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Mô tả món ăn</Text>
+            <TextInput
+              style={[styles.input, { height: 80 }]}
+              multiline
+              placeholder="Mô tả món ăn"
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
+
+          {/* Group and Availability */}
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Nhóm món</Text>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
+            >
+              <Text>{selectedGroup || 'Chọn'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Còn món</Text>
+            <Switch value={isAvailable} onValueChange={setIsAvailable} />
+          </View>
+
+          {/* Time Selling */}
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Thời gian bán</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("TimeScheduleSell")} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16 }}>Tùy chỉnh</Text>
+              <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.deleteButton}>
+              <Text style={styles.buttonText}>Xóa</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.saveButton} onPress={addFoodItem}>
+              <Text style={styles.buttonText}>Lưu</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Modal for Image Upload */}
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)} // for Android back button
           >
-            <Text style={styles.modalTitle}>Chọn nhóm món</Text>
-            {foodGroups.map((group, index) => (
-              <TouchableOpacity 
-                key={index} 
-                onPress={() => {
-                  setSelectedGroup(group);
-                  setGroupModalVisible(false); // Close modal after selecting group
-                }}
-                style={{ paddingVertical: 10 }}
+            <Pressable
+              style={styles.modalBackground}
+              onPress={() => setModalVisible(false)} // Close modal when tapping outside
+            >
+              <Pressable
+                style={styles.modalContent}
+                onPress={() => { }} // Prevent closing when tapping inside
               >
-                <Text style={styles.modalOption}>{group}</Text>
-              </TouchableOpacity>
-            ))}
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </View>
+                <Text style={styles.modalTitle}>Chọn ảnh</Text>
+                <TouchableOpacity onPress={pickImage}>
+                  <Text style={styles.modalOption}>Chọn ảnh từ thư viện</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={takePhoto}>
+                  <Text style={styles.modalOption}>Chụp ảnh</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          </Modal>
+
+          {/* Modal for Group Selection */}
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={groupModalVisible}
+            onRequestClose={() => setGroupModalVisible(false)} // for Android back button
+          >
+            <Pressable
+              style={styles.modalBackground}
+              onPress={() => setGroupModalVisible(false)} // Close modal when tapping outside
+            >
+              <Pressable
+                style={styles.modalContent}
+                onPress={() => { }} // Prevent closing when tapping inside
+              >
+                <Text style={styles.modalTitle}>Chọn nhóm món</Text>
+                {foodGroups.map((group, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      setSelectedGroup(group);
+                      setGroupModalVisible(false); // Close modal after selecting group
+                    }}
+                    style={{ paddingVertical: 10 }}
+                  >
+                    <Text style={styles.modalOption}>{group}</Text>
+                  </TouchableOpacity>
+                ))}
+              </Pressable>
+            </Pressable>
+          </Modal>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 

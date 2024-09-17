@@ -32,7 +32,8 @@ import {
   UpdateHome,
   ListFood,
   AddEat,
-  AddDishGroup
+  AddDishGroup,
+  TimeScheduleSell
 } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
@@ -164,6 +165,7 @@ const App = () => {
             <Stack.Screen name="Staff" component={Staff} />
             <Stack.Screen name="AddEat" component={AddEat} />
             <Stack.Screen name="AddDishGroup" component={AddDishGroup} />
+            <Stack.Screen name="TimeScheduleSell" component={TimeScheduleSell} />
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>
