@@ -7,7 +7,6 @@ import { AntDesign } from '@expo/vector-icons'; // Import AntDesign
 export default function ListFood({ navigation }) {
   const [selectedTab, setSelectedTab] = useState('Món');
   const [switchStates, setSwitchStates] = useState({
-    "Cơm tấm sườn": true,
     "Cơm tấm sườn bì chả": false,
     "Cơm tấm sườn ốp la": true,
     "Canh khổ qua": true,
@@ -16,7 +15,7 @@ export default function ListFood({ navigation }) {
   });
 
   // Danh sách món ăn
-  const [comTamGroup, setComTamGroup] = useState(["Cơm tấm sườn", "Cơm tấm sườn bì chả", "Cơm tấm sườn ốp la"]);
+  const [comTamGroup, setComTamGroup] = useState(["Cơm tấm sườn bì chả", "Cơm tấm sườn ốp la"]);
   const [canhGroup, setCanhGroup] = useState(["Canh khổ qua", "Canh rong biển", "Canh mướp"]);
 
   // State cho modal thêm nhóm món
@@ -66,8 +65,8 @@ export default function ListFood({ navigation }) {
       <View style={{ backgroundColor: '#E53935', padding: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 140 }}>
         <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>Danh sách thực đơn</Text>
         <TouchableOpacity onPress={handleAddButtonPress}>
-  <AntDesign name="pluscircleo" size={30} color="#fff" />
-</TouchableOpacity>
+          <AntDesign name="pluscircleo" size={30} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* Search Input */}
@@ -160,7 +159,7 @@ export default function ListFood({ navigation }) {
           {[...comTamGroup, ...canhGroup].map((item, index) => (
             <Swipeable
               key={index}
-              renderLeftActions={() => renderLeftActions(item, () => {})}
+              renderLeftActions={() => renderLeftActions(item, () => { })}
             >
               <View style={styles.foodItem}>
                 <Text style={{ fontSize: 16 }}>{item}</Text>

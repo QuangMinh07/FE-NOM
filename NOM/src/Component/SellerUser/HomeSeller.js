@@ -15,9 +15,9 @@ export default function HomeSeller() {
   const navigation = useNavigation();
 
   // Lấy thông tin từ GlobalContext
-  const { globalData } = useContext(globalContext);
+  const { globalData, globalHandler } = useContext(globalContext); // Sử dụng globalContext
 
-  // Gọi API để lấy thông tin cửa hàng
+  // Gọi API để lấy thông tin cửa hàng và lưu vào GlobalContext
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
@@ -27,16 +27,30 @@ export default function HomeSeller() {
           return;
         }
 
+        // Kiểm tra xem thông tin cửa hàng đã tồn tại trong GlobalContext chưa
+        if (globalData.storeData) {
+          console.log("Thông tin cửa hàng đã có sẵn:", globalData.storeData);
+          return; // Không cần gọi API nếu đã có thông tin
+        }
+
         const storeData = await api({
           method: typeHTTP.GET,
           url: `/store/getStore/${userId}`, // Gọi API với userId
           sendToken: true,
         });
 
+        console.log("Thông tin cửa hàng từ API:", storeData);
+
         if (storeData && storeData.data) {
           setStoreName(storeData.data.storeName || "Tên cửa hàng");
           setStoreAddress(storeData.data.storeAddress || "Địa chỉ cửa hàng");
+
+          // Lưu toàn bộ thông tin cửa hàng vào GlobalContext
+          globalHandler.setStoreData(storeData.data);
+
+          console.log("Thông tin cửa hàng đã lưu vào GlobalContext:", storeData.data);
         }
+
         setLoading(false);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
@@ -44,8 +58,12 @@ export default function HomeSeller() {
       }
     };
 
-    fetchStoreData();
-  }, [globalData]);
+    // Chỉ gọi API nếu storeData chưa có trong GlobalContext
+    if (!globalData.storeData) {
+      fetchStoreData();
+    }
+  }, [globalData, globalHandler]); // Thêm cả globalHandler vào dependencies
+
 
   // Hàm xử lý tải ảnh lên
   const handleUploadPhoto = () => {
