@@ -1,35 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Modal, Pressable, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker'; // Sử dụng expo-image-picker
-import { useNavigation } from '@react-navigation/native';
-import { api, typeHTTP } from '../../utils/api';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Dimensions,
+  ScrollView,
+  Modal,
+  Pressable,
+  Keyboard,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Alert,
+  Image,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker"; // Sử dụng expo-image-picker
+import { useNavigation } from "@react-navigation/native";
+import { api, typeHTTP } from "../../utils/api";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 // Hàm định dạng ngày theo DD/MM/YYYY
 const formatDate = (date) => {
   const d = new Date(date);
-  const day = (`0${d.getDate()}`).slice(-2);
-  const month = (`0${d.getMonth() + 1}`).slice(-2);
+  const day = `0${d.getDate()}`.slice(-2);
+  const month = `0${d.getMonth() + 1}`.slice(-2);
   const year = d.getFullYear();
   return `${day}/${month}/${year}`;
 };
 
 // Hàm chuyển đổi ngày từ định dạng DD/MM/YYYY thành Date object
 const parseDate = (dateString) => {
-  const [day, month, year] = dateString.split('/');
+  const [day, month, year] = dateString.split("/");
   return new Date(`${year}-${month}-${day}`);
 };
 
 export default function UpdateInformation() {
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    dateOfBirth: '',
-    gender: '',
-    state: '',
+    fullName: "",
+    phone: "",
+    email: "",
+    dateOfBirth: "",
+    gender: "",
+    state: "",
     profilePictureURL: null, // Để lưu URL ảnh sau khi tải lên thành công
   });
 
@@ -46,7 +60,7 @@ export default function UpdateInformation() {
     try {
       const profileResponse = await api({
         method: typeHTTP.GET,
-        url: '/user/profile',
+        url: "/user/profile",
         sendToken: true,
       });
 
@@ -54,11 +68,11 @@ export default function UpdateInformation() {
 
       if (userProfile) {
         // Cập nhật dữ liệu profile người dùng
-        setFormData(prevState => ({
+        setFormData((prevState) => ({
           ...prevState,
-          fullName: userProfile.fullName || '',
-          phone: userProfile.phoneNumber || '',
-          email: userProfile.email || '',
+          fullName: userProfile.fullName || "",
+          phone: userProfile.phoneNumber || "",
+          email: userProfile.email || "",
         }));
       }
     } catch (error) {
@@ -71,7 +85,7 @@ export default function UpdateInformation() {
     try {
       const personalInfoResponse = await api({
         method: typeHTTP.GET,
-        url: '/userPersonal/personal-info',
+        url: "/userPersonal/personal-info",
         sendToken: true,
       });
 
@@ -79,11 +93,11 @@ export default function UpdateInformation() {
 
       if (userPersonalInfo) {
         // Cập nhật dữ liệu cá nhân của người dùng
-        setFormData(prevState => ({
+        setFormData((prevState) => ({
           ...prevState,
-          dateOfBirth: formatDate(userPersonalInfo.dateOfBirth) || '',
-          gender: userPersonalInfo.gender || '',
-          state: userPersonalInfo.state || '',
+          dateOfBirth: formatDate(userPersonalInfo.dateOfBirth) || "",
+          gender: userPersonalInfo.gender || "",
+          state: userPersonalInfo.state || "",
           profilePictureURL: userPersonalInfo.profilePictureURL || null,
         }));
       }
@@ -95,22 +109,20 @@ export default function UpdateInformation() {
   // Hàm tải lên ảnh
   const uploadImage = async (imageUri) => {
     try {
-      // Chuẩn hóa URI để đảm bảo nó tương thích với Cloudinary và Multer
-      const cleanUri = imageUri.replace('file://', '');
-
       const formDataUpload = new FormData();
-      formDataUpload.append('image', {
-        uri: cleanUri,
-        type: 'image/png', // Thay đổi type phù hợp nếu là ảnh JPEG
-        name: 'photo.png',
+      formDataUpload.append("image", {
+        uri: imageUri,
+        type: "image/jpeg", // Định dạng của ảnh
+        name: "photo.jpg",
       });
 
+      // Kiểm tra URL API này đã đúng chưa?
       const response = await api({
         method: typeHTTP.POST,
-        url: '/upload/upload', // Đảm bảo URL đúng
+        url: "/upload/upload-image", // Đảm bảo đường dẫn này đúng trên server của bạn
         data: formDataUpload,
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
         sendToken: true,
       });
@@ -118,49 +130,52 @@ export default function UpdateInformation() {
       if (response.success) {
         return response.imageUrl;
       } else {
-        Alert.alert('Lỗi', 'Tải lên ảnh thất bại.');
+        Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
         return null;
       }
     } catch (error) {
-      console.error('Lỗi tải ảnh:', error);
+      console.error("Lỗi khi tải ảnh:", error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi tải ảnh.");
       return null;
     }
   };
 
-
-
   // Hàm mở thư viện ảnh
   const openImageLibrary = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (permissionResult.granted === false) {
-      Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    console.log('Image Picker Result:', result); // Log toàn bộ result để kiểm tra dữ liệu
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const selectedImageUri = result.assets[0].uri; // Lấy URI ảnh từ assets
-      console.log('Selected Image URI:', selectedImageUri); // Log URI của ảnh để chắc chắn nó tồn tại
-      // Upload ảnh và cập nhật URL vào formData
-      const uploadedImageUrl = await uploadImage(selectedImageUri);
-      if (uploadedImageUrl) {
-        setFormData({ ...formData, profilePictureURL: uploadedImageUrl });
-      } else {
-        Alert.alert('Lỗi', 'Tải lên ảnh thất bại.');
+      // Nếu quyền chưa được cấp thì hiển thị thông báo và không đóng modal
+      if (!permissionResult.granted) {
+        Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh!");
+        return;
       }
-    } else {
-      Alert.alert('Lỗi', 'Không thể chọn ảnh.');
+
+      // Chọn ảnh sau khi quyền đã được cấp
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      // Nếu người dùng chọn ảnh thành công
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImageUri = result.assets[0].uri;
+        const uploadedImageUrl = await uploadImage(selectedImageUri);
+        if (uploadedImageUrl) {
+          setFormData({ ...formData, profilePictureURL: uploadedImageUrl });
+        } else {
+          Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
+        }
+      } else {
+        Alert.alert("Lỗi", "Không thể chọn ảnh.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi chọn ảnh:", error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi chọn ảnh.");
     }
   };
-
 
   // Hàm mở camera
   const openCamera = async () => {
@@ -177,7 +192,7 @@ export default function UpdateInformation() {
       quality: 1,
     });
 
-    console.log('Camera Result:', result); // Log kết quả từ camera
+    console.log("Camera Result:", result); // Log kết quả từ camera
 
     if (!result.cancelled && result.uri) {
       // Upload ảnh và cập nhật URL vào formData
@@ -186,23 +201,16 @@ export default function UpdateInformation() {
         setFormData({ ...formData, profilePictureURL: uploadedImageUrl }); // Cập nhật URL ảnh sau khi tải lên thành công
         setImage(result.uri); // Cập nhật ảnh để hiển thị trước khi upload
       } else {
-        Alert.alert('Lỗi', 'Tải lên ảnh thất bại.');
+        Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
       }
     } else {
-      Alert.alert('Lỗi', 'Không thể chụp ảnh.');
+      Alert.alert("Lỗi", "Không thể chụp ảnh.");
     }
   };
 
-  // Hàm hiển thị modal không bị tắt khi quyền bị từ chối
+  // Hàm để mở modal chọn ảnh hoặc camera
   const toggleModal = () => {
-    if (!isModalVisible) {
-      setModalVisible(true);
-    } else {
-      if (image === null) {
-        Alert.alert('Bạn cần chọn ảnh!');
-      }
-      setModalVisible(false);
-    }
+    setModalVisible((prev) => !prev); // Chỉ thay đổi trạng thái của modal khi người dùng tương tác
   };
 
   const handleInputChange = (field, value) => {
@@ -217,7 +225,7 @@ export default function UpdateInformation() {
       if (image) {
         imageUrl = await uploadImage(image);
         if (!imageUrl) {
-          Alert.alert('Lỗi', 'Tải lên ảnh thất bại. Vui lòng thử lại.');
+          Alert.alert("Lỗi", "Tải lên ảnh thất bại. Vui lòng thử lại.");
           return;
         }
       }
@@ -225,7 +233,7 @@ export default function UpdateInformation() {
       // Cập nhật thông tin người dùng
       await api({
         method: typeHTTP.PUT,
-        url: '/user/update',
+        url: "/user/update",
         body: {
           phone: formData.phone,
           email: formData.email,
@@ -237,54 +245,60 @@ export default function UpdateInformation() {
       // Cập nhật thông tin cá nhân
       await api({
         method: typeHTTP.PUT,
-        url: '/userPersonal/update-personal-info',
+        url: "/userPersonal/update-personal-info",
         body: {
           dateOfBirth: parseDate(formData.dateOfBirth),
           gender: formData.gender,
           state: formData.state,
-          profilePictureURL: imageUrl || 'https://example.com/random-image.jpg',
+          profilePictureURL: imageUrl || "https://example.com/random-image.jpg",
         },
         sendToken: true,
       });
 
-      Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-      navigation.navigate('InformationUser');
+      Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+      navigation.navigate("InformationUser");
     } catch (error) {
-      console.error('Lỗi khi cập nhật:', error);
-      Alert.alert('Lỗi', 'Cập nhật thông tin thất bại.');
+      console.error("Lỗi khi cập nhật:", error);
+      Alert.alert("Lỗi", "Cập nhật thông tin thất bại.");
     }
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
-          <View style={{
-            backgroundColor: '#E53935',
-            height: height * 0.2,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <View style={{
-              position: 'absolute',
-              top: height * 0.15,
-              width: width,
-              alignItems: 'center',
-            }}>
-              <View style={{
-                width: width * 0.2,
-                height: width * 0.2,
-                borderRadius: (width * 0.2) / 2,
-                borderColor: '#E53935',
-                borderWidth: 2,
-                backgroundColor: '#fff',
-              }}>
+        <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+          <View
+            style={{
+              backgroundColor: "#E53935",
+              height: height * 0.2,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: height * 0.15,
+                width: width,
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  width: width * 0.2,
+                  height: width * 0.2,
+                  borderRadius: (width * 0.2) / 2,
+                  borderColor: "#E53935",
+                  borderWidth: 2,
+                  backgroundColor: "#fff",
+                }}
+              >
                 {formData.profilePictureURL ? ( // Ưu tiên hiển thị ảnh đã tải lên từ profilePictureURL
                   <Image
                     source={{ uri: formData.profilePictureURL }}
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      width: "100%",
+                      height: "100%",
                       borderRadius: (width * 0.2) / 2,
                     }}
                   />
@@ -292,18 +306,20 @@ export default function UpdateInformation() {
                   <Image
                     source={{ uri: image }}
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      width: "100%",
+                      height: "100%",
                       borderRadius: (width * 0.2) / 2,
                     }}
                   />
                 ) : (
                   // Nếu không có ảnh nào, hiển thị chữ Avatar
-                  <Text style={{ textAlign: 'center', marginTop: 40 }}>Avatar</Text>
+                  <Text style={{ textAlign: "center", marginTop: 40 }}>
+                    Avatar
+                  </Text>
                 )}
 
                 <TouchableOpacity
-                  style={{ position: 'absolute', bottom: -10, right: -10 }}
+                  style={{ position: "absolute", bottom: -10, right: -10 }}
                   onPress={toggleModal}
                 >
                   <Text>🖼️</Text>
@@ -317,161 +333,179 @@ export default function UpdateInformation() {
             animationType="slide"
             transparent={true}
             visible={isModalVisible}
-            onRequestClose={toggleModal}
+            onRequestClose={toggleModal} // Chỉ đóng modal khi người dùng yêu cầu
           >
             <Pressable
               style={{
                 flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0)',
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền tối cho modal
               }}
-              onPress={toggleModal}
+              onPress={toggleModal} // Đóng modal khi bấm ra ngoài
             >
               <Pressable
                 style={{
                   width: width * 0.8,
-                  backgroundColor: '#fff',
+                  backgroundColor: "#fff",
                   borderRadius: 10,
                   padding: 20,
-                  alignItems: 'center',
+                  alignItems: "center",
                 }}
-                onPress={(e) => e.stopPropagation()}
+                onPress={(e) => e.stopPropagation()} // Ngăn không cho đóng modal khi bấm vào bên trong modal
               >
-                <Text style={{ fontSize: 18, marginBottom: 20 }}>Chọn ảnh đại diện</Text>
+                <Text style={{ fontSize: 18, marginBottom: 20 }}>
+                  Chọn ảnh đại diện
+                </Text>
                 <TouchableOpacity
                   style={{
-                    backgroundColor: '#E53935',
+                    backgroundColor: "#E53935",
                     padding: 10,
                     borderRadius: 5,
-                    width: '100%',
-                    alignItems: 'center',
+                    width: "100%",
+                    alignItems: "center",
                     marginBottom: 10,
                   }}
                   onPress={() => {
-                    openCamera();
-                    toggleModal();
+                    openCamera(); // Mở camera
+                    toggleModal(); // Đóng modal sau khi camera được mở
                   }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Chụp ảnh</Text>
+                  <Text style={{ color: "#fff", fontSize: 16 }}>Chụp ảnh</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={{
-                    backgroundColor: '#E53935',
+                    backgroundColor: "#E53935",
                     padding: 10,
                     borderRadius: 5,
-                    width: '100%',
-                    alignItems: 'center',
+                    width: "100%",
+                    alignItems: "center",
                     marginBottom: 10,
                   }}
                   onPress={() => {
-                    openImageLibrary();
-                    toggleModal();
+                    openImageLibrary(); // Mở thư viện ảnh
+                    toggleModal(); // Đóng modal sau khi thư viện ảnh được mở
                   }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Chọn từ thư viện</Text>
+                  <Text style={{ color: "#fff", fontSize: 16 }}>
+                    Chọn từ thư viện
+                  </Text>
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
           </Modal>
 
           {/* Form nhập thông tin */}
-          <View style={{
-            padding: width * 0.05,
-            marginTop: height * 0.05,
-          }}>
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Tên người dùng</Text>
+          <View
+            style={{
+              padding: width * 0.05,
+              marginTop: height * 0.05,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Tên người dùng
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.fullName}
-              onChangeText={(value) => handleInputChange('fullName', value)}
+              onChangeText={(value) => handleInputChange("fullName", value)}
             />
 
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Số điện thoại</Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Số điện thoại
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.phone}
               keyboardType="phone-pad"
-              onChangeText={(value) => handleInputChange('phone', value)}
+              onChangeText={(value) => handleInputChange("phone", value)}
             />
 
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Email</Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Email
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.email}
               keyboardType="email-address"
-              onChangeText={(value) => handleInputChange('email', value)}
+              onChangeText={(value) => handleInputChange("email", value)}
             />
 
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Ngày sinh</Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Ngày sinh
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.dateOfBirth}
-              onChangeText={(value) => handleInputChange('dateOfBirth', value)}
+              onChangeText={(value) => handleInputChange("dateOfBirth", value)}
             />
 
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Giới tính</Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Giới tính
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.gender}
-              onChangeText={(value) => handleInputChange('gender', value)}
+              onChangeText={(value) => handleInputChange("gender", value)}
             />
 
-            <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>Trạng thái</Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
+              Trạng thái
+            </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: '#E53935',
+                borderColor: "#E53935",
                 padding: 10,
                 borderRadius: 8,
                 marginBottom: 15,
               }}
               value={formData.state}
-              onChangeText={(value) => handleInputChange('state', value)}
+              onChangeText={(value) => handleInputChange("state", value)}
             />
 
             <TouchableOpacity
               style={{
-                backgroundColor: '#E53935',
+                backgroundColor: "#E53935",
                 padding: 15,
                 borderRadius: 8,
-                alignItems: 'center',
+                alignItems: "center",
                 marginTop: 20,
               }}
               onPress={handleSubmit}
             >
-              <Text style={{ color: '#fff', fontSize: 18 }}>Xác nhận</Text>
+              <Text style={{ color: "#fff", fontSize: 18 }}>Xác nhận</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
