@@ -3,24 +3,68 @@ import {
     View,
     Text,
     Switch,
-    TextInput,
     TouchableOpacity,
     ScrollView,
-    StyleSheet,
     Dimensions,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 
 const { width, height } = Dimensions.get('window');
 
 const TimeScheduleSell = () => {
     const [timeData, setTimeData] = useState([
-        { day: 'Thứ 2', startTime: '12:30', endTime: '15:30', is24h: false, isActive: true },
-        { day: 'Thứ 3', startTime: '12:30', endTime: '15:30', is24h: false, isActive: true },
-        { day: 'Thứ 4', startTime: '12:30', endTime: '15:30', is24h: false, isActive: true },
-        { day: 'Thứ 5', startTime: '12:30', endTime: '15:30', is24h: false, isActive: true },
+        {
+            day: 'Thứ 2',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '12:30', endTime: '15:30' }],
+        },
+        {
+            day: 'Thứ 3',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '10:00', endTime: '14:00' }],
+        },
+        {
+            day: 'Thứ 4',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '09:00', endTime: '17:00' }],
+        },
+        {
+            day: 'Thứ 5',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '08:00', endTime: '16:00' }],
+        },
+        {
+            day: 'Thứ 6',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '08:00', endTime: '16:00' }],
+        },
+        {
+            day: 'Thứ 7',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '08:00', endTime: '16:00' }],
+        },
+        {
+            day: 'Chủ nhật',
+            is24h: false,
+            isActive: true,
+            timeSlots: [{ startTime: '08:00', endTime: '16:00' }],
+        },
     ]);
+
+    const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+    const [selectedDayIndex, setSelectedDayIndex] = useState(null);
+    const [selectedSlotIndex, setSelectedSlotIndex] = useState(null);
+    const [isStartTime, setIsStartTime] = useState(true);
 
     const toggleSwitch = (index) => {
         const newData = [...timeData];
@@ -28,203 +72,247 @@ const TimeScheduleSell = () => {
         setTimeData(newData);
     };
 
+    const toggle24h = (index) => {
+        const newData = [...timeData];
+        newData[index].is24h = !newData[index].is24h;
+        setTimeData(newData);
+    };
+
     const handleAddTime = (index) => {
-        console.log('Add time slot for:', timeData[index].day);
+        const newData = [...timeData];
+        newData[index].timeSlots.push({ startTime: '', endTime: '' });
+        setTimeData(newData);
+    };
+
+    const handleDeleteTime = (dayIndex, slotIndex) => {
+        const newData = [...timeData];
+        newData[dayIndex].timeSlots.splice(slotIndex, 1);
+        setTimeData(newData);
+    };
+
+    const handleTimeChange = (dayIndex, slotIndex, field, value) => {
+        const newData = [...timeData];
+        newData[dayIndex].timeSlots[slotIndex][field] = value;
+        setTimeData(newData);
+    };
+
+    const showTimePicker = (dayIndex, slotIndex, isStart) => {
+        setSelectedDayIndex(dayIndex);
+        setSelectedSlotIndex(slotIndex);
+        setIsStartTime(isStart);
+        setTimePickerVisible(true);
+    };
+
+    const handleConfirm = (date) => {
+        const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const newData = [...timeData];
+
+        if (isStartTime) {
+            newData[selectedDayIndex].timeSlots[selectedSlotIndex].startTime = timeString;
+        } else {
+            newData[selectedDayIndex].timeSlots[selectedSlotIndex].endTime = timeString;
+        }
+
+        setTimeData(newData);
+        setTimePickerVisible(false);
+    };
+
+    const hideTimePicker = () => {
+        setTimePickerVisible(false);
     };
 
     const navigation = useNavigation();
 
+    const renderDeleteButton = (dayIndex, slotIndex) => (
+        <TouchableOpacity
+            style={{
+                backgroundColor: '#E53935',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop:22,
+                width: 50,
+                height: '53%',
+            }}
+            onPress={() => handleDeleteTime(dayIndex, slotIndex)}
+        >
+            <AntDesign name="delete" size={20} color="#fff" />
+        </TouchableOpacity>
+    );
+
     return (
-        <View style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <View style={{
+                backgroundColor: '#E53935',
+                height: height * 0.13,
+                paddingHorizontal: 15,
+                flexDirection: 'row',
+                alignItems: 'center',
+                width: '100%',
+            }}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
                     <AntDesign name="arrowleft" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Thời gian bán</Text>
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Thời gian bán</Text>
             </View>
 
-            <ScrollView style={styles.container}>
+            <ScrollView style={{ flex: 1, marginTop: height * 0.02 }}>
                 {/* Time Schedule Form */}
-                <Text style={styles.sectionTitle}>Ngày áp dụng</Text>
-                {timeData.map((item, index) => (
-                    <View key={index} style={styles.card}>
-                        <View style={styles.cardHeader}>
-                            <Text style={styles.dayText}>{item.day}</Text>
-                            <Switch
-                                value={item.isActive}
-                                onValueChange={() => toggleSwitch(index)}
-                                thumbColor={item.isActive ? '#E53935' : '#f4f3f4'}
-                                trackColor={{ false: '#767577', true: '#E53935' }}
-                            />
+                <View style={{ paddingHorizontal: width * 0.05 }}>
+                    <Text style={{
+                        marginTop: 2,
+                        fontSize: 18,
+                        color: '#E53935',
+                        fontWeight: 'bold',
+                        marginBottom: 10,
+                    }}>Ngày áp dụng</Text>
+                    {timeData.map((item, dayIndex) => (
+                        <View key={dayIndex} style={{
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: 15,
+                            padding: 20,
+                            marginBottom: 20,
+                            elevation: 3,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 3,
+                            shadowOffset: { width: 0, height: 1 },
+                        }}>
+                            {/* Day and Switch */}
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 5,
+                            }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.day}</Text>
+                                <Switch
+                                    value={item.isActive}
+                                    onValueChange={() => toggleSwitch(dayIndex)}
+                                    thumbColor={item.isActive ? '#ffff' : '#ffff'}
+                                    trackColor={{ false: '#ffff', true: '#E53935' }}
+                                />
+                            </View>
+
+                            {/* 24h Checkbox */}
+                            <TouchableOpacity style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 15,
+                            }} onPress={() => toggle24h(dayIndex)}>
+                                <View style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 3,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                    {item.is24h && <View style={{
+                                        width: 12,
+                                        height: 12,
+                                        backgroundColor: '#E53935',
+                                        borderRadius: 2,
+                                    }} />}
+                                </View>
+                                <Text style={{ fontSize: 14, fontWeight: 'bold', marginLeft: 10 }}>24h</Text>
+                            </TouchableOpacity>
+
+                            {/* Time Slots (Horizontal Layout) */}
+                            {!item.is24h ? (
+                                item.timeSlots.map((slot, slotIndex) => (
+                                    <Swipeable
+                                        key={slotIndex}
+                                        renderLeftActions={() => renderDeleteButton(dayIndex, slotIndex)}
+                                    >
+                                        <View>
+                                            {/* Giờ bán & Giờ nghỉ Titles */}
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 14 }}>Giờ bán</Text>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 14 }}>Giờ nghỉ</Text>
+                                            </View>
+
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
+                                            }}>
+                                                <TouchableOpacity onPress={() => showTimePicker(dayIndex, slotIndex, true)}>
+                                                    <Text style={{
+                                                        paddingVertical: 8,
+                                                        paddingHorizontal: 12,
+                                                        backgroundColor: '#E53935',
+                                                        color: '#fff',
+                                                        borderRadius: 10,
+                                                        fontSize: 16,
+                                                        textAlign: 'center',
+                                                        width: width * 0.35,
+                                                    }}>{slot.startTime || 'HH:MM'}</Text>
+                                                </TouchableOpacity>
+                                                <Text style={{ fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                                                <TouchableOpacity onPress={() => showTimePicker(dayIndex, slotIndex, false)}>
+                                                    <Text style={{
+                                                        paddingVertical: 8,
+                                                        paddingHorizontal: 12,
+                                                        backgroundColor: '#E53935',
+                                                        color: '#fff',
+                                                        borderRadius: 10,
+                                                        fontSize: 16,
+                                                        textAlign: 'center',
+                                                        width: width * 0.35,
+                                                    }}>{slot.endTime || 'HH:MM'}</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    </Swipeable>
+                                ))
+                            ) : (
+                                <Text style={{ fontStyle: 'italic', color: '#E53935', marginBottom: 5 }}>
+                                    Cửa hàng mở cả ngày (24h)
+                                </Text>
+                            )}
+
+                            {/* Add Time Button */}
+                            {!item.is24h && (
+                                <TouchableOpacity style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginTop: 10,
+                                }} onPress={() => handleAddTime(dayIndex)}>
+                                    <AntDesign name="plus" size={20} color="#E53935" />
+                                    <Text style={{ color: '#E53935', marginLeft: 10 }}>Thêm giờ</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
+                    ))}
 
-                        <View style={styles.row}>
-                            <View style={styles.checkboxRow}>
-                                <TextInput
-                                    style={styles.checkbox}
-                                    value={item.is24h ? '24h' : ''}
-                                    editable={false}
-                                />
-                                <Text style={styles.checkboxLabel}>24h</Text>
-                            </View>
-                            <View style={styles.timeRow}>
-                                <TextInput
-                                    style={styles.timeInput}
-                                    value={item.startTime}
-                                    onChangeText={(value) => {
-                                        const newData = [...timeData];
-                                        newData[index].startTime = value;
-                                        setTimeData(newData);
-                                    }}
-                                />
-                                <Text style={styles.timeLabel}>Giờ bán</Text>
-                            </View>
-                            <View style={styles.timeRow}>
-                                <TextInput
-                                    style={styles.timeInput}
-                                    value={item.endTime}
-                                    onChangeText={(value) => {
-                                        const newData = [...timeData];
-                                        newData[index].endTime = value;
-                                        setTimeData(newData);
-                                    }}
-                                />
-                                <Text style={styles.timeLabel}>Giờ nghỉ</Text>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity style={styles.addTimeButton} onPress={() => handleAddTime(index)}>
-                            <AntDesign name="plus" size={20} color="#E53935" />
-                            <Text style={styles.addTimeText}>Thêm giờ</Text>
-                        </TouchableOpacity>
-                    </View>
-                ))}
-
-                {/* Save Button */}
-                <TouchableOpacity style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Lưu</Text>
-                </TouchableOpacity>
+                    {/* Save Button */}
+                    <TouchableOpacity style={{
+                        backgroundColor: '#E53935',
+                        borderRadius: 25,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        marginTop: 10,
+                        width: '100%',
+                    }}>
+                        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Lưu</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
-        </View>
+
+            {/* Time Picker Modal with Vietnamese labels */}
+            <DateTimePickerModal
+                isVisible={isTimePickerVisible}
+                mode="time"
+                onConfirm={handleConfirm}
+                onCancel={hideTimePicker}
+                cancelTextIOS="Hủy"
+                confirmTextIOS="Xác nhận"
+            />
+        </SafeAreaView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingHorizontal: width * 0.05,
-        marginTop: 40
-    },
-    header: {
-        backgroundColor: '#E53935',
-        height: height * 0.13,
-        padding: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '100%', // Đảm bảo header full width màn hình
-        position: 'absolute', // Đặt header cố định trên cùng
-        top: 0, // Đảm bảo nó ở trên cùng của màn hình
-        zIndex: 1000, // Đảm bảo header luôn trên cùng các phần tử khác
-    },
-    backButton: {
-        marginRight: 10,
-    },
-    headerText: {
-        color: '#fff',
-        fontSize: 18, // Tăng kích thước chữ cho header giống mẫu
-        fontWeight: 'bold',
-    },
-    sectionTitle: {
-        marginTop: 80, // Đặt khoảng cách với header
-        fontSize: 18,
-        color: '#E53935',
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    card: {
-        backgroundColor: '#f9f9f9',
-        borderRadius: 15,
-        padding: 20,
-        marginBottom: 20,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 2 },
-        minHeight: height * 0.15,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    checkboxRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    checkbox: {
-        width: 25,
-        height: 25,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        marginRight: 5,
-    },
-    checkboxLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    timeRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    timeInput: {
-        borderColor: '#ccc',
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 10,
-        width: width * 0.3,
-        textAlign: 'center',
-    },
-    timeLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 10,
-    },
-    addTimeButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    addTimeText: {
-        color: '#E53935',
-        marginLeft: 5,
-    },
-    saveButton: {
-        backgroundColor: '#E53935',
-        borderRadius: 25,
-        paddingVertical: 15,
-        alignItems: 'center',
-        marginTop: 20,
-        width: '100%',
-        height: height * 0.08,
-    },
-    saveButtonText: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-});
 
 export default TimeScheduleSell;

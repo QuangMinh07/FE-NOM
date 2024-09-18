@@ -9,6 +9,7 @@ import Comment from "../SellerUser/Comment";
 import AddDishGroup from "../SellerUser/AddDishGroup";
 import AddEat from "../SellerUser/AddEat";
 import TimeScheduleSell from "../SellerUser/TimeScheduleSell";
+import DishDetails from "../SellerUser/DishDetails";
 
 
-export { LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell};
+export { LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell,DishDetails};
