@@ -53,7 +53,7 @@ export default function ListFood({ navigation }) {
         style={styles.deleteButton}
         onPress={() => handleDeleteFood(setGroup, foodName)}
       >
-        <Ionicons name="trash-outline" size={20} color="#fff" />
+        <Ionicons name="trash-outline" size={22} color="#fff" />
         <Text style={{ color: '#fff' }}>Xóa</Text>
       </TouchableOpacity>
     );
@@ -109,18 +109,21 @@ export default function ListFood({ navigation }) {
                 key={index}
                 renderLeftActions={() => renderLeftActions(item, setComTamGroup)}
               >
-                <View style={styles.foodItem}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('DishDetails', { dishName: item })}
+                  style={styles.foodItem}
+                >
                   <View>
-                    <Text style={{ fontSize: 16 }}>{item}</Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>45,000 VND</Text>
+                    <Text style={styles.foodName}>{item}</Text>
+                    <Text style={styles.foodPrice}>45,000 VND</Text>
                   </View>
                   <Switch
                     value={switchStates[item]}
                     onValueChange={() => handleSwitchChange(item)}
-                    thumbColor={switchStates[item] ? '#ffff' : '#ffff'}
-                    trackColor={{ false: '#ffff', true: '#E53935' }}
+                    thumbColor={switchStates[item] ? '#fff' : '#fff'}
+                    trackColor={{ false: '#fff', true: '#E53935' }}
                   />
-                </View>
+                </TouchableOpacity>
               </Swipeable>
             ))}
           </View>
@@ -135,18 +138,21 @@ export default function ListFood({ navigation }) {
                 key={index}
                 renderLeftActions={() => renderLeftActions(item, setCanhGroup)}
               >
-                <View style={styles.foodItem}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('DishDetails', { dishName: item })}
+                  style={styles.foodItem}
+                >
                   <View>
-                    <Text style={{ fontSize: 16 }}>{item}</Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>45,000 VND</Text>
+                    <Text style={styles.foodName}>{item}</Text>
+                    <Text style={styles.foodPrice}>45,000 VND</Text>
                   </View>
                   <Switch
                     value={switchStates[item]}
                     onValueChange={() => handleSwitchChange(item)}
-                    thumbColor={switchStates[item] ? '#ffff' : '#ffff'}
-                    trackColor={{ false: '#ffff', true: '#E53935' }}
+                    thumbColor={switchStates[item] ? '#fff' : '#fff'}
+                    trackColor={{ false: '#fff', true: '#E53935' }}
                   />
-                </View>
+                </TouchableOpacity>
               </Swipeable>
             ))}
           </View>
@@ -219,13 +225,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
     elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  foodName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  foodPrice: {
+    fontSize: 14,
+    color: '#6B7280',
   },
   deleteButton: {
     backgroundColor: '#E53935',
     justifyContent: 'center',
     alignItems: 'center',
     width: 70,
-    height: '83%',
+    height: '88%',
     borderRadius: 10,
     padding: 10,
   },
