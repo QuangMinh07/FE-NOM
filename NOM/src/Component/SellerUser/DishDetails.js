@@ -1,12 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';  // Import icon library
+import { AntDesign, Feather } from '@expo/vector-icons';  // Import icon library
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";  // Import API functions
 import { globalContext } from "../../context/globalContext"; // Import GlobalContext
 
-export default function AddEat() {
+export default function DishDetails() {
   const [foodName, setFoodName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
@@ -15,11 +15,11 @@ export default function AddEat() {
   const [modalVisible, setModalVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(''); // Lưu trữ nhóm món đã chọn
+  const [isEditMode, setIsEditMode] = useState(false); // Trạng thái chỉnh sửa
+  const [sellingTime, setSellingTime] = useState("08:00 - 20:00"); // Thời gian bán
   const navigation = useNavigation();
 
   const { globalData } = useContext(globalContext); // Lấy dữ liệu từ GlobalContext
-
-  // Lấy storeId từ globalData
   const storeId = globalData.storeData?._id; // Lấy storeId từ GlobalContext
 
   const pickImage = async () => {
@@ -60,26 +60,26 @@ export default function AddEat() {
 
     try {
       const body = {
-        storeId, // Sử dụng storeId từ GlobalContext
+        storeId, 
         foodName,
-        price: parseFloat(price), // Chuyển giá thành số
+        price: parseFloat(price), 
         description,
-        imageUrl: image || null,  // Nếu không có ảnh thì truyền null
+        imageUrl: image || null,  
         foodGroup: selectedGroup,
         isAvailable,
-        sellingTime: "08:00 - 20:00", // Bạn có thể tùy chỉnh thời gian bán
+        sellingTime, // Lưu thời gian bán
       };
 
       const response = await api({
         method: typeHTTP.POST,
-        url: "/food/add-food",  // URL của API thêm món ăn
+        url: "/food/add-food",
         body,
-        sendToken: true, // Gửi token trong header
+        sendToken: true, 
       });
 
       if (response) {
         Alert.alert("Thành công", "Món ăn đã được thêm!");
-        navigation.navigate("ListFood");  // Điều hướng về danh sách món ăn
+        navigation.navigate("ListFood");  
       } else {
         Alert.alert("Lỗi", "Không thể thêm món ăn.");
       }
@@ -91,7 +91,7 @@ export default function AddEat() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior="padding" // Tự động đẩy nội dung lên khi bàn phím mở
+      behavior="padding"
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -99,7 +99,11 @@ export default function AddEat() {
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: 'row', alignItems: 'center' }}>
               <AntDesign name="arrowleft" size={24} color="#fff" style={{ marginRight: 10 }} />
-              <Text style={styles.headerText}>Thêm món ăn</Text>
+              <Text style={styles.headerText}>Chi tiết món ăn</Text>
+            </TouchableOpacity>
+            {/* Edit Icon */}
+            <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
+              <Feather name="edit" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
@@ -111,6 +115,7 @@ export default function AddEat() {
               placeholder="Cơm tấm sườn"
               value={foodName}
               onChangeText={setFoodName}
+              editable={isEditMode} // Chỉ chỉnh sửa khi chế độ Edit bật
             />
 
             <Text style={[styles.label, { marginTop: 10 }]}>Giá món ăn</Text>
@@ -119,13 +124,14 @@ export default function AddEat() {
               placeholder="Nhập giá"
               value={price}
               onChangeText={setPrice}
-              keyboardType="numeric" // Chỉ cho phép nhập số
+              keyboardType="numeric"
+              editable={isEditMode} // Chỉ chỉnh sửa khi chế độ Edit bật
             />
 
             <Text style={[styles.label, { marginTop: 10 }]}>Ảnh món ăn</Text>
             <TouchableOpacity
               style={styles.imagePicker}
-              onPress={() => setModalVisible(true)}
+              onPress={() => isEditMode && setModalVisible(true)} // Chỉ bật modal khi ở chế độ Edit
             >
               {image ? (
                 <Image source={{ uri: image }} style={styles.image} />
@@ -144,6 +150,7 @@ export default function AddEat() {
               placeholder="Mô tả món ăn"
               value={description}
               onChangeText={setDescription}
+              editable={isEditMode} // Chỉ chỉnh sửa khi chế độ Edit bật
             />
           </View>
 
@@ -152,55 +159,58 @@ export default function AddEat() {
             <Text style={styles.label}>Nhóm món</Text>
             <TouchableOpacity
               style={styles.selectButton}
-              onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
+              onPress={() => isEditMode && setGroupModalVisible(true)} // Chỉ bật modal khi ở chế độ Edit
             >
               <Text>{selectedGroup || 'Chọn'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.switchContainer}>
-    <Text style={styles.label}>Còn món</Text>
-    <Switch
-        value={isAvailable}
-        onValueChange={setIsAvailable}
-        thumbColor={isAvailable ? '#ffff' : '#ffff'} // Set thumb color
-        trackColor={{ false: '#ffff', true: '#E53935' }} // Set track color
-    />
-</View>
+            <Text style={styles.label}>Còn món</Text>
+            <Switch
+              value={isAvailable}
+              onValueChange={setIsAvailable}
+              thumbColor={isAvailable ? '#ffff' : '#ffff'}
+              trackColor={{ false: '#ffff', true: '#E53935' }}
+              disabled={!isEditMode} // Khóa switch khi không ở chế độ Edit
+            />
+          </View>
 
           {/* Time Selling */}
           <View style={styles.switchContainer}>
             <Text style={styles.label}>Thời gian bán</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("TimeScheduleSell")} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16 }}>Tùy chỉnh</Text>
-              <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />
+            <TouchableOpacity onPress={() => isEditMode && navigation.navigate("TimeScheduleSell")} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16 }}>{sellingTime}</Text>
+              {isEditMode && <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />}
             </TouchableOpacity>
           </View>
 
           {/* Buttons */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.deleteButton}>
-              <Text style={styles.buttonText}>Xóa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={addFoodItem}>
-              <Text style={styles.buttonText}>Lưu</Text>
-            </TouchableOpacity>
-          </View>
+          {isEditMode && (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.deleteButton}>
+                <Text style={styles.buttonText}>Xóa</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={addFoodItem}>
+                <Text style={styles.buttonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Modal for Image Upload */}
           <Modal
             transparent={true}
             animationType="slide"
             visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)} // for Android back button
+            onRequestClose={() => setModalVisible(false)}
           >
             <Pressable
               style={styles.modalBackground}
-              onPress={() => setModalVisible(false)} // Close modal when tapping outside
+              onPress={() => setModalVisible(false)}
             >
               <Pressable
                 style={styles.modalContent}
-                onPress={() => { }} // Prevent closing when tapping inside
+                onPress={() => { }}
               >
                 <Text style={styles.modalTitle}>Chọn ảnh</Text>
                 <TouchableOpacity onPress={pickImage}>
@@ -218,15 +228,15 @@ export default function AddEat() {
             transparent={true}
             animationType="slide"
             visible={groupModalVisible}
-            onRequestClose={() => setGroupModalVisible(false)} // for Android back button
+            onRequestClose={() => setGroupModalVisible(false)}
           >
             <Pressable
               style={styles.modalBackground}
-              onPress={() => setGroupModalVisible(false)} // Close modal when tapping outside
+              onPress={() => setGroupModalVisible(false)}
             >
               <Pressable
                 style={styles.modalContent}
-                onPress={() => { }} // Prevent closing when tapping inside
+                onPress={() => { }}
               >
                 <Text style={styles.modalTitle}>Chọn nhóm món</Text>
                 {foodGroups.map((group, index) => (
@@ -234,7 +244,7 @@ export default function AddEat() {
                     key={index}
                     onPress={() => {
                       setSelectedGroup(group);
-                      setGroupModalVisible(false); // Close modal after selecting group
+                      setGroupModalVisible(false);
                     }}
                     style={{ paddingVertical: 10 }}
                   >
@@ -267,7 +277,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 20,
-    marginTop: 15,  // Giảm khoảng cách giữa các thành phần
+    marginTop: 15,
   },
   label: {
     fontSize: 16,
@@ -281,6 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 16,
     width: '100%',
+    backgroundColor: '#f9f9f9',
   },
   imagePicker: {
     height: 150,
@@ -300,7 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 8,  // Giảm khoảng cách giữa các phần tử
+    marginVertical: 8,
     paddingHorizontal: 20,
   },
   selectButton: {
@@ -314,24 +325,24 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginVertical: 15,  // Giảm khoảng cách giữa các nút
+    marginVertical: 15,
     paddingHorizontal: 20,
   },
   deleteButton: {
     backgroundColor: '#E53935',
     padding: 10,
-    borderRadius: 20,  // Thiết kế bo tròn giống như hình
+    borderRadius: 20,
     width: 100,
     alignItems: 'center',
-    elevation: 5,  // Bóng đổ để tạo chiều sâu
+    elevation: 5,
   },
   saveButton: {
-    backgroundColor: '#E53935',  // Màu đỏ cho cả hai nút
+    backgroundColor: '#E53935',
     padding: 10,
-    borderRadius: 20,  // Thiết kế bo tròn giống như hình
+    borderRadius: 20,
     width: 100,
     alignItems: 'center',
-    elevation: 5,  // Bóng đổ
+    elevation: 5,
   },
   buttonText: {
     color: '#fff',
@@ -341,11 +352,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    borderColor: '#f2f2f2',     // Border color
-    borderWidth: 5, 
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 20,
