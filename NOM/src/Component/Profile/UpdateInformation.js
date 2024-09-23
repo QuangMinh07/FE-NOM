@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import {
 import * as ImagePicker from "expo-image-picker"; // Sử dụng expo-image-picker
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
+import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,6 +37,7 @@ const parseDate = (dateString) => {
 };
 
 export default function UpdateInformation() {
+  const { globalData } = useContext(globalContext);
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -106,29 +108,32 @@ export default function UpdateInformation() {
     }
   };
 
-  // Hàm tải lên ảnh
-  const uploadImage = async (imageUri) => {
+  const uploadImage = async (base64Image) => {
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append("image", {
-        uri: imageUri,
-        type: "image/jpeg", // Định dạng của ảnh
-        name: "photo.jpg",
-      });
+      const userId = globalData.user?.id;
+      if (!userId) {
+        Alert.alert("Lỗi", "Không tìm thấy userId.");
+        return null;
+      }
 
-      // Kiểm tra URL API này đã đúng chưa?
+      if (!base64Image) {
+        Alert.alert("Lỗi", "Dữ liệu Base64 của ảnh bị thiếu.");
+        return null;
+      }
+
+      // Khởi tạo fullBase64Image với MIME type của ảnh
+      const fullBase64Image = `data:image/png;base64,${base64Image}`; // Đảm bảo đúng định dạng
+
+      // Gửi request POST đến API server
       const response = await api({
         method: typeHTTP.POST,
-        url: "/upload/upload-image", // Đảm bảo đường dẫn này đúng trên server của bạn
-        data: formDataUpload,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        url: `/upload/uploadBase64`,
+        data: { imageBase64: fullBase64Image }, // Gửi đúng định dạng Base64
         sendToken: true,
       });
 
       if (response.success) {
-        return response.imageUrl;
+        return response.url;
       } else {
         Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
         return null;
@@ -140,33 +145,36 @@ export default function UpdateInformation() {
     }
   };
 
-  // Hàm mở thư viện ảnh
+  // Chọn ảnh từ thư viện
   const openImageLibrary = async () => {
     try {
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      // Nếu quyền chưa được cấp thì hiển thị thông báo và không đóng modal
       if (!permissionResult.granted) {
         Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh!");
         return;
       }
 
-      // Chọn ảnh sau khi quyền đã được cấp
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 1,
+        quality: 0.5,
+        base64: true, // Lấy Base64 của ảnh
       });
 
-      // Nếu người dùng chọn ảnh thành công
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImageUri = result.assets[0].uri;
-        const uploadedImageUrl = await uploadImage(selectedImageUri);
-        if (uploadedImageUrl) {
-          setFormData({ ...formData, profilePictureURL: uploadedImageUrl });
+        const selectedImageBase64 = result.assets[0].base64; // Lấy dữ liệu Base64 của ảnh
+        console.log("Base64 from library:", selectedImageBase64); // Log Base64
+        if (selectedImageBase64) {
+          const uploadedImageUrl = await uploadImage(selectedImageBase64); // Upload ảnh base64
+          if (uploadedImageUrl) {
+            setFormData({ ...formData, profilePictureURL: uploadedImageUrl });
+          } else {
+            Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
+          }
         } else {
-          Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
+          Alert.alert("Lỗi", "Không thể lấy dữ liệu ảnh.");
         }
       } else {
         Alert.alert("Lỗi", "Không thể chọn ảnh.");
@@ -174,37 +182,6 @@ export default function UpdateInformation() {
     } catch (error) {
       console.error("Lỗi khi chọn ảnh:", error);
       Alert.alert("Lỗi", "Đã xảy ra lỗi khi chọn ảnh.");
-    }
-  };
-
-  // Hàm mở camera
-  const openCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      Alert.alert("Bạn cần cấp quyền truy cập camera!");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    console.log("Camera Result:", result); // Log kết quả từ camera
-
-    if (!result.cancelled && result.uri) {
-      // Upload ảnh và cập nhật URL vào formData
-      const uploadedImageUrl = await uploadImage(result.uri);
-      if (uploadedImageUrl) {
-        setFormData({ ...formData, profilePictureURL: uploadedImageUrl }); // Cập nhật URL ảnh sau khi tải lên thành công
-        setImage(result.uri); // Cập nhật ảnh để hiển thị trước khi upload
-      } else {
-        Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
-      }
-    } else {
-      Alert.alert("Lỗi", "Không thể chụp ảnh.");
     }
   };
 

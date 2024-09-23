@@ -116,7 +116,7 @@ export default function SignUpSeller() {
       });
 
       if (response) {
-        alert("Đăng ký người bán thành công!");
+        alert("Đăng ký người bán thành công, chờ admin duyệt");
         navigation.navigate("Login");
       }
     } catch (error) {
