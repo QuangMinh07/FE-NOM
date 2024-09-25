@@ -9,11 +9,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ListFood({ navigation }) {
   const { globalData, globalHandler } = useContext(globalContext); // Truy cập globalData từ GlobalContext
-  const { foods } = globalData; // Lấy danh sách món ăn từ globalData
+  const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
+  const [filteredFoods, setFilteredFoods] = useState([]); // State để lưu món ăn đúng của cửa hàng hiện tại
 
   useEffect(() => {
-    console.log("Foods:", foods); // Kiểm tra danh sách món ăn
-  }, [foods]);
+    console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
+    console.log("StoreId from storeData:", storeData?._id); // Kiểm tra storeId từ storeData
+
+    if (storeData && storeData._id && foods.length > 0) {
+      // Lọc món ăn dựa trên storeId hiện tại
+      const filtered = foods.filter((food) => food.store === storeData._id);
+      console.log("Filtered Foods:", filtered); // Kiểm tra món ăn đã lọc
+      setFilteredFoods(filtered);
+    }
+  }, [foods, storeData]); // Chỉ gọi lại khi foods hoặc storeData thay đổi
 
   const [selectedTab, setSelectedTab] = useState("Món");
   const [modalVisible, setModalVisible] = useState(false); // State cho modal thêm nhóm món
@@ -42,7 +51,7 @@ export default function ListFood({ navigation }) {
       }, {});
   };
 
-  const groupedFoods = groupFoodsByCategory(foods);
+  const groupedFoods = groupFoodsByCategory(filteredFoods);
 
   const handleAddButtonPress = () => {
     if (selectedTab === "Nhóm món") {
@@ -52,43 +61,50 @@ export default function ListFood({ navigation }) {
     }
   };
 
-  // Hàm lấy chi tiết món ăn từ API
-  const fetchFoodById = async (foodId) => {
+  const getFoodsByStoreId = async () => {
+    const storeId = storeData?._id; // Lấy storeId từ storeData
+    console.log("StoreId: ", storeId); // Kiểm tra giá trị storeId
+
+    if (!storeId) {
+      console.error("storeId không tồn tại");
+      return;
+    }
+
     try {
       const response = await api({
         method: typeHTTP.GET,
-        url: `/food/get-food/${foodId}`,
+        url: `/food/get-foodstore/${storeId}`, // Gọi API với storeId
         sendToken: true, // Gửi token để xác thực
       });
 
-      // Log chi tiết phản hồi từ API
       console.log("Response from API:", response);
 
-      // Nếu phản hồi thành công
       if (response.status === 200 && response.data) {
-        console.log("Thông tin món ăn:", response.data.food);
-        return response.data.food;
-      }
-
-      // Nếu có lỗi không tìm thấy món ăn (404)
-      if (response.status === 404) {
-        console.error("Lỗi 404: Không tìm thấy món ăn", response.data.message);
+        if (response.data.foods && response.data.foods.length > 0) {
+          // Có món ăn trong cửa hàng
+          console.log("Danh sách món ăn:", response.data.foods);
+          globalHandler.setFoods(response.data.foods); // Cập nhật danh sách món ăn trong globalData
+        } else {
+          // Không có món ăn nào trong cửa hàng
+          console.log("Chưa có món ăn nào được thêm.");
+          globalHandler.setFoods([]); // Đảm bảo rằng foods được đặt thành mảng rỗng
+        }
+      } else if (response.status === 404) {
+        console.error("Không tìm thấy cửa hàng hoặc món ăn", response.data.message);
       }
     } catch (error) {
-      // Xử lý lỗi từ server và kiểm tra mã lỗi HTTP
       if (error.response) {
-        if (error.response.status === 404) {
-          console.error("Lỗi 404: Món ăn không tồn tại", error.response.data.message);
-        } else if (error.response.status === 500) {
-          console.error("Lỗi 500: Lỗi server khi lấy món ăn", error.response.data.message);
-        } else {
-          console.error(`Lỗi ${error.response.status}:`, error.response.data.message);
-        }
+        console.error(`Lỗi ${error.response.status}:`, error.response.data.message);
       } else {
         console.error("Lỗi không xác định:", error.message);
       }
     }
   };
+
+  // Gọi hàm getFoodsByStoreId khi component được mount
+  useEffect(() => {
+    getFoodsByStoreId(); // Gọi API khi storeData đã được tải
+  }, [storeData]); // Chỉ gọi khi storeData thay đổi
 
   const handleDeleteFood = async (foodId) => {
     try {
@@ -116,11 +132,9 @@ export default function ListFood({ navigation }) {
   };
 
   // Khi người dùng bấm vào món ăn
-  const handleDishClick = async (foodId) => {
-    const foodDetails = await fetchFoodById(foodId);
-    if (foodDetails) {
-      navigation.navigate("DishDetails", { food: foodDetails }); // Điều hướng sang màn hình chi tiết món ăn
-    }
+  const handleDishClick = (foodId) => {
+    console.log("Navigating to DishDetails with foodId:", foodId); // Kiểm tra giá trị foodId trước khi navigate
+    navigation.navigate("DishDetails", { foodId }); // Truyền foodId qua navigation
   };
 
   const renderLeftActions = (foodId) => {
@@ -199,43 +213,54 @@ export default function ListFood({ navigation }) {
         ))}
       </View>
 
-      {/* List of Food */}
-      {selectedTab === "Món" && (
-        <ScrollView contentContainerStyle={{ padding: 15 }}>
-          {Object.keys(groupedFoods).map((groupName) => (
-            <View key={groupName} style={{ marginBottom: 20 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+      {/* Kiểm tra nếu không có món ăn */}
+      {selectedTab === "Món" &&
+        (filteredFoods.length === 0 ? (
+          <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+            <Text style={{ fontSize: 18, color: "#999" }}>Không có món ăn nào</Text>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={{ padding: 15 }}>
+            {Object.keys(groupedFoods).map((groupName) => (
+              <View key={groupName} style={{ marginBottom: 20 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+                </View>
+                {groupedFoods[groupName].map((item, index) => (
+                  <Swipeable key={index} renderLeftActions={() => renderLeftActions(item._id)}>
+                    <TouchableOpacity
+                      onPress={() => handleDishClick(item._id)} // Gọi hàm khi nhấn vào món ăn
+                      style={styles.foodItem}
+                    >
+                      <View>
+                        <Text style={styles.foodName}>{item.foodName}</Text>
+                        <Text style={styles.foodPrice}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </Swipeable>
+                ))}
               </View>
-              {groupedFoods[groupName].map((item, index) => (
-                <Swipeable key={index} renderLeftActions={() => renderLeftActions(item._id, () => {})}>
-                  <TouchableOpacity
-                    onPress={() => handleDishClick(item._id)} // Gọi hàm khi nhấn vào món ăn
-                    style={styles.foodItem}
-                  >
-                    <View>
-                      <Text style={styles.foodName}>{item.foodName}</Text>
-                      <Text style={styles.foodPrice}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                    </View>
-                  </TouchableOpacity>
-                </Swipeable>
-              ))}
-            </View>
-          ))}
-        </ScrollView>
-      )}
+            ))}
+          </ScrollView>
+        ))}
 
-      {selectedTab === "Nhóm món" && (
-        <ScrollView contentContainerStyle={{ padding: 15 }}>
-          {Object.keys(groupedFoods).map((groupName) => (
-            <View key={groupName} style={{ marginBottom: 20 }}>
-              <View style={styles.foodItem}>
-                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+      {/* Tab nhóm món */}
+      {selectedTab === "Nhóm món" &&
+        (Object.keys(groupedFoods).length === 0 ? (
+          <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+            <Text style={{ fontSize: 18, color: "#999" }}>Không có nhóm món nào</Text>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={{ padding: 15 }}>
+            {Object.keys(groupedFoods).map((groupName) => (
+              <View key={groupName} style={{ marginBottom: 20 }}>
+                <View style={styles.foodItem}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
-      )}
+            ))}
+          </ScrollView>
+        ))}
 
       {/* Modal for adding new group */}
       <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
