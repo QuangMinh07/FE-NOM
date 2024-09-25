@@ -122,13 +122,15 @@ export default function UpdateInformation() {
       }
 
       // Khởi tạo fullBase64Image với MIME type của ảnh
-      const fullBase64Image = `data:image/png;base64,${base64Image}`; // Đảm bảo đúng định dạng
+      const fullBase64Image = `data:image/png;base64,${base64Image}`; // Đảm bảo định dạng đúng
 
-      // Gửi request POST đến API server
       const response = await api({
         method: typeHTTP.POST,
         url: `/upload/uploadBase64`,
-        data: { imageBase64: fullBase64Image }, // Gửi đúng định dạng Base64
+        headers: {
+          "Content-Type": "application/json", // Đảm bảo đúng định dạng
+        },
+        data: { imageBase64: fullBase64Image },
         sendToken: true,
       });
 
