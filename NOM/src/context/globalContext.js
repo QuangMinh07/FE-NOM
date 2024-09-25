@@ -22,7 +22,7 @@ export const GlobalContext = ({ children }) => {
         const storedStoreData = await AsyncStorage.getItem("storeData");
         if (storedStoreData) {
           setStoreData(JSON.parse(storedStoreData));
-          console.log("Store data loaded from AsyncStorage:", JSON.parse(storedStoreData));
+          console.log("Store data loaded from AsyncStorage:", JSON.parse(storedStoreData)); // Kiểm tra giá trị storeData
         }
 
         const storedSellingTime = await AsyncStorage.getItem("sellingTime");
