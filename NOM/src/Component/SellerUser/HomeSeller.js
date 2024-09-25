@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Modal, // Import Modal
+  TextInput, // For input fields
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +20,10 @@ export default function HomeSeller() {
   const [storeName, setStoreName] = useState(""); // State để lưu tên cửa hàng
   const [storeAddress, setStoreAddress] = useState(""); // State để lưu địa chỉ cửa hàng
   const [loading, setLoading] = useState(true); // State để theo dõi trạng thái tải dữ liệu
+  const [modalVisible, setModalVisible] = useState(false); // State để mở/đóng modal
+  const [newStoreName, setNewStoreName] = useState(storeName); // State để cập nhật tên cửa hàng mới
+  const [newStoreAddress, setNewStoreAddress] = useState(storeAddress); // State để cập nhật địa chỉ cửa hàng mới
+
   const placeholderImage = null; // Giả định không có ảnh
   const navigation = useNavigation();
 
@@ -41,19 +47,12 @@ export default function HomeSeller() {
           sendToken: true,
         });
 
-        console.log("Thông tin cửa hàng từ API:", storeData);
-
         if (storeData && storeData.data) {
           setStoreName(storeData.data.storeName || "Tên cửa hàng");
           setStoreAddress(storeData.data.storeAddress || "Địa chỉ cửa hàng");
 
           // Lưu toàn bộ thông tin cửa hàng vào GlobalContext
           globalHandler.setStoreData(storeData.data);
-
-          console.log(
-            "Thông tin cửa hàng đã lưu vào GlobalContext:",
-            storeData.data
-          );
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
@@ -78,8 +77,23 @@ export default function HomeSeller() {
 
   // Hàm xử lý tải ảnh lên
   const handleUploadPhoto = () => {
-    // Xử lý tải ảnh lên ở đây
     console.log("Tải ảnh lên");
+  };
+
+  const openEditModal = () => {
+    setModalVisible(true);
+    setNewStoreName(storeName);
+    setNewStoreAddress(storeAddress);
+  };
+
+  const closeEditModal = () => {
+    setModalVisible(false);
+  };
+
+  const handleSaveChanges = () => {
+    setStoreName(newStoreName);
+    setStoreAddress(newStoreAddress);
+    setModalVisible(false);
   };
 
   if (loading) {
@@ -168,7 +182,7 @@ export default function HomeSeller() {
                 Đang mở cửa
               </Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={openEditModal}>
               <Icon name="edit" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
@@ -183,6 +197,80 @@ export default function HomeSeller() {
           </Text>
         </View>
       </View>
+
+      {/* Modal for Editing Store Info */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeEditModal}
+      >
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0)",
+          }}
+          activeOpacity={1}
+          onPress={closeEditModal} // Close modal when tapping outside
+        >
+          <View
+            style={{
+              width: "80%",
+              backgroundColor: "#fff",
+              padding: 20,
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+              Cập nhật thông tin
+            </Text>
+            <TextInput
+              value={newStoreName}
+              onChangeText={setNewStoreName}
+              placeholder="Tên cửa hàng"
+              style={{
+                borderWidth: 1,
+                borderColor: "#E53935",
+                borderRadius: 5,
+                padding: 10,
+                marginBottom: 10,
+              }}
+            />
+            <TextInput
+              value={newStoreAddress}
+              onChangeText={setNewStoreAddress}
+              placeholder="Địa chỉ"
+              style={{
+                borderWidth: 1,
+                borderColor: "#E53935",
+                borderRadius: 5,
+                padding: 10,
+                marginBottom: 10,
+              }}
+            />
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+              }}
+            >
+              <TouchableOpacity
+                onPress={handleSaveChanges}
+                style={{
+                  backgroundColor: "#E53935",
+                  borderRadius: 5,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                }}
+              >
+                <Text style={{ color: "#fff" }}>Xác nhận</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Tạo khoảng trống để không bị đè bởi khung nổi */}
       <View style={{ marginTop: 60 }} />
