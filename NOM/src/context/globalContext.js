@@ -8,6 +8,7 @@ export const GlobalContext = ({ children }) => {
   const [storeData, setStoreData] = useState(null); // Thêm state lưu trữ toàn bộ thông tin cửa hàng
   const [sellingTime, setSellingTime] = useState([]); // Thêm state lưu trữ sellingTime
   const [foods, setFoods] = useState([]); // Thêm state lưu trữ danh sách món ăn (foods)
+  const [selectedFoodId, setSelectedFoodId] = useState(null); // Thêm state để lưu selectedFoodId
 
   // Tải thông tin người dùng, cửa hàng, thời gian bán hàng và món ăn từ AsyncStorage khi khởi động
   useEffect(() => {
@@ -49,6 +50,7 @@ export const GlobalContext = ({ children }) => {
     storeData, // Lưu toàn bộ thông tin cửa hàng
     sellingTime, // Thêm sellingTime vào globalData
     foods, // Thêm foods vào globalData
+    selectedFoodId,
   };
 
   const globalHandler = {
@@ -62,10 +64,12 @@ export const GlobalContext = ({ children }) => {
       }
     },
     setStoreData: async (storeInfo) => {
-      // Hàm để lưu toàn bộ thông tin cửa hàng
-      setStoreData(storeInfo);
-      console.log("Store data set in GlobalContext:", storeInfo);
       try {
+        // Cập nhật vào state và GlobalContext
+        setStoreData(storeInfo);
+        console.log("Store data set in GlobalContext:", storeInfo);
+
+        // Lưu thông tin vào AsyncStorage
         await AsyncStorage.setItem("storeData", JSON.stringify(storeInfo));
         console.log("Store data saved to AsyncStorage:", storeInfo);
       } catch (error) {
@@ -93,6 +97,7 @@ export const GlobalContext = ({ children }) => {
         console.error("Error saving foods data to storage:", error);
       }
     },
+    setSelectedFoodId, // Thêm hàm này để cập nhật selectedFoodId
     loadUser: async () => {
       try {
         const storedUser = await AsyncStorage.getItem("user");
