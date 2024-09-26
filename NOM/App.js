@@ -2,43 +2,15 @@ import React, { useEffect, useState, useContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View, AppState } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import {
-  WelcomeScreen,
-  Log,
-  Login,
-  SignUp,
-  ForgotPassword,
-  ResetPassword,
-  OTPMail,
-  OTPPhone,
-  SignUpSeller,
-  SignUpMailOrPhone,
-  Route
-} from "./src/Component/Login";
-import {
-  OrdersScreen,
-  MessagesScreen,
-  ProfileScreen,
-} from "./src/Component/Home";
-import {
-  LoginSeller,
-  TermsDetails,
-  TimeClose,
-  Comment,
-  Staff,
-  UpdateHome,
-  ListFood,
-  AddEat,
-  AddDishGroup,
-  TimeScheduleSell,
-  DishDetails
-} from "./src/Component/SellerUser";
+import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route } from "./src/Component/Login";
+import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
-import { api, typeHTTP } from './src/utils/api';
+import { api, typeHTTP } from "./src/utils/api";
 import CustomerTabs from "./src/Component/Home/CustomerTabs"; // Import các tab cho customer
 import SellerTabs from "./src/Component/SellerUser/SellerTabs"; // Import các tab cho seller
 
@@ -61,12 +33,15 @@ const App = () => {
         if (token && user) {
           const userData = JSON.parse(user); // Parse lại thông tin user từ chuỗi JSON
           console.log("User Data Role ID:", userData.roleId); // Log roleId
+          console.log("User Data isActive:", userData.isActive); // Log isActive
 
           // Điều hướng đến trang tương ứng dựa trên role của người dùng
           if (userData.roleId === "customer") {
             setInitialRoute("HomeKH"); // Điều hướng đến trang Home của khách hàng
           } else if (userData.roleId === "seller") {
             setInitialRoute("HomeSeller"); // Điều hướng đến trang Home của người bán
+          } else if (userData.roleId === "staff" && userData.isActive) {
+            setInitialRoute("HomeSeller"); // Điều hướng đến trang Home của nhân viên nếu isActive là true
           } else {
             setInitialRoute("WelcomeScreen"); // Fallback nếu không xác định được role
           }
@@ -168,7 +143,6 @@ const App = () => {
             <Stack.Screen name="AddDishGroup" component={AddDishGroup} />
             <Stack.Screen name="TimeScheduleSell" component={TimeScheduleSell} />
             <Stack.Screen name="DishDetails" component={DishDetails} />
-
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>

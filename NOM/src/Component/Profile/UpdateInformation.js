@@ -1,19 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  ScrollView,
-  Modal,
-  Pressable,
-  Keyboard,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Alert,
-  Image,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Modal, Pressable, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker"; // Sử dụng expo-image-picker
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
@@ -150,8 +136,7 @@ export default function UpdateInformation() {
   // Chọn ảnh từ thư viện
   const openImageLibrary = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
         Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh!");
@@ -292,15 +277,10 @@ export default function UpdateInformation() {
                   />
                 ) : (
                   // Nếu không có ảnh nào, hiển thị chữ Avatar
-                  <Text style={{ textAlign: "center", marginTop: 40 }}>
-                    Avatar
-                  </Text>
+                  <Text style={{ textAlign: "center", marginTop: 40 }}>Avatar</Text>
                 )}
 
-                <TouchableOpacity
-                  style={{ position: "absolute", bottom: -10, right: -10 }}
-                  onPress={toggleModal}
-                >
+                <TouchableOpacity style={{ position: "absolute", bottom: -10, right: -10 }} onPress={toggleModal}>
                   <Text>🖼️</Text>
                 </TouchableOpacity>
               </View>
@@ -333,9 +313,7 @@ export default function UpdateInformation() {
                 }}
                 onPress={(e) => e.stopPropagation()} // Ngăn không cho đóng modal khi bấm vào bên trong modal
               >
-                <Text style={{ fontSize: 18, marginBottom: 20 }}>
-                  Chọn ảnh đại diện
-                </Text>
+                <Text style={{ fontSize: 18, marginBottom: 20 }}>Chọn ảnh đại diện</Text>
                 <TouchableOpacity
                   style={{
                     backgroundColor: "#E53935",
@@ -367,9 +345,7 @@ export default function UpdateInformation() {
                     toggleModal(); // Đóng modal sau khi thư viện ảnh được mở
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 16 }}>
-                    Chọn từ thư viện
-                  </Text>
+                  <Text style={{ color: "#fff", fontSize: 16 }}>Chọn từ thư viện</Text>
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
@@ -382,9 +358,7 @@ export default function UpdateInformation() {
               marginTop: height * 0.05,
             }}
           >
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Tên người dùng
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Tên người dùng</Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -397,9 +371,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("fullName", value)}
             />
 
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Số điện thoại
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Số điện thoại</Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -413,9 +385,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("phone", value)}
             />
 
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Email
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Email</Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -429,9 +399,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("email", value)}
             />
 
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Ngày sinh
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Ngày sinh</Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -444,9 +412,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("dateOfBirth", value)}
             />
 
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Giới tính
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Giới tính</Text>
             <TextInput
               style={{
                 borderWidth: 1,
@@ -459,9 +425,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("gender", value)}
             />
 
-            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>
-              Trạng thái
-            </Text>
+            <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Trạng thái</Text>
             <TextInput
               style={{
                 borderWidth: 1,

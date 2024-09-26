@@ -1,16 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  Image,
-  Alert,
-  TouchableWithoutFeedback,
-  Keyboard,
-  AppState,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, Image, Alert, TouchableWithoutFeedback, Keyboard, AppState } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -100,7 +89,7 @@ export default function Login() {
         await AsyncStorage.setItem("user", JSON.stringify(response.user));
 
         console.log("Token saved:", response.token); // Log token để kiểm tra
-        console.log("User saved:", response.user);   // Log user để kiểm tra
+        console.log("User saved:", response.user); // Log user để kiểm tra
 
         if (isRememberMeChecked) {
           await AsyncStorage.setItem("saved_phone", phone);
@@ -121,11 +110,22 @@ export default function Login() {
         });
 
         // Kiểm tra role và điều hướng tới trang phù hợp
-        const userRole = response.user.roleId; // Giả sử role là trường trong user
-        if (userRole === "customer") {
+        if (response.user.roleId === "staff") {
+          console.log("Store ID:", response.user.storeId); // Sử dụng storeId nếu cần
+          console.log("Trạng thái isActive của nhân viên:", response.user.isActive); // Log giá trị isActive để kiểm tra
+
+          if (response.user.isActive) {
+            globalHandler.setStoreData(response.user.storeId); // Lưu storeId vào globalContext
+            console.log("Điều hướng đến HomeSeller");
+            console.log("Store ID:", response.user.storeId);
+            navigation.navigate("HomeSeller");
+          } else {
+            Alert.alert("Tài khoản nhân viên chưa được kích hoạt. Vui lòng liên hệ quản trị viên.");
+          }
+        } else if (response.user.roleId === "customer") {
           console.log("Điều hướng đến HomeKH");
           navigation.navigate("HomeKH");
-        } else if (userRole === "seller") {
+        } else if (response.user.roleId === "seller") {
           console.log("Điều hướng đến HomeSeller");
           navigation.navigate("HomeSeller");
         } else {
@@ -180,9 +180,7 @@ export default function Login() {
 
         {/* Form đăng nhập */}
         <View style={{ width: "100%", marginBottom: 20 }}>
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
-            Số điện thoại
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>Số điện thoại</Text>
           <TextInput
             placeholder="Số điện thoại"
             style={{
@@ -199,9 +197,7 @@ export default function Login() {
             onChangeText={setPhone}
           />
 
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5, marginTop: 10 }}>
-            Mật khẩu
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5, marginTop: 10 }}>Mật khẩu</Text>
           <View style={{ position: "relative", marginBottom: 10 }}>
             <TextInput
               placeholder="Mật khẩu"
@@ -218,15 +214,8 @@ export default function Login() {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity
-              style={{ position: "absolute", right: 15, top: 15 }}
-              onPress={() => setPasswordVisible(!isPasswordVisible)}
-            >
-              <Icon
-                name={isPasswordVisible ? "visibility" : "visibility-off"}
-                size={20}
-                color="#E53935"
-              />
+            <TouchableOpacity style={{ position: "absolute", right: 15, top: 15 }} onPress={() => setPasswordVisible(!isPasswordVisible)}>
+              <Icon name={isPasswordVisible ? "visibility" : "visibility-off"} size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
         </View>
@@ -240,10 +229,7 @@ export default function Login() {
             marginBottom: 30,
           }}
         >
-          <TouchableOpacity
-            style={{ marginRight: 10 }}
-            onPress={() => setRememberMeChecked(!isRememberMeChecked)}
-          >
+          <TouchableOpacity style={{ marginRight: 10 }} onPress={() => setRememberMeChecked(!isRememberMeChecked)}>
             <View
               style={{
                 width: 18,
@@ -256,9 +242,7 @@ export default function Login() {
                 backgroundColor: isRememberMeChecked ? "#E53935" : "#FFFFFF",
               }}
             >
-              {isRememberMeChecked && (
-                <Icon name="check" size={14} color="#FFFFFF" />
-              )}
+              {isRememberMeChecked && <Icon name="check" size={14} color="#FFFFFF" />}
             </View>
           </TouchableOpacity>
           <Text style={{ color: "#000", fontSize: 14 }}>Ghi nhớ mật khẩu</Text>
@@ -282,25 +266,18 @@ export default function Login() {
             elevation: 5,
           }}
         >
-          <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>
-            Đăng nhập
-          </Text>
+          <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Đăng nhập</Text>
         </TouchableOpacity>
 
         {/* Quên mật khẩu */}
         <TouchableOpacity style={{ alignSelf: "flex-end", marginBottom: 10 }}>
-          <Text
-            onPress={() => navigation.navigate("ForgotPassword")}
-            style={{ color: "#E53935", fontSize: 14 }}
-          >
+          <Text onPress={() => navigation.navigate("ForgotPassword")} style={{ color: "#E53935", fontSize: 14 }}>
             Quên mật khẩu?
           </Text>
         </TouchableOpacity>
 
         {/* Đăng nhập với */}
-        <Text style={{ color: "#777", fontSize: 16, marginBottom: 20 }}>
-          Đăng nhập với
-        </Text>
+        <Text style={{ color: "#777", fontSize: 16, marginBottom: 20 }}>Đăng nhập với</Text>
 
         {/* Đăng nhập với Facebook và Google */}
         <View
@@ -312,28 +289,18 @@ export default function Login() {
           }}
         >
           <TouchableOpacity>
-            <Image
-              source={require("../../img/logos_facebook.png")}
-              style={{ width: 50, height: 50, resizeMode: "contain" }}
-            />
+            <Image source={require("../../img/logos_facebook.png")} style={{ width: 50, height: 50, resizeMode: "contain" }} />
           </TouchableOpacity>
           <TouchableOpacity>
-            <Image
-              source={require("../../img/flat-color-icons_google.png")}
-              style={{ width: 50, height: 50, resizeMode: "contain" }}
-            />
+            <Image source={require("../../img/flat-color-icons_google.png")} style={{ width: 50, height: 50, resizeMode: "contain" }} />
           </TouchableOpacity>
         </View>
 
         {/* Đăng ký tài khoản */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: "#000", fontSize: 14 }}>
-            Chưa có tài khoản?{" "}
-          </Text>
+          <Text style={{ color: "#000", fontSize: 14 }}>Chưa có tài khoản? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}>
-              Đăng ký
-            </Text>
+            <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
       </View>

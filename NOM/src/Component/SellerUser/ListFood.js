@@ -133,8 +133,8 @@ export default function ListFood({ navigation }) {
 
   // Khi người dùng bấm vào món ăn
   const handleDishClick = (foodId) => {
-    console.log("Navigating to DishDetails with foodId:", foodId); // Kiểm tra giá trị foodId trước khi navigate
-    navigation.navigate("DishDetails", { foodId }); // Truyền foodId qua navigation
+    globalHandler.setSelectedFoodId(foodId); // Lưu foodId vào globalData
+    navigation.navigate("DishDetails"); // Điều hướng mà không cần truyền foodId
   };
 
   const renderLeftActions = (foodId) => {
