@@ -1,16 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  Modal, // Import Modal
-  TextInput, // For input fields
-} from "react-native";
+import React, { useEffect, useState, useContext, useCallback } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, Modal, TextInput } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
 import { globalContext } from "../../context/globalContext";
 
@@ -32,43 +23,43 @@ export default function HomeSeller() {
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext); // Sử dụng globalContext
 
-  useEffect(() => {
-    const fetchFoodsByStoreId = async () => {
-      try {
-        const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
-        if (!storeId) {
-          console.log("Không tìm thấy storeId trong globalData");
-          return;
-        }
-
-        // Gọi API để lấy danh sách món ăn
-        const response = await api({
-          method: typeHTTP.GET,
-          url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn theo storeId
-          sendToken: true,
-        });
-
-        // Kiểm tra phản hồi và chuyển đổi thành JSON nếu cần
-        const data = (await response.json) ? await response.json() : response;
-
-        console.log("Phản hồi từ API (đã xử lý):", data); // Kiểm tra phản hồi sau khi xử lý
-
-        if (data && data.foods && Array.isArray(data.foods) && data.foods.length > 0) {
-          setFoodList(data.foods); // Lưu danh sách món ăn vào state
-          console.log("Danh sách món ăn:", data.foods);
-        } else {
-          console.log("Không tìm thấy món ăn nào");
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu món ăn:", error);
+  const fetchFoodsByStoreId = useCallback(async () => {
+    try {
+      const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
       }
-    };
 
-    const storeId = globalData.storeData?._id;
-    if (storeId) {
-      fetchFoodsByStoreId(); // Gọi API để lấy danh sách món ăn khi storeId thay đổi
+      // Gọi API để lấy danh sách món ăn
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn theo storeId
+        sendToken: true,
+      });
+
+      // Kiểm tra phản hồi và chuyển đổi thành JSON nếu cần
+      const data = (await response.json) ? await response.json() : response;
+
+      console.log("Phản hồi từ API (đã xử lý):", data); // Kiểm tra phản hồi sau khi xử lý
+
+      if (data && data.foods && Array.isArray(data.foods) && data.foods.length > 0) {
+        setFoodList(data.foods); // Lưu danh sách món ăn vào state
+        console.log("Danh sách món ăn:", data.foods);
+      } else {
+        console.log("Không tìm thấy món ăn nào");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu món ăn:", error);
     }
-  }, [globalData.storeData?._id]);
+  }, [globalData.storeData?._id]); // Callback chỉ thay đổi khi storeId thay đổi
+
+  // Dùng useFocusEffect để gọi hàm fetchFoodsByStoreId mỗi khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchFoodsByStoreId();
+    }, [fetchFoodsByStoreId])
+  );
 
   // Gọi API để lấy thông tin cửa hàng và lưu vào GlobalContext
   useEffect(() => {
