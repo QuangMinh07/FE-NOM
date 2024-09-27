@@ -3,11 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Dimensions 
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import icons
 import { api, typeHTTP } from '../../utils/api'; // Import the reusable API function
 import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get('window'); // Lấy kích thước chiều rộng của màn hình
 
 const HomeKH = () => {
   const [userData, setUserData] = useState(null); // Tạo state để lưu thông tin người dùng
+  const navigation = useNavigation();
 
   // Hàm lấy thông tin người dùng từ API
   const getUserProfile = async () => {
@@ -78,10 +80,14 @@ const HomeKH = () => {
 
       {/* Thanh tìm kiếm và trái tim */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 15, marginTop: -30, alignItems: 'center' }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, height: 50 }}>
-          <Ionicons name="search-outline" size={25} color="#E53935" />
-          <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
-        </View>
+      <View style={{ flex: 1 }} >
+  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, height: 50 }}>
+    <Ionicons 
+    onPress={() => navigation.navigate('Seach')}
+    name="search-outline" size={25} color="#E53935" />
+    <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
+  </View>
+</View>
         <TouchableOpacity style={{ marginLeft: 10 }}>
           <View style={{ backgroundColor: '#fff', width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 25 }}>
             <Ionicons name="heart-outline" size={25} color="#E53935" />
