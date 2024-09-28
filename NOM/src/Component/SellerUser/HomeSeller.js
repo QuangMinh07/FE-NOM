@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, Modal, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, Modal, TextInput, Pressable } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
@@ -120,21 +120,8 @@ export default function HomeSeller() {
     return hours * 60 + minutes;
   };
 
-  useEffect(() => {
-    // Kiểm tra trạng thái cửa hàng ngay khi component mount
-    checkStoreStatus();
-
-    // Cập nhật trạng thái cửa hàng mỗi phút
-    const interval = setInterval(() => {
-      checkStoreStatus();
-    }, 60000); // 60000ms tương đương với 1 phút
-
-    // Cleanup interval khi component unmount
-    return () => clearInterval(interval);
-  }, [sellingTime]);
-
   // Hàm kiểm tra trạng thái cửa hàng có đang mở hay không
-  const checkStoreStatus = () => {
+  const checkStoreStatus = useCallback(() => {
     const nowMinutes = getCurrentMinutes(); // Lấy số phút hiện tại
     const currentDay = new Date().getDay(); // Lấy thứ hiện tại (0 là Chủ Nhật, 1 là Thứ 2,...)
 
@@ -162,38 +149,60 @@ export default function HomeSeller() {
         if (isOpen) setIsOpen(false); // Nếu chưa đóng cửa, cập nhật thành đóng cửa
       }
     }
-  };
+  }, [sellingTime, isOpen]);
 
+  // Dùng useFocusEffect để kiểm tra trạng thái khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      checkStoreStatus(); // Gọi kiểm tra ngay khi màn hình được focus
+    }, [checkStoreStatus])
+  );
+
+  // Dùng useEffect kết hợp setInterval để kiểm tra trạng thái mỗi phút
   useEffect(() => {
-    const fetchStoreData1 = async () => {
-      try {
-        const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
-        if (!storeId) {
-          console.log("Không tìm thấy storeId trong globalData");
-          return;
-        }
+    checkStoreStatus(); // Kiểm tra ngay khi component mount
 
-        // Gọi API mới với storeId để lấy thông tin cửa hàng
-        const storeData = await api({
-          method: typeHTTP.GET,
-          url: `/store/get-store/${storeId}`, // Sử dụng API mới
-          sendToken: true,
-        });
+    // Cập nhật trạng thái cửa hàng mỗi phút
+    const interval = setInterval(() => {
+      checkStoreStatus();
+    }, 60000); // 60000ms tương đương với 1 phút
 
-        if (storeData && storeData.data) {
-          setSellingTime(storeData.data.sellingTime || []); // Lưu thời gian bán hàng vào state
-          globalHandler.setStoreData(storeData.data); // Cập nhật GlobalContext
-          checkStoreStatus(); // Kiểm tra trạng thái mở/đóng cửa
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
-      } finally {
-        setLoading(false);
+    // Cleanup interval khi component unmount
+    return () => clearInterval(interval);
+  }, [checkStoreStatus]); // Chỉ gọi lại khi checkStoreStatus thay đổi
+
+  const fetchStoreData1 = useCallback(async () => {
+    try {
+      const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
       }
-    };
 
-    fetchStoreData1();
+      // Gọi API mới với storeId để lấy thông tin cửa hàng
+      const storeData = await api({
+        method: typeHTTP.GET,
+        url: `/store/get-store/${storeId}`, // Sử dụng API mới
+        sendToken: true,
+      });
+
+      if (storeData && storeData.data) {
+        setSellingTime(storeData.data.sellingTime || []); // Lưu thời gian bán hàng vào state
+        globalHandler.setStoreData(storeData.data); // Cập nhật GlobalContext
+        checkStoreStatus(); // Kiểm tra trạng thái mở/đóng cửa
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [globalData.storeData?._id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStoreData1();
+    }, [fetchStoreData1])
+  );
 
   // Hàm xử lý hiển thị thời gian mở cửa từ dữ liệu
   const formatSellingTime = () => {
@@ -355,10 +364,14 @@ export default function HomeSeller() {
             </TouchableOpacity>
           </View>
           {/* Hiển thị thời gian mở cửa từ dữ liệu */}
-          <View>
+          <Pressable
+            onPress={() => {
+              navigation.navigate("TimeClose");
+            }}
+          >
             <Text style={{ fontSize: 14, color: "#E53935", marginTop: 5 }}>Thời gian mở cửa:</Text>
             <Text style={{ paddingLeft: 20, fontSize: 14, color: "#E53935" }}>{formatSellingTime()}</Text>
-          </View>
+          </Pressable>
 
           <Text style={{ fontSize: 14, color: "#333", marginTop: 5 }}>{storeAddress}</Text>
         </View>
