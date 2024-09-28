@@ -11,6 +11,7 @@ export default function ListFood({ navigation }) {
   const { globalData, globalHandler } = useContext(globalContext); // Truy cập globalData từ GlobalContext
   const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
   const [filteredFoods, setFilteredFoods] = useState([]); // State để lưu món ăn đúng của cửa hàng hiện tại
+  const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
@@ -26,15 +27,95 @@ export default function ListFood({ navigation }) {
 
   const [selectedTab, setSelectedTab] = useState("Món");
   const [modalVisible, setModalVisible] = useState(false); // State cho modal thêm nhóm món
-  const [newGroupName, setNewGroupName] = useState(""); // State cho nhóm món mới
+  const [groupName, setGroupName] = useState(""); // State cho nhóm món mới
+
+  const handleAddFoodGroup = async () => {
+    const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+    console.log("StoreId for adding food group:", storeId);
+
+    if (!storeId || !groupName) {
+      Alert.alert("Lỗi", "ID cửa hàng và tên nhóm món không được để trống.");
+      return;
+    }
+
+    try {
+      console.log("Calling API...");
+
+      const body = {
+        groupName,
+      };
+
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/foodgroup/add-food-group/${storeId}`,
+        body,
+        sendToken: true,
+      });
+
+      console.log("API response full:", response); // Log toàn bộ phản hồi để kiểm tra cấu trúc
+
+      // Kiểm tra phản hồi từ API trực tiếp
+      if (response && response.message === "Thêm nhóm món thành công.") {
+        Alert.alert("Thành công", "Thêm nhóm món thành công.");
+
+        // Gọi lại hàm lấy nhóm món để cập nhật danh sách sau khi thêm thành công
+        await getFoodGroups();
+      } else {
+        Alert.alert("Lỗi", "Có lỗi xảy ra khi thêm nhóm món.");
+      }
+
+      setModalVisible(false); // Đóng modal
+    } catch (error) {
+      console.error("Client error:", error?.response ? error.response.data : error.message);
+      Alert.alert("Lỗi", "Có lỗi xảy ra: " + (error?.response ? error.response.data.message : error.message));
+    }
+  };
+
+  const getFoodGroups = async () => {
+    const storeId = storeData?._id; // Lấy storeId từ storeData
+
+    if (!storeId) {
+      console.error("storeId không tồn tại");
+      return;
+    }
+
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/foodgroup/getfood-groups/${storeId}`,
+        sendToken: true, // Gửi token để xác thực
+      });
+
+      // Log toàn bộ phản hồi để kiểm tra cấu trúc
+      console.log("Response from API:", response);
+
+      // Kiểm tra nếu response và response.foodGroups tồn tại
+      if (response && response.foodGroups) {
+        console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
+        setFoodGroups(response.foodGroups); // Cập nhật state với danh sách nhóm món từ MongoDB
+      } else {
+        console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
+      }
+    } catch (error) {
+      // Kiểm tra xem error.response có tồn tại không
+      if (error.response) {
+        console.error("Lỗi từ server:", error.response.data);
+      } else {
+        console.error("Lỗi không xác định:", error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getFoodGroups(); // Lấy danh sách nhóm món khi component được mount
+  }, [storeData]); // Chỉ gọi khi storeData thay đổi
 
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
-  const groupFoodsByCategory = (foods) => {
-    const groupOrder = ["Món chính", "Canh", "Tráng miệng", "Nước", "Khác"];
-
-    // Nhóm món ăn
+  const groupFoodsByCategory = (foods, foodGroups) => {
     const groupedFoods = foods.reduce((groupedFoods, food) => {
-      const group = food.foodGroup || "Khác";
+      // Tìm tên của nhóm món dựa trên ID của foodGroup trong food
+      const group = foodGroups.find((group) => group._id === food.foodGroup)?.groupName || "Khác";
+
       if (!groupedFoods[group]) {
         groupedFoods[group] = [];
       }
@@ -42,16 +123,11 @@ export default function ListFood({ navigation }) {
       return groupedFoods;
     }, {});
 
-    // Sắp xếp nhóm món theo thứ tự ưu tiên
-    return Object.keys(groupedFoods)
-      .sort((a, b) => groupOrder.indexOf(a) - groupOrder.indexOf(b))
-      .reduce((sortedGroupedFoods, key) => {
-        sortedGroupedFoods[key] = groupedFoods[key];
-        return sortedGroupedFoods;
-      }, {});
+    return groupedFoods;
   };
 
-  const groupedFoods = groupFoodsByCategory(filteredFoods);
+  // Sử dụng hàm groupFoodsByCategory với cả foods và foodGroups
+  const groupedFoods = groupFoodsByCategory(filteredFoods, foodGroups);
 
   const handleAddButtonPress = () => {
     if (selectedTab === "Nhóm món") {
@@ -167,7 +243,6 @@ export default function ListFood({ navigation }) {
           <AntDesign name="pluscircleo" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
-
       {/* Search Input */}
       <View
         style={{
@@ -181,7 +256,6 @@ export default function ListFood({ navigation }) {
       >
         <TextInput placeholder="Tìm kiếm" style={{ padding: 10, fontSize: 16 }} />
       </View>
-
       {/* Tabs */}
       <View
         style={{
@@ -212,7 +286,6 @@ export default function ListFood({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
-
       {/* Kiểm tra nếu không có món ăn */}
       {selectedTab === "Món" &&
         (filteredFoods.length === 0 ? (
@@ -243,19 +316,18 @@ export default function ListFood({ navigation }) {
             ))}
           </ScrollView>
         ))}
-
       {/* Tab nhóm món */}
       {selectedTab === "Nhóm món" &&
-        (Object.keys(groupedFoods).length === 0 ? (
+        (foodGroups.length === 0 ? (
           <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
             <Text style={{ fontSize: 18, color: "#999" }}>Không có nhóm món nào</Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={{ padding: 15 }}>
-            {Object.keys(groupedFoods).map((groupName) => (
-              <View key={groupName} style={{ marginBottom: 20 }}>
+            {foodGroups.map((group, index) => (
+              <View key={index} style={{ marginBottom: 20 }}>
                 <View style={styles.foodItem}>
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{group.groupName}</Text>
                 </View>
               </View>
             ))}
@@ -267,14 +339,11 @@ export default function ListFood({ navigation }) {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Tên Nhóm món</Text>
-            <TextInput style={styles.modalInput} value={newGroupName} onChangeText={setNewGroupName} placeholder="Nhập tên nhóm món" />
+            <TextInput style={styles.modalInput} value={groupName} onChangeText={setGroupName} placeholder="Nhập tên nhóm món" />
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButton}
-                onPress={() => {
-                  // Handle confirmation
-                  setModalVisible(false);
-                }}
+                onPress={handleAddFoodGroup} // Gọi hàm để thêm nhóm món
               >
                 <Text style={styles.modalButtonText}>Xác nhận</Text>
               </TouchableOpacity>
