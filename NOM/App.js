@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
 import { 
-  Seach,StoreKH,Shopping,EditAddress,Select,Orderfood
+  Seach,StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood
  } from "./src/Component/Customer";
 import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
@@ -152,6 +152,7 @@ const App = () => {
             <Stack.Screen name="EditAddress" component={EditAddress} />
             <Stack.Screen name="Select" component={Select} />
             <Stack.Screen name="Orderfood" component={Orderfood} />
+            <Stack.Screen name="ReviewFood" component={ReviewFood} />
 
           </Stack.Navigator>
         </NavigationContainer>
