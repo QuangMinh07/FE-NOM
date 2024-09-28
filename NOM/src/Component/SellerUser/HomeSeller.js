@@ -23,9 +23,52 @@ export default function HomeSeller() {
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext); // Sử dụng globalContext
 
-  const fetchFoodsByStoreId = useCallback(async () => {
+  const checkStoreStatus = useCallback(async () => {
     try {
       const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
+      }
+
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/store/check-store-open/${storeId}`,
+        sendToken: true,
+      });
+
+      if (response && response.isOpen !== undefined) {
+        setIsOpen(response.isOpen); // true nếu cửa hàng đang mở, false nếu đã đóng
+      }
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra trạng thái cửa hàng:", error);
+    }
+  }, [globalData.storeData?._id]);
+
+  // Dùng useFocusEffect để kiểm tra trạng thái khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      checkStoreStatus(); // Gọi kiểm tra ngay khi màn hình được focus
+    }, [checkStoreStatus])
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkStoreStatus();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [checkStoreStatus]);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkStoreStatus();
+    }, [checkStoreStatus])
+  );
+
+  const fetchFoodsByStoreId = useCallback(async () => {
+    try {
+      const storeId = globalData.storeData?._id;
       if (!storeId) {
         console.log("Không tìm thấy storeId trong globalData");
         return;
@@ -105,71 +148,6 @@ export default function HomeSeller() {
       setLoading(false);
     }
   }, [globalData.user?.id]); // Theo dõi userId để gọi lại API khi thay đổi
-
-  // Hàm để chuyển đổi giờ phút thành số phút trong ngày
-  const convertTimeToMinutes = (time) => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-  };
-
-  // Hàm lấy thời gian hiện tại và chuyển đổi thành phút
-  const getCurrentMinutes = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    return hours * 60 + minutes;
-  };
-
-  // Hàm kiểm tra trạng thái cửa hàng có đang mở hay không
-  const checkStoreStatus = useCallback(() => {
-    const nowMinutes = getCurrentMinutes(); // Lấy số phút hiện tại
-    const currentDay = new Date().getDay(); // Lấy thứ hiện tại (0 là Chủ Nhật, 1 là Thứ 2,...)
-
-    const daysMap = {
-      0: "Chủ Nhật",
-      1: "Thứ 2",
-      2: "Thứ 3",
-      3: "Thứ 4",
-      4: "Thứ 5",
-      5: "Thứ 6",
-      6: "Thứ 7",
-    };
-
-    const today = daysMap[currentDay];
-    const todaySellingTime = sellingTime.find((time) => time.day === today);
-
-    if (todaySellingTime) {
-      const openTimeMinutes = convertTimeToMinutes(todaySellingTime.timeSlots[0].open);
-      const closeTimeMinutes = convertTimeToMinutes(todaySellingTime.timeSlots[0].close);
-
-      // So sánh thời gian hiện tại với thời gian mở và đóng cửa
-      if (nowMinutes >= openTimeMinutes && nowMinutes <= closeTimeMinutes) {
-        if (!isOpen) setIsOpen(true); // Nếu chưa mở cửa, cập nhật thành mở cửa
-      } else {
-        if (isOpen) setIsOpen(false); // Nếu chưa đóng cửa, cập nhật thành đóng cửa
-      }
-    }
-  }, [sellingTime, isOpen]);
-
-  // Dùng useFocusEffect để kiểm tra trạng thái khi màn hình được focus
-  useFocusEffect(
-    useCallback(() => {
-      checkStoreStatus(); // Gọi kiểm tra ngay khi màn hình được focus
-    }, [checkStoreStatus])
-  );
-
-  // Dùng useEffect kết hợp setInterval để kiểm tra trạng thái mỗi phút
-  useEffect(() => {
-    checkStoreStatus(); // Kiểm tra ngay khi component mount
-
-    // Cập nhật trạng thái cửa hàng mỗi phút
-    const interval = setInterval(() => {
-      checkStoreStatus();
-    }, 60000); // 60000ms tương đương với 1 phút
-
-    // Cleanup interval khi component unmount
-    return () => clearInterval(interval);
-  }, [checkStoreStatus]); // Chỉ gọi lại khi checkStoreStatus thay đổi
 
   const fetchStoreData1 = useCallback(async () => {
     try {
@@ -516,9 +494,9 @@ export default function HomeSeller() {
             <View
               key={food._id}
               style={{
-                backgroundColor: "#fff", // Khung màu trắng
-                height: height * 0.23, // Tăng chiều cao của khung linh hoạt theo chiều cao màn hình
-                width: width * 0.55, // Độ rộng chiếm một nửa màn hình
+                backgroundColor: "#fff",
+                height: height * 0.23,
+                width: width * 0.55,
                 borderRadius: 10,
                 marginRight: 15,
                 padding: 10,
