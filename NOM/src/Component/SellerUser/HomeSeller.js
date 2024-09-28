@@ -337,7 +337,7 @@ export default function HomeSeller() {
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>{storeName}</Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000", width: 110 }}>{storeName}</Text>
             <Text style={{ fontSize: 12, color: "#333", marginTop: 4 }}>4.5 ⭐ (25+)</Text>
             <View
               style={{
