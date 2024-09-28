@@ -8,19 +8,22 @@ const { width, height } = Dimensions.get("window"); // Get device dimensions
 
 export default function StoreKH() {
   const route = useRoute(); // To get route params
+  const navigation = useNavigation(); // To navigate between screens
+
   const [loading, setLoading] = useState(true); // Loading state
   const [store, setStore] = useState(null); // Store data state
+  const [foodList, setFoodList] = useState([]); // Food data state
   const { storeId } = route.params; // Retrieve storeId from navigation params
   const [error, setError] = useState(null); // Error state
 
   // Hàm xử lý hiển thị thời gian mở cửa từ dữ liệu
   const formatSellingTime = () => {
-    if (!sellingTime.length) return "Không có dữ liệu thời gian";
+    if (!store.sellingTime || !store.sellingTime.length) return "Không có dữ liệu thời gian";
 
     // Nhóm các ngày có cùng giờ mở cửa
     const groupedTime = {};
 
-    sellingTime.forEach((day) => {
+    store.sellingTime.forEach((day) => {
       const timeSlotString = day.timeSlots.map((slot) => `${slot.open}-${slot.close}`).join(", ");
 
       if (!groupedTime[timeSlotString]) {
@@ -35,7 +38,7 @@ export default function StoreKH() {
       .map(([timeSlotString, days]) => {
         return `${days.join(", ")} - ${timeSlotString.replace("-", " đến ")}`;
       })
-      .join("\n"); // Hiển thị từng dòng cho mỗi nhóm thời gian
+      .join("\n");
   };
 
   useEffect(() => {
@@ -57,8 +60,27 @@ export default function StoreKH() {
       }
     };
 
+    // Fetch food data by storeId
+    const fetchFoods = async () => {
+      try {
+        setLoading(true);
+        const data = await api({
+          method: typeHTTP.GET,
+          url: `/food/get-foodstore/${storeId}`, // API endpoint to get foods by store ID
+          sendToken: true, // Send authentication token
+        });
+        setFoodList(data.foods); // Set food data
+      } catch (err) {
+        console.error("Error fetching foods:", err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (storeId) {
       fetchStore(); // Fetch store data on component mount
+      fetchFoods(); // Fetch food data on component mount
     }
   }, [storeId]);
 
@@ -87,8 +109,6 @@ export default function StoreKH() {
   }
 
   const { storeName, storeAddress, isOpen, sellingTime } = store; // Destructure store data
-
-  const navigation = useNavigation(); // To navigate between screens
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -175,6 +195,109 @@ export default function StoreKH() {
 
             <Text style={{ fontSize: 14, color: "#333", marginTop: 5 }}>{storeAddress}</Text>
           </View>
+        </View>
+
+        <View style={{ paddingHorizontal: 15, marginBottom: 20, marginTop: 50 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {foodList.map((food) => (
+              <TouchableOpacity
+                key={food._id} // Update key to use the correct id
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 10,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "#eee",
+                  marginRight: 15,
+                  width: width * 0.4,
+                }}
+              >
+                {/* Placeholder for Image */}
+                <View
+                  style={{
+                    height: 80,
+                    width: "100%",
+                    backgroundColor: "#f0f0f0", // Placeholder color for the image
+                    borderRadius: 10,
+                  }}
+                />
+                <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
+                <Text style={{ fontSize: 12, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
+                  {food.rating || 5} ⭐ ({food.price.toLocaleString()} VND)
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Special Section */}
+        <View style={{ paddingHorizontal: 15 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Món Đặc Biệt</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {foodList.map((food) => (
+              <View
+                key={food._id}
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 10,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "#eee",
+                  marginRight: 15,
+                  width: width * 0.55,
+                }}
+              >
+                {/* Placeholder for Image */}
+                <View
+                  style={{
+                    height: 120,
+                    width: "100%",
+                    backgroundColor: "#f0f0f0",
+                    borderRadius: 10,
+                  }}
+                />
+                <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
+                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Dessert Section */}
+        <View style={{ marginTop: 20, paddingHorizontal: 15 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Tráng miệng</Text>
+          {foodList.map((food) => (
+            <View
+              key={food._id}
+              style={{
+                backgroundColor: "#fff",
+                padding: 10,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: "#eee",
+                marginBottom: 10,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              {/* Placeholder for Image */}
+              <View
+                style={{
+                  height: 80,
+                  width: 80,
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: 10,
+                  marginRight: 15,
+                }}
+              />
+              <View>
+                <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
+                <Text style={{ fontSize: 14 }}>{food.description}</Text>
+                <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+              </View>
+            </View>
+          ))}
         </View>
       </ScrollView>
 
