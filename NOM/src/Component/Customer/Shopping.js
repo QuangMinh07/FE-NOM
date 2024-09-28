@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import { Swipeable } from 'react-native-gesture-handler';
 
 const { width } = Dimensions.get('window');
 
 export default function Shopping() {
   const navigation = useNavigation();
 
-  // Initial state for the order items
   const [orderItems, setOrderItems] = useState([
     { id: 1, name: 'Cơm tấm sườn bì', price: 20000, quantity: 2 },
     { id: 2, name: 'Cơm tấm sườn bì', price: 20000, quantity: 2 },
@@ -27,38 +25,20 @@ export default function Shopping() {
   // Function to handle decreasing the quantity
   const decreaseQuantity = (itemId) => {
     setOrderItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item
-      )
+      prevItems
+        .map((item) =>
+          item.id === itemId && item.quantity > 1
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0) // Automatically remove if quantity reaches 0
     );
-  };
-
-  // Function to handle deleting an item
-  const deleteItem = (itemId) => {
-    setOrderItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   };
 
   // Calculate total price
   const calculateTotal = () => {
     return orderItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
-
-  // Render right action for swipeable item
-  const renderRightActions = (itemId) => (
-    <TouchableOpacity
-      onPress={() => deleteItem(itemId)}
-      style={{
-        backgroundColor: '#E53935',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 75,
-        marginVertical: 10,
-        borderRadius: 10,
-      }}
-    >
-      <Icon name="delete" size={30} color="#fff" />
-    </TouchableOpacity>
-  );
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -120,43 +100,56 @@ export default function Shopping() {
 
         {/* Order Details */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10 }}>Đơn hàng</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Đơn hàng</Text>
+            {/* Add Food Icon with "Thêm món" text */}
+            <TouchableOpacity onPress={() => navigation.navigate('StoreKH')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
-          {/* Render each order item with swipeable */}
+                <Text
+                  style={{ marginLeft: 5, fontSize: 16, color: '#E53935' }}>Thêm món</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Render each order item */}
           {orderItems.map((item) => (
-            <Swipeable
+            <TouchableOpacity
               key={item.id}
-              renderRightActions={() => renderRightActions(item.id)}
+              onPress={() => navigation.navigate('Orderfood')} // Navigate to OrderFood page without passing item
             >
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Orderfood')} // Navigate to OrderFood page without passing item
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginBottom: 10,
+                  padding: 10,
+                  backgroundColor: '#fff',
+                  borderRadius: 10,
+                  borderColor: '#eee',
+                  borderWidth: 1,
+                }}
               >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginBottom: 10,
-                    padding: 10,
-                    backgroundColor: '#fff',
-                    borderRadius: 10,
-                    borderColor: '#eee',
-                    borderWidth: 1,
-                  }}
-                >
-                  <Text style={{ fontSize: 14, color: '#333' }}>{item.name}</Text>
-                  <Text style={{ fontSize: 14, color: '#333' }}>{item.price.toLocaleString()} VND</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <TouchableOpacity onPress={() => decreaseQuantity(item.id)}>
-                      <Icon name="remove-circle-outline" size={24} color="#E53935" />
-                    </TouchableOpacity>
-                    <Text style={{ marginHorizontal: 10, fontSize: 14 }}>{item.quantity}</Text>
-                    <TouchableOpacity onPress={() => increaseQuantity(item.id)}>
-                      <Icon name="add-circle-outline" size={24} color="#E53935" />
-                    </TouchableOpacity>
-                  </View>
+                <Text style={{ fontSize: 14, color: '#333' }}>{item.name}</Text>
+                <Text style={{ fontSize: 14, color: '#333' }}>{(item.price * item.quantity).toLocaleString()} VND</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity onPress={() => decreaseQuantity(item.id)}>
+                    <Icon name="remove-circle-outline" size={24} color="#E53935" />
+                  </TouchableOpacity>
+                  <Text style={{ marginHorizontal: 10, fontSize: 14 }}>{item.quantity}</Text>
+                  <TouchableOpacity onPress={() => increaseQuantity(item.id)}>
+                    <Icon name="add-circle-outline" size={24} color="#E53935" />
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            </Swipeable>
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -200,8 +193,8 @@ export default function Shopping() {
       <TouchableOpacity
         style={{
           position: 'absolute',
-          bottom: 0,
-          left: 0,
+          bottom: 35,
+          left: 10,
           right: 0,
           backgroundColor: '#E53935',
           padding: 15,
