@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
+import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
@@ -13,27 +14,70 @@ export default function StoreKH() {
   const [loading, setLoading] = useState(true); // Loading state
   const [store, setStore] = useState(null); // Store data state
   const [foodList, setFoodList] = useState([]); // Food data state
-  const { storeId } = route.params; // Retrieve storeId from navigation params
   const [error, setError] = useState(null); // Error state
+  const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
+  const { globalData } = useContext(globalContext); // Sử dụng globalContext
+  const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
 
-  // Hàm xử lý hiển thị thời gian mở cửa từ dữ liệu
+  // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
+  const groupFoodsByCategory = (foods, foodGroups) => {
+    const groupedFoods = foods.reduce((groupedFoods, food) => {
+      // Tìm tên của nhóm món dựa trên ID của foodGroup trong food
+      const group = foodGroups.find((group) => group._id === food.foodGroup)?._id || "Khác";
+      if (!groupedFoods[group]) {
+        groupedFoods[group] = [];
+      }
+      groupedFoods[group].push(food);
+      return groupedFoods;
+    }, {});
+    return groupedFoods;
+  };
+
+  const getFoodGroups = async () => {
+    if (!storeId) {
+      console.error("storeId không tồn tại");
+      return;
+    }
+
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/foodgroup/getfood-groups/${storeId}`,
+        sendToken: true, // Gửi token để xác thực
+      });
+
+      // Kiểm tra nếu response và response.foodGroups tồn tại
+      if (response && response.foodGroups) {
+        setFoodGroups(response.foodGroups); // Cập nhật state với danh sách nhóm món từ MongoDB
+      } else {
+        console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
+      }
+    } catch (error) {
+      // Kiểm tra xem error.response có tồn tại không
+      if (error.response) {
+        console.error("Lỗi từ server:", error.response.data);
+      } else {
+        console.error("Lỗi không xác định:", error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getFoodGroups(); // Lấy danh sách nhóm món khi component được mount
+  }, [storeId]); // Chỉ gọi khi storeData thay đổi
+
   const formatSellingTime = () => {
     if (!store.sellingTime || !store.sellingTime.length) return "Không có dữ liệu thời gian";
-
-    // Nhóm các ngày có cùng giờ mở cửa
     const groupedTime = {};
 
     store.sellingTime.forEach((day) => {
       const timeSlotString = day.timeSlots.map((slot) => `${slot.open}-${slot.close}`).join(", ");
-
       if (!groupedTime[timeSlotString]) {
         groupedTime[timeSlotString] = [];
       }
-
       groupedTime[timeSlotString].push(day.day);
     });
 
-    // Tạo chuỗi hiển thị
     return Object.entries(groupedTime)
       .map(([timeSlotString, days]) => {
         return `${days.join(", ")} - ${timeSlotString.replace("-", " đến ")}`;
@@ -42,7 +86,6 @@ export default function StoreKH() {
   };
 
   useEffect(() => {
-    // Fetch store data by storeId
     const fetchStore = async () => {
       try {
         setLoading(true);
@@ -60,7 +103,6 @@ export default function StoreKH() {
       }
     };
 
-    // Fetch food data by storeId
     const fetchFoods = async () => {
       try {
         setLoading(true);
@@ -79,8 +121,8 @@ export default function StoreKH() {
     };
 
     if (storeId) {
-      fetchStore(); // Fetch store data on component mount
-      fetchFoods(); // Fetch food data on component mount
+      fetchStore();
+      fetchFoods();
     }
   }, [storeId]);
 
@@ -108,11 +150,14 @@ export default function StoreKH() {
     );
   }
 
+  const groupedFoods = groupFoodsByCategory(foodList, foodGroups); // Nhóm món ăn theo nhóm món
   const { storeName, storeAddress, isOpen, sellingTime } = store; // Destructure store data
+
+  const firstGroup = Object.keys(groupedFoods)[0]; // Lấy nhóm đầu tiên
+  const remainingGroups = Object.keys(groupedFoods).slice(1); // Các nhóm còn lại
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      {/* Content Area */}
       <ScrollView
         contentContainerStyle={{
           paddingBottom: 100, // Ensure there is space for the footer
@@ -129,7 +174,7 @@ export default function StoreKH() {
             }}
           />
 
-          {/* Cart Icon Replacing Upload Icon */}
+          {/* Cart Icon */}
           <TouchableOpacity
             style={{
               position: "absolute",
@@ -144,12 +189,12 @@ export default function StoreKH() {
               shadowRadius: 5,
               shadowOffset: { width: 0, height: 2 },
             }}
-            onPress={() => navigation.navigate("Shopping")} // Navigate to the Shopping screen
+            onPress={() => navigation.navigate("Shopping")}
           >
             <Icon name="shopping-cart" size={24} color="#E53935" />
           </TouchableOpacity>
 
-          {/* Store Info Floating Box */}
+          {/* Store Info */}
           <View
             style={{
               position: "absolute",
@@ -187,7 +232,6 @@ export default function StoreKH() {
               </View>
             </View>
 
-            {/* Store Hours */}
             <View>
               <Text style={{ fontSize: 14, color: "#E53935", marginTop: 5 }}>Thời gian mở cửa:</Text>
               <Text style={{ paddingLeft: 20, fontSize: 14, color: "#E53935" }}>{formatSellingTime()}</Text>
@@ -231,11 +275,43 @@ export default function StoreKH() {
           </ScrollView>
         </View>
 
-        {/* Special Section */}
-        <View style={{ paddingHorizontal: 15 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Món Đặc Biệt</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {foodList.map((food) => (
+        {firstGroup && (
+          <View style={{ paddingHorizontal: 15 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {groupedFoods[firstGroup].map((food) => (
+                <View
+                  key={food._id}
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: 10,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#eee",
+                    marginRight: 15,
+                    width: width * 0.55,
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 120,
+                      width: "100%",
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: 10,
+                    }}
+                  />
+                  <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
+                  <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {remainingGroups.map((group) => (
+          <View key={group} style={{ marginTop: 20, paddingHorizontal: 15 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
+            {groupedFoods[group].map((food) => (
               <View
                 key={food._id}
                 style={{
@@ -244,64 +320,31 @@ export default function StoreKH() {
                   borderRadius: 10,
                   borderWidth: 1,
                   borderColor: "#eee",
-                  marginRight: 15,
-                  width: width * 0.55,
+                  marginBottom: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
                 }}
               >
-                {/* Placeholder for Image */}
                 <View
                   style={{
-                    height: 120,
-                    width: "100%",
+                    height: 80,
+                    width: 80,
                     backgroundColor: "#f0f0f0",
                     borderRadius: 10,
+                    marginRight: 15,
                   }}
                 />
-                <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                <View>
+                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
+                  <Text style={{ fontSize: 14 }}>{food.description}</Text>
+                  <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                </View>
               </View>
             ))}
-          </ScrollView>
-        </View>
-
-        {/* Dessert Section */}
-        <View style={{ marginTop: 20, paddingHorizontal: 15 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Tráng miệng</Text>
-          {foodList.map((food) => (
-            <View
-              key={food._id}
-              style={{
-                backgroundColor: "#fff",
-                padding: 10,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: "#eee",
-                marginBottom: 10,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              {/* Placeholder for Image */}
-              <View
-                style={{
-                  height: 80,
-                  width: 80,
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 10,
-                  marginRight: 15,
-                }}
-              />
-              <View>
-                <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 14 }}>{food.description}</Text>
-                <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+          </View>
+        ))}
       </ScrollView>
 
-      {/* Sticky Footer Section */}
       <View
         style={{
           position: "absolute",

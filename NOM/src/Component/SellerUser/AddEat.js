@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { AntDesign } from "@expo/vector-icons"; // Import icon library
 import * as ImagePicker from "expo-image-picker";
@@ -16,11 +16,49 @@ export default function AddEat() {
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(""); // Lưu trữ nhóm món đã chọn
   const navigation = useNavigation();
+  const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món
 
   const { globalData, globalHandler } = useContext(globalContext); // Lấy dữ liệu từ GlobalContext
 
   // Lấy storeId từ globalData
   const storeId = globalData.storeData?._id; // Lấy storeId từ GlobalContext
+
+  const getFoodGroups = async () => {
+    if (!storeId) {
+      console.error("storeId không tồn tại");
+      return;
+    }
+
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/foodgroup/getfood-groups/${storeId}`,
+        sendToken: true, // Gửi token để xác thực
+      });
+
+      // Log toàn bộ phản hồi để kiểm tra cấu trúc
+      console.log("Response from API:", response);
+
+      // Kiểm tra nếu response và response.foodGroups tồn tại
+      if (response && response.foodGroups) {
+        console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
+        setFoodGroups(response.foodGroups); // Cập nhật state với danh sách nhóm món từ MongoDB
+      } else {
+        console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
+      }
+    } catch (error) {
+      // Kiểm tra xem error.response có tồn tại không
+      if (error.response) {
+        console.error("Lỗi từ server:", error.response.data);
+      } else {
+        console.error("Lỗi không xác định:", error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getFoodGroups(); // Lấy danh sách nhóm món khi component được mount
+  }, [storeId]); // Chỉ gọi khi storeData thay đổi
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -61,12 +99,15 @@ export default function AddEat() {
     setModalVisible(false);
   };
 
-  const foodGroups = ["Canh", "Tráng miệng", "Món chính", "Nước"]; // Danh sách nhóm món ăn
-
   // Hàm gọi API thêm món ăn mới
   const addFoodItem = async () => {
     console.log("Global Data:", globalData); // Kiểm tra toàn bộ dữ liệu từ context
     console.log("Store ID:", storeId); // Kiểm tra giá trị của storeId
+
+    if (!selectedGroup._id) {
+      Alert.alert("Lỗi", "Vui lòng chọn nhóm món.");
+      return;
+    }
 
     if (!storeId) {
       Alert.alert("Lỗi", "Không tìm thấy thông tin cửa hàng");
@@ -80,7 +121,7 @@ export default function AddEat() {
         price: parseFloat(price),
         description,
         imageUrl: null, // Luôn gắn imageUrl là null
-        foodGroup: selectedGroup,
+        foodGroup: selectedGroup._id, // Sử dụng _id của nhóm món
         isAvailable,
         sellingTime: globalData.sellingTime || [], // Sử dụng sellingTime từ context
       };
@@ -188,13 +229,14 @@ export default function AddEat() {
           </View>
 
           {/* Group and Availability */}
+          {/* Group and Availability */}
           <View style={styles.switchContainer}>
             <Text style={styles.label}>Nhóm món</Text>
             <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
             >
-              <Text>{selectedGroup || "Chọn"}</Text>
+              <Text>{selectedGroup?.groupName || "Chọn"}</Text>
             </TouchableOpacity>
           </View>
 
@@ -254,6 +296,7 @@ export default function AddEat() {
           </Modal>
 
           {/* Modal for Group Selection */}
+          {/* Modal for Group Selection */}
           <Modal
             transparent={true}
             animationType="slide"
@@ -273,12 +316,12 @@ export default function AddEat() {
                   <TouchableOpacity
                     key={index}
                     onPress={() => {
-                      setSelectedGroup(group);
-                      setGroupModalVisible(false); // Close modal after selecting group
+                      setSelectedGroup(group); // Lưu lại nhóm món đã chọn
+                      setGroupModalVisible(false); // Đóng modal
                     }}
                     style={{ paddingVertical: 10 }}
                   >
-                    <Text style={styles.modalOption}>{group}</Text>
+                    <Text style={styles.modalOption}>{group.groupName}</Text>
                   </TouchableOpacity>
                 ))}
               </Pressable>
