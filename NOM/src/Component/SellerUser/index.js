@@ -10,6 +10,9 @@ import AddDishGroup from "../SellerUser/AddDishGroup";
 import AddEat from "../SellerUser/AddEat";
 import TimeScheduleSell from "../SellerUser/TimeScheduleSell";
 import DishDetails from "../SellerUser/DishDetails";
+import ChatSellerScreen from "../SellerUser/ChatSellerScreen";
+import SellerProfileScreen from "../SellerUser/SellerProfileScreen";
+import OrderManagementScreen from "../SellerUser/OrderManagementScreen";
 
 
-export { LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell,DishDetails};
+export {OrderManagementScreen, SellerProfileScreen ,ChatSellerScreen, LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell,DishDetails};
