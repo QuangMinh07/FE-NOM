@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
+import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
@@ -13,9 +14,10 @@ export default function StoreKH() {
   const [loading, setLoading] = useState(true); // Loading state
   const [store, setStore] = useState(null); // Store data state
   const [foodList, setFoodList] = useState([]); // Food data state
-  const { storeId } = route.params; // Retrieve storeId from navigation params
   const [error, setError] = useState(null); // Error state
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
+  const { globalData } = useContext(globalContext); // Sử dụng globalContext
+  const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
 
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
   const groupFoodsByCategory = (foods, foodGroups) => {
