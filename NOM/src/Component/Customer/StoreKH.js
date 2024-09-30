@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
 import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
 export default function StoreKH() {
-  const route = useRoute(); // To get route params
   const navigation = useNavigation(); // To navigate between screens
 
   const [loading, setLoading] = useState(true); // Loading state
@@ -245,7 +244,7 @@ export default function StoreKH() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {foodList.map((food) => (
               <TouchableOpacity
-                key={food._id} // Update key to use the correct id
+                key={food._id} // Sử dụng id chính xác cho key
                 style={{
                   backgroundColor: "#fff",
                   padding: 10,
@@ -253,18 +252,36 @@ export default function StoreKH() {
                   borderWidth: 1,
                   borderColor: "#eee",
                   marginRight: 15,
-                  width: width * 0.4,
+                  width: width * 0.4, // Chiều rộng của khung chứa
                 }}
               >
-                {/* Placeholder for Image */}
+                {/* Placeholder cho ảnh */}
                 <View
                   style={{
-                    height: 80,
-                    width: "100%",
-                    backgroundColor: "#f0f0f0", // Placeholder color for the image
+                    height: 100, // Chiều cao khung chứa
+                    width: "100%", // Đảm bảo chiếm toàn bộ chiều rộng
+                    backgroundColor: "#f0f0f0", // Màu nền cho khung chứa ảnh
                     borderRadius: 10,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
-                />
+                >
+                  {food.imageUrl ? (
+                    <Image
+                      source={{ uri: food.imageUrl }}
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        borderRadius: 10,
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                  )}
+                </View>
+
+                {/* Thông tin món ăn */}
                 <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                 <Text style={{ fontSize: 12, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                 <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
@@ -296,10 +313,24 @@ export default function StoreKH() {
                     style={{
                       height: 120,
                       width: "100%",
-                      backgroundColor: "#f0f0f0",
+                      backgroundColor: "#f0f0f0", // Placeholder background color
                       borderRadius: 10,
+                      overflow: "hidden", // Ensure the image doesn't exceed the border radius
                     }}
-                  />
+                  >
+                    {food.imageUrl ? (
+                      <Image
+                        source={{ uri: food.imageUrl }}
+                        style={{
+                          height: "100%", // Fill the height of the parent View
+                          width: "100%", // Fill the width of the parent View
+                        }}
+                        resizeMode="cover" // Ensure the image covers the View without distortion
+                      />
+                    ) : (
+                      <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                    )}
+                  </View>
                   <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                   <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
                 </View>
@@ -331,9 +362,23 @@ export default function StoreKH() {
                     width: 80,
                     backgroundColor: "#f0f0f0",
                     borderRadius: 10,
-                    marginRight: 15,
+                    overflow: "hidden",
+                    marginRight: 10,
                   }}
-                />
+                >
+                  {food.imageUrl ? (
+                    <Image
+                      source={{ uri: food.imageUrl }}
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                  )}
+                </View>
                 <View>
                   <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
                   <Text style={{ fontSize: 14 }}>{food.description}</Text>
