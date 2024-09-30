@@ -2,12 +2,11 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { OrdersScreen, MessagesScreen, ProfileScreen } from '../Home';
+import { OrderManagementScreen,SellerProfileScreen,ChatSellerScreen } from '../SellerUser';
 import HomeSeller from '../SellerUser/HomeSeller'; 
 
+
 const Tab = createBottomTabNavigator();
-
-
 
 // Tạo cấu hình Tab cho Seller
 function SellerTabs() {
@@ -105,9 +104,10 @@ function SellerTabs() {
       })}
     >
       <Tab.Screen name="Trang Chủ Seller" component={HomeSeller} />
-      <Tab.Screen name="Quản lý Đơn Hàng" component={OrdersScreen} />
-      <Tab.Screen name="Chat Seller" component={MessagesScreen} />
-      <Tab.Screen name="Hồ sơ Seller" component={ProfileScreen} />
+      {/* Thay đổi các component dưới đây với tên trang mới */}
+      <Tab.Screen name="Quản lý Đơn Hàng" component={OrderManagementScreen} />
+      <Tab.Screen name="Chat Seller" component={ChatSellerScreen} />
+      <Tab.Screen name="Hồ sơ Seller" component={SellerProfileScreen} />
     </Tab.Navigator>
   );
 }

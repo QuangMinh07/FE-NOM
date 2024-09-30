@@ -10,7 +10,7 @@ import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Hom
 import { 
   Seach,StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood
  } from "./src/Component/Customer";
-import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails } from "./src/Component/SellerUser";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen ,ChatSellerScreen,OrderManagementScreen } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
 import { api, typeHTTP } from "./src/utils/api";
@@ -153,6 +153,9 @@ const App = () => {
             <Stack.Screen name="Select" component={Select} />
             <Stack.Screen name="Orderfood" component={Orderfood} />
             <Stack.Screen name="ReviewFood" component={ReviewFood} />
+            <Stack.Screen name="ChatSellerScreen" component={ChatSellerScreen} />
+            <Stack.Screen name="SellerProfileScreen " component={SellerProfileScreen } />
+            <Stack.Screen name="OrderManagementScreen " component={OrderManagementScreen } />
 
           </Stack.Navigator>
         </NavigationContainer>
