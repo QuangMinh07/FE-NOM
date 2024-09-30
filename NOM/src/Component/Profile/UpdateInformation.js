@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Modal, Pressable, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker"; // Sử dụng expo-image-picker
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
 
@@ -25,6 +25,7 @@ const parseDate = (dateString) => {
 export default function UpdateInformation() {
   const { globalData } = useContext(globalContext);
   const navigation = useNavigation();
+  const isFocused = useIsFocused(); // Sử dụng useIsFocused để theo dõi trạng thái focus của màn hình
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -36,13 +37,15 @@ export default function UpdateInformation() {
   });
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const [image, setImage] = useState(null); // Để lưu ảnh tạm trước khi tải lên
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
-    fetchUserProfile();
-    fetchUserPersonalInfo();
-  }, []);
-
+    if (isFocused) {
+      // Chỉ fetch dữ liệu khi màn hình được focus
+      fetchUserProfile();
+      fetchUserPersonalInfo();
+    }
+  }, [isFocused]); // Lắng nghe thay đổi của isFocused
   // Hàm lấy dữ liệu hồ sơ người dùng
   const fetchUserProfile = async () => {
     try {
@@ -94,46 +97,6 @@ export default function UpdateInformation() {
     }
   };
 
-  const uploadImage = async (base64Image) => {
-    try {
-      const userId = globalData.user?.id;
-      if (!userId) {
-        Alert.alert("Lỗi", "Không tìm thấy userId.");
-        return null;
-      }
-
-      if (!base64Image) {
-        Alert.alert("Lỗi", "Dữ liệu Base64 của ảnh bị thiếu.");
-        return null;
-      }
-
-      // Khởi tạo fullBase64Image với MIME type của ảnh
-      const fullBase64Image = `data:image/png;base64,${base64Image}`; // Đảm bảo định dạng đúng
-
-      const response = await api({
-        method: typeHTTP.POST,
-        url: `/upload/uploadBase64`,
-        headers: {
-          "Content-Type": "application/json", // Đảm bảo đúng định dạng
-        },
-        data: { imageBase64: fullBase64Image },
-        sendToken: true,
-      });
-
-      if (response.success) {
-        return response.url;
-      } else {
-        Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
-        return null;
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải ảnh:", error);
-      Alert.alert("Lỗi", "Đã xảy ra lỗi khi tải ảnh.");
-      return null;
-    }
-  };
-
-  // Chọn ảnh từ thư viện
   const openImageLibrary = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -146,23 +109,14 @@ export default function UpdateInformation() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 0.5,
-        base64: true, // Lấy Base64 của ảnh
+        quality: 0.5, // Điều chỉnh chất lượng ảnh
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImageBase64 = result.assets[0].base64; // Lấy dữ liệu Base64 của ảnh
-        console.log("Base64 from library:", selectedImageBase64); // Log Base64
-        if (selectedImageBase64) {
-          const uploadedImageUrl = await uploadImage(selectedImageBase64); // Upload ảnh base64
-          if (uploadedImageUrl) {
-            setFormData({ ...formData, profilePictureURL: uploadedImageUrl });
-          } else {
-            Alert.alert("Lỗi", "Tải lên ảnh thất bại.");
-          }
-        } else {
-          Alert.alert("Lỗi", "Không thể lấy dữ liệu ảnh.");
-        }
+        const selectedImageUri = result.assets[0].uri; // Lấy URI của ảnh
+        console.log("Image URI:", selectedImageUri);
+
+        setImage(selectedImageUri); // Lưu URI ảnh vào state để hiển thị
       } else {
         Alert.alert("Lỗi", "Không thể chọn ảnh.");
       }
@@ -172,13 +126,35 @@ export default function UpdateInformation() {
     }
   };
 
-  // Hàm để mở modal chọn ảnh hoặc camera
-  const toggleModal = () => {
-    setModalVisible((prev) => !prev); // Chỉ thay đổi trạng thái của modal khi người dùng tương tác
-  };
+  const uploadProfilePicture = async (userId, uri) => {
+    const formData = new FormData();
+    formData.append("image", {
+      uri,
+      type: "image/jpeg", // hoặc image/png
+      name: "profilePicture.jpg",
+    });
 
-  const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    try {
+      const response = await fetch(`http://192.168.1.213:5000/v1/upload/uploadProfilePicture/${userId}`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.profilePictureURL) {
+        return data; // Return the Cloudinary URL from the server
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload ảnh:", error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi upload ảnh.");
+      throw error;
+    }
   };
 
   const handleSubmit = async () => {
@@ -187,11 +163,8 @@ export default function UpdateInformation() {
 
       // Nếu có ảnh mới, tải ảnh lên trước
       if (image) {
-        imageUrl = await uploadImage(image);
-        if (!imageUrl) {
-          Alert.alert("Lỗi", "Tải lên ảnh thất bại. Vui lòng thử lại.");
-          return;
-        }
+        const uploadResult = await uploadProfilePicture(globalData.user.id, image);
+        imageUrl = uploadResult.profilePictureURL; // Update with the URL returned from Cloudinary
       }
 
       // Cập nhật thông tin người dùng
@@ -214,7 +187,7 @@ export default function UpdateInformation() {
           dateOfBirth: parseDate(formData.dateOfBirth),
           gender: formData.gender,
           state: formData.state,
-          profilePictureURL: imageUrl || "https://example.com/random-image.jpg",
+          profilePictureURL: imageUrl, // Use the correct image URL here
         },
         sendToken: true,
       });
@@ -225,6 +198,15 @@ export default function UpdateInformation() {
       console.error("Lỗi khi cập nhật:", error);
       Alert.alert("Lỗi", "Cập nhật thông tin thất bại.");
     }
+  };
+
+  // Hàm để mở modal chọn ảnh hoặc camera
+  const toggleModal = () => {
+    setModalVisible((prev) => !prev); // Chỉ thay đổi trạng thái của modal khi người dùng tương tác
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
   };
 
   return (
@@ -257,7 +239,16 @@ export default function UpdateInformation() {
                   backgroundColor: "#fff",
                 }}
               >
-                {formData.profilePictureURL ? ( // Ưu tiên hiển thị ảnh đã tải lên từ profilePictureURL
+                {image ? ( // Ưu tiên hiển thị ảnh từ URI đã chọn
+                  <Image
+                    source={{ uri: image }} // Sử dụng URI của ảnh đã chọn
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: (width * 0.2) / 2,
+                    }}
+                  />
+                ) : formData.profilePictureURL ? ( // Nếu không có ảnh mới, hiển thị ảnh từ profilePictureURL
                   <Image
                     source={{ uri: formData.profilePictureURL }}
                     style={{
@@ -266,17 +257,7 @@ export default function UpdateInformation() {
                       borderRadius: (width * 0.2) / 2,
                     }}
                   />
-                ) : image ? ( // Nếu không có URL, hiển thị ảnh từ state image
-                  <Image
-                    source={{ uri: image }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: (width * 0.2) / 2,
-                    }}
-                  />
                 ) : (
-                  // Nếu không có ảnh nào, hiển thị chữ Avatar
                   <Text style={{ textAlign: "center", marginTop: 40 }}>Avatar</Text>
                 )}
 

@@ -1,10 +1,12 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView } from "react-native";
 import { AntDesign } from "@expo/vector-icons"; // Import icon library
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API functions
 import { globalContext } from "../../context/globalContext"; // Import GlobalContext
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddEat() {
   const [foodName, setFoodName] = useState("");
@@ -60,43 +62,46 @@ export default function AddEat() {
     getFoodGroups(); // Lấy danh sách nhóm món khi component được mount
   }, [storeId]); // Chỉ gọi khi storeData thay đổi
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-      base64: true, // Thêm tùy chọn này để lấy base64 của ảnh
-    });
-
-    if (!result.cancelled && result.assets && result.assets.length > 0) {
-      const selectedImage = result.assets[0];
-      if (selectedImage.base64) {
-        setImage(selectedImage.base64); // Lưu dữ liệu base64 của ảnh
-      } else {
-        setImage(selectedImage.uri); // Nếu không có base64, lưu URI
+  useEffect(() => {
+    const requestPermission = async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Yêu cầu quyền", "Ứng dụng cần quyền truy cập thư viện ảnh");
       }
-    }
-    setModalVisible(false);
-  };
+    };
+    requestPermission(); // Gọi khi component được mount
+  }, []);
 
-  const takePhoto = async () => {
-    let result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-      base64: true, // Thêm tùy chọn này để lấy base64 của ảnh
-    });
+  const openImageLibrary = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!result.cancelled && result.assets && result.assets.length > 0) {
-      const selectedImage = result.assets[0];
-      if (selectedImage.base64) {
-        setImage(selectedImage.base64); // Lưu dữ liệu base64 của ảnh
-      } else {
-        setImage(selectedImage.uri); // Nếu không có base64, lưu URI
+      if (!permissionResult.granted) {
+        Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh!");
+        return;
       }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.5, // Điều chỉnh chất lượng ảnh
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImageUri = result.assets[0].uri; // Lấy URI của ảnh
+        console.log("Image URI:", selectedImageUri);
+
+        setImage(selectedImageUri); // Lưu URI ảnh vào state để hiển thị
+        setModalVisible(false); // Đóng modal sau khi ảnh được chọn
+      } else {
+        Alert.alert("Lỗi", "Không thể chọn ảnh.");
+        setModalVisible(false); // Đóng modal nếu ảnh không được chọn
+      }
+    } catch (error) {
+      console.error("Lỗi khi chọn ảnh:", error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi chọn ảnh.");
+      setModalVisible(false); // Đóng modal khi có lỗi
     }
-    setModalVisible(false);
   };
 
   // Hàm gọi API thêm món ăn mới
@@ -115,221 +120,198 @@ export default function AddEat() {
     }
 
     try {
-      const body = {
-        storeId,
-        foodName,
-        price: parseFloat(price),
-        description,
-        imageUrl: null, // Luôn gắn imageUrl là null
-        foodGroup: selectedGroup._id, // Sử dụng _id của nhóm món
-        isAvailable,
-        sellingTime: globalData.sellingTime || [], // Sử dụng sellingTime từ context
-      };
+      // Sử dụng FormData để gửi dữ liệu món ăn và ảnh
+      const formData = new FormData();
+      formData.append("storeId", storeId);
+      formData.append("foodName", foodName);
+      formData.append("price", parseFloat(price));
+      formData.append("description", description);
+      formData.append("foodGroup", selectedGroup._id);
+      formData.append("isAvailable", isAvailable);
 
-      const response = await api({
-        method: typeHTTP.POST,
-        url: "/food/add-food",
-        body,
-        sendToken: true,
+      // Thêm sellingTime (nếu có)
+      if (globalData.sellingTime) {
+        formData.append("sellingTime", JSON.stringify(globalData.sellingTime));
+      }
+
+      // Thêm ảnh vào formData nếu có ảnh
+      if (image) {
+        formData.append("image", {
+          uri: image,
+          type: "image/jpeg", // Định dạng ảnh
+          name: "foodImage.jpg", // Tên file ảnh
+        });
+      }
+
+      // Gọi API để thêm món ăn
+      const response = await fetch("http://192.168.1.213:5000/v1/food/add-food", {
+        method: "POST",
+        body: formData, // Gửi formData
+        headers: {
+          // Không cần `Content-Type` khi dùng `FormData`, trình duyệt tự thêm.
+          Authorization: `Bearer ${await AsyncStorage.getItem("auth_token")}`, // Gửi token trong header
+        },
       });
 
-      console.log("API response:", response);
+      const data = await response.json(); // Xử lý phản hồi từ API
 
-      // Kiểm tra phản hồi API
-      if (response && response.message === "Thêm món ăn thành công") {
+      if (data && data.message === "Thêm món ăn thành công") {
         Alert.alert("Thành công", "Món ăn đã được thêm!");
 
-        const newFoodItem = response.food;
-        const updatedFoods = globalData.foods ? [...globalData.foods, newFoodItem] : [newFoodItem];
-
-        console.log("Updated Foods trước khi set:", updatedFoods);
-
         // Cập nhật foods trong GlobalContext
+        const updatedFoods = globalData.foods ? [...globalData.foods, data.food] : [data.food];
         await globalHandler.setFoods(updatedFoods);
 
-        // Điều hướng tới màn hình hiển thị danh sách món ăn
+        // Điều hướng tới danh sách món ăn
         navigation.navigate("ListFood", { reload: true });
       } else {
-        Alert.alert("Lỗi", response.message || "Không thể thêm món ăn.");
+        Alert.alert("Lỗi", data.message || "Không thể thêm món ăn.");
       }
     } catch (error) {
       console.error("Lỗi khi thêm món ăn:", error);
-      if (error.response && error.response.data) {
-        Alert.alert("Lỗi", error.response.data.message || "Có lỗi xảy ra trong quá trình thêm món ăn.");
-      } else {
-        Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
-      }
+      Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
     }
   };
 
-  // // Hàm upload ảnh Base64 lên server
-  // const uploadImage = async (base64Image) => {
-  //   try {
-  //     // Gửi request POST đến API server
-  //     const response = await api({
-  //       method: typeHTTP.POST,
-  //       url: `/upload/uploadBase64`,
-  //       headers: {
-  //         "Content-Type": "application/json", // Đảm bảo đúng định dạng
-  //       },
-  //       data: { imageBase64: base64Image }, // Gửi đúng định dạng Base64
-  //       sendToken: true,
-  //     });
-
-  //     if (response && response.url) {
-  //       return response.url;
-  //     } else {
-  //       Alert.alert("Lỗi", response.message || "Tải lên ảnh thất bại.");
-  //       return null;
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi khi tải ảnh:", error);
-  //     if (error.response && error.response.data) {
-  //       Alert.alert(
-  //         "Lỗi",
-  //         error.response.data.message || "Đã xảy ra lỗi khi tải ảnh."
-  //       );
-  //     } else {
-  //       Alert.alert("Lỗi", "Đã xảy ra lỗi khi tải ảnh.");
-  //     }
-  //     return null;
-  //   }
-  // };
-
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1, backgroundColor: "#fff" }}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: "row", alignItems: "center" }}>
-              <AntDesign name="arrowleft" size={24} color="#fff" style={{ marginRight: 10 }} />
-              <Text style={styles.headerText}>Thêm món ăn</Text>
-            </TouchableOpacity>
-          </View>
+    <KeyboardAwareScrollView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      resetScrollToCoords={{ x: 0, y: 0 }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      enableOnAndroid={true} // Bật tính năng tự động điều chỉnh cho Android
+      extraScrollHeight={150} // Đảm bảo có đủ khoảng trống khi bàn phím mở
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: "row", alignItems: "center" }}>
+          <AntDesign name="arrowleft" size={24} color="#fff" style={{ marginRight: 10 }} />
+          <Text style={styles.headerText}>Thêm món ăn</Text>
+        </TouchableOpacity>
+      </View>
 
-          {/* Food Name and Price */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Tên món</Text>
-            <TextInput style={styles.input} placeholder="Cơm tấm sườn" value={foodName} onChangeText={setFoodName} />
+      {/* Food Name and Price */}
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Tên món</Text>
+        <TextInput style={styles.input} placeholder="Cơm tấm sườn" value={foodName} onChangeText={setFoodName} />
 
-            <Text style={[styles.label, { marginTop: 10 }]}>Giá món ăn</Text>
-            <TextInput style={styles.input} placeholder="Nhập giá" value={price} onChangeText={setPrice} keyboardType="numeric" />
+        <Text style={[styles.label, { marginTop: 10 }]}>Giá món ăn</Text>
+        <TextInput style={styles.input} placeholder="Nhập giá" value={price} onChangeText={setPrice} keyboardType="numeric" />
 
-            <Text style={[styles.label, { marginTop: 10 }]}>Ảnh món ăn</Text>
-            <TouchableOpacity style={styles.imagePicker} onPress={() => setModalVisible(true)}>
-              {image ? <Image source={image.startsWith("data:image") ? { uri: `data:image/png;base64,${image}` } : { uri: `data:image/png;base64,${image}` }} style={styles.image} /> : <Text style={{ color: "#ccc", fontSize: 16 }}>Chọn ảnh món ăn</Text>}
-            </TouchableOpacity>
-          </View>
+        <Text style={[styles.label, { marginTop: 10 }]}>Ảnh món ăn</Text>
+        <TouchableOpacity
+          style={styles.imagePicker}
+          onPress={() => {
+            console.log("Image Picker Opened");
+            setModalVisible(true);
+          }}
+        >
+          {image ? <Image source={{ uri: image }} style={styles.image} /> : <Text style={{ color: "#ccc", fontSize: 16 }}>Chọn ảnh món ăn</Text>}
+        </TouchableOpacity>
+      </View>
 
-          {/* Description */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Mô tả món ăn</Text>
-            <TextInput style={[styles.input, { height: 80 }]} multiline placeholder="Mô tả món ăn" value={description} onChangeText={setDescription} />
-          </View>
+      {/* Description */}
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Mô tả món ăn</Text>
+        <TextInput style={[styles.input, { height: 80 }]} multiline placeholder="Mô tả món ăn" value={description} onChangeText={setDescription} />
+      </View>
 
-          {/* Group and Availability */}
-          {/* Group and Availability */}
-          <View style={styles.switchContainer}>
-            <Text style={styles.label}>Nhóm món</Text>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
-            >
-              <Text>{selectedGroup?.groupName || "Chọn"}</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Group and Availability */}
+      {/* Group and Availability */}
+      <View style={styles.switchContainer}>
+        <Text style={styles.label}>Nhóm món</Text>
+        <TouchableOpacity
+          style={styles.selectButton}
+          onPress={() => setGroupModalVisible(true)} // Hiển thị modal chọn nhóm
+        >
+          <Text>{selectedGroup?.groupName || "Chọn"}</Text>
+        </TouchableOpacity>
+      </View>
 
-          <View style={styles.switchContainer}>
-            <Text style={styles.label}>Còn món</Text>
-            <Switch
-              value={isAvailable}
-              onValueChange={setIsAvailable}
-              thumbColor={isAvailable ? "#ffff" : "#ffff"} // Set thumb color
-              trackColor={{ false: "#ffff", true: "#E53935" }} // Set track color
-            />
-          </View>
+      <View style={styles.switchContainer}>
+        <Text style={styles.label}>Còn món</Text>
+        <Switch
+          value={isAvailable}
+          onValueChange={setIsAvailable}
+          thumbColor={isAvailable ? "#ffff" : "#ffff"} // Set thumb color
+          trackColor={{ false: "#ffff", true: "#E53935" }} // Set track color
+        />
+      </View>
 
-          {/* Time Selling */}
-          <View style={styles.switchContainer}>
-            <Text style={styles.label}>Thời gian bán</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("TimeScheduleSell")} style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 16 }}>Tùy chỉnh</Text>
-              <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />
-            </TouchableOpacity>
-          </View>
+      {/* Time Selling */}
+      <View style={styles.switchContainer}>
+        <Text style={styles.label}>Thời gian bán</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("TimeScheduleSell")} style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ fontSize: 16 }}>Tùy chỉnh</Text>
+          <AntDesign name="right" size={16} color="black" style={{ marginLeft: 5 }} />
+        </TouchableOpacity>
+      </View>
 
-          {/* Buttons */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.deleteButton}>
-              <Text style={styles.buttonText}>Xóa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={addFoodItem}>
-              <Text style={styles.buttonText}>Lưu</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Buttons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.deleteButton}>
+          <Text style={styles.buttonText}>Xóa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={addFoodItem}>
+          <Text style={styles.buttonText}>Lưu</Text>
+        </TouchableOpacity>
+      </View>
 
-          {/* Modal for Image Upload */}
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)} // for Android back button
+      {/* Modal for Image Upload */}
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)} // for Android back button
+      >
+        <Pressable
+          style={styles.modalBackground}
+          onPress={() => setModalVisible(false)} // Close modal when tapping outside
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={() => {}} // Prevent closing when tapping inside
           >
-            <Pressable
-              style={styles.modalBackground}
-              onPress={() => setModalVisible(false)} // Close modal when tapping outside
-            >
-              <Pressable
-                style={styles.modalContent}
-                onPress={() => {}} // Prevent closing when tapping inside
-              >
-                <Text style={styles.modalTitle}>Chọn ảnh</Text>
-                <TouchableOpacity onPress={pickImage}>
-                  <Text style={styles.modalOption}>Chọn ảnh từ thư viện</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={takePhoto}>
-                  <Text style={styles.modalOption}>Chụp ảnh</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          </Modal>
+            <Text style={styles.modalTitle}>Chọn ảnh</Text>
+            <TouchableOpacity onPress={openImageLibrary}>
+              <Text style={styles.modalOption}>Chọn ảnh từ thư viện</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-          {/* Modal for Group Selection */}
-          {/* Modal for Group Selection */}
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={groupModalVisible}
-            onRequestClose={() => setGroupModalVisible(false)} // for Android back button
+      {/* Modal for Group Selection */}
+      {/* Modal for Group Selection */}
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={groupModalVisible}
+        onRequestClose={() => setGroupModalVisible(false)} // for Android back button
+      >
+        <Pressable
+          style={styles.modalBackground}
+          onPress={() => setGroupModalVisible(false)} // Close modal when tapping outside
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={() => {}} // Prevent closing when tapping inside
           >
-            <Pressable
-              style={styles.modalBackground}
-              onPress={() => setGroupModalVisible(false)} // Close modal when tapping outside
-            >
-              <Pressable
-                style={styles.modalContent}
-                onPress={() => {}} // Prevent closing when tapping inside
+            <Text style={styles.modalTitle}>Chọn nhóm món</Text>
+            {foodGroups.map((group, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedGroup(group); // Lưu lại nhóm món đã chọn
+                  setGroupModalVisible(false); // Đóng modal
+                }}
+                style={{ paddingVertical: 10 }}
               >
-                <Text style={styles.modalTitle}>Chọn nhóm món</Text>
-                {foodGroups.map((group, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => {
-                      setSelectedGroup(group); // Lưu lại nhóm món đã chọn
-                      setGroupModalVisible(false); // Đóng modal
-                    }}
-                    style={{ paddingVertical: 10 }}
-                  >
-                    <Text style={styles.modalOption}>{group.groupName}</Text>
-                  </TouchableOpacity>
-                ))}
-              </Pressable>
-            </Pressable>
-          </Modal>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+                <Text style={styles.modalOption}>{group.groupName}</Text>
+              </TouchableOpacity>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -350,7 +332,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 20,
-    marginTop: 15, // Giảm khoảng cách giữa các thành phần
+    marginTop: 15,
   },
   label: {
     fontSize: 16,
