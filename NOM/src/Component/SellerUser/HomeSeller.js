@@ -514,7 +514,7 @@ export default function HomeSeller() {
                   alignItems: "center",
                 }}
               >
-                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.12, borderRadius: 10 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
+                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.15, borderRadius: 10, width: width * 0.5 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
               </View>
               <Text style={{ fontSize: 14, fontWeight: "bold", color: "#333" }}>{food.foodName}</Text>
               <Text style={{ fontSize: 14, color: "#333" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
@@ -552,7 +552,7 @@ export default function HomeSeller() {
                   alignItems: "center",
                 }}
               >
-                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.12, borderRadius: 10 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
+                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.12, borderRadius: 10, width: width * 0.3 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
               </View>
 
               <View style={{ flex: 1, justifyContent: "center", paddingLeft: 10 }}>

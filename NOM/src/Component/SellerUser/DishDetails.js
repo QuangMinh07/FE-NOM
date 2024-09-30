@@ -3,21 +3,43 @@ import { View, Text, TextInput, Image, Switch, TouchableOpacity, StyleSheet, Key
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { globalContext } from "../../context/globalContext"; // Sử dụng globalContext
+import { api, typeHTTP } from "../../utils/api"; // Import hàm gọi API
 
 export default function DishDetails() {
   const navigation = useNavigation();
   const { globalData } = useContext(globalContext); // Lấy thông tin từ globalContext
-  const { selectedFoodId, foods } = globalData; // Lấy selectedFoodId và foods từ globalData
+  const { selectedFoodId, storeData } = globalData; // Lấy selectedFoodId và storeData từ globalData
   const [foodDetails, setFoodDetails] = useState(null);
+  const [foodGroupName, setFoodGroupName] = useState(""); // State để lưu tên nhóm món
 
-  useEffect(() => {
-    const selectedFood = foods.find((food) => food._id === selectedFoodId); // Tìm món ăn dựa trên selectedFoodId
-    if (selectedFood) {
-      setFoodDetails(selectedFood);
-    } else {
-      console.error("Không tìm thấy thông tin món ăn");
+  // Hàm gọi API để lấy thông tin nhóm món dựa trên storeId và foodId
+  const fetchFoodGroup = async () => {
+    try {
+      console.log("Gọi API với storeId:", storeData._id, "và foodId:", selectedFoodId); // Log dữ liệu
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/foodgroup/get-foods-by-group/${storeData._id}/${selectedFoodId}`,
+        sendToken: true, // Gửi token nếu cần
+      });
+
+      if (response) {
+        console.log("Phản hồi API:", response); // Log phản hồi từ API
+        setFoodDetails(response.foodDetails); // Lưu chi tiết món ăn
+        setFoodGroupName(response.groupName); // Lưu tên nhóm món
+      } else {
+        console.error("Không có phản hồi từ API");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
     }
-  }, [selectedFoodId]);
+  };
+
+  // Gọi hàm fetchFoodGroup khi component được mount
+  useEffect(() => {
+    if (selectedFoodId && storeData?._id) {
+      fetchFoodGroup();
+    }
+  }, [selectedFoodId, storeData]);
 
   // Function to format time to AM/PM manually
   const formatTime = (time) => {
@@ -41,7 +63,7 @@ export default function DishDetails() {
           </View>
 
           {/* Main Content with ScrollView */}
-          <ScrollView scontentContainerStyle={styles.scrollViewContainer}>
+          <ScrollView contentContainerStyle={styles.scrollViewContainer}>
             {/* Food Name and Price */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Tên món</Text>
@@ -64,7 +86,7 @@ export default function DishDetails() {
             <View style={styles.switchContainer}>
               <Text style={styles.label}>Nhóm món</Text>
               <TouchableOpacity style={styles.selectButton}>
-                <Text>{foodDetails ? foodDetails.foodGroup : "Chưa có nhóm"}</Text>
+                <Text>{foodGroupName ? foodGroupName : "Chưa có nhóm"}</Text>
               </TouchableOpacity>
             </View>
 
