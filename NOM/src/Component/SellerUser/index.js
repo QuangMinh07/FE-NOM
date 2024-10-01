@@ -13,6 +13,6 @@ import DishDetails from "../SellerUser/DishDetails";
 import ChatSellerScreen from "../SellerUser/ChatSellerScreen";
 import SellerProfileScreen from "../SellerUser/SellerProfileScreen";
 import OrderManagementScreen from "../SellerUser/OrderManagementScreen";
+import ImagePickerScreen from "../SellerUser/ImagePickerScreen";
 
-
-export {OrderManagementScreen, SellerProfileScreen ,ChatSellerScreen, LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell,DishDetails};
+export { OrderManagementScreen, SellerProfileScreen, ChatSellerScreen, LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell, DishDetails, ImagePickerScreen };

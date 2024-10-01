@@ -1,17 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  Image,
-  Alert,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, Image, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import module API
@@ -31,7 +19,7 @@ export default function SignUp() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường!");
       return;
     }
-  
+
     try {
       const response = await api({
         method: typeHTTP.POST,
@@ -44,7 +32,7 @@ export default function SignUp() {
         },
         sendToken: false,
       });
-  
+
       if (response.success) {
         Alert.alert("Thành công", response.message);
         navigation.navigate("SignUpMailOrPhone", { email });
@@ -55,13 +43,11 @@ export default function SignUp() {
       // Kiểm tra và hiển thị chi tiết lỗi từ backend
       let errorMessage = "Đăng ký không thành công";
       if (error.response && error.response.data) {
-        errorMessage =
-          error.response.data.message || error.response.data.error || errorMessage;
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
       }
       Alert.alert("Lỗi", errorMessage);
     }
   };
-  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -112,9 +98,7 @@ export default function SignUp() {
 
         {/* Form đăng ký */}
         <View style={{ width: "100%", marginBottom: 20 }}>
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
-            Tên đăng nhập
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>Tên đăng nhập</Text>
           <TextInput
             value={username}
             onChangeText={setUsername}
@@ -131,9 +115,7 @@ export default function SignUp() {
             }}
           />
 
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
-            Số điện thoại
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>Số điện thoại</Text>
           <TextInput
             value={phone}
             onChangeText={setPhone}
@@ -151,9 +133,7 @@ export default function SignUp() {
             keyboardType="phone-pad"
           />
 
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
-            Email
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>Email</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -171,9 +151,7 @@ export default function SignUp() {
             keyboardType="email-address"
           />
 
-          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>
-            Mật khẩu
-          </Text>
+          <Text style={{ fontSize: 14, color: "#000", marginBottom: 5 }}>Mật khẩu</Text>
           <View style={{ position: "relative" }}>
             <TextInput
               value={password}
@@ -190,15 +168,8 @@ export default function SignUp() {
                 backgroundColor: "#FFFFFF",
               }}
             />
-            <TouchableOpacity
-              style={{ position: "absolute", right: 15, top: 15 }}
-              onPress={() => setPasswordVisible(!isPasswordVisible)}
-            >
-              <Icon
-                name={isPasswordVisible ? "visibility" : "visibility-off"}
-                size={20}
-                color="#E53935"
-              />
+            <TouchableOpacity style={{ position: "absolute", right: 15, top: 15 }} onPress={() => setPasswordVisible(!isPasswordVisible)}>
+              <Icon name={isPasswordVisible ? "visibility" : "visibility-off"} size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
         </View>
@@ -221,19 +192,14 @@ export default function SignUp() {
             elevation: 5,
           }}
         >
-          <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>
-            Đăng ký
-          </Text>
+          <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Đăng ký</Text>
         </TouchableOpacity>
 
         {/* Đã có tài khoản */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={{ color: "#000", fontSize: 14 }}>Đã có tài khoản? </Text>
           <TouchableOpacity>
-            <Text
-              onPress={() => navigation.navigate("Login")}
-              style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}
-            >
+            <Text onPress={() => navigation.navigate("Login")} style={{ color: "#E53935", fontSize: 14, fontWeight: "bold" }}>
               Đăng nhập
             </Text>
           </TouchableOpacity>

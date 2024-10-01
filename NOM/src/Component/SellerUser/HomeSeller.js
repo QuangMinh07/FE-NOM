@@ -4,24 +4,26 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
 import { globalContext } from "../../context/globalContext";
+import ImagePickerScreen from "../SellerUser/ImagePickerScreen"; // Import ImageUploader
 
-const { width, height } = Dimensions.get("window"); // Lấy kích thước màn hình
+const { width, height } = Dimensions.get("window");
 
 export default function HomeSeller() {
-  const [storeName, setStoreName] = useState(""); // State để lưu tên cửa hàng
-  const [storeAddress, setStoreAddress] = useState(""); // State để lưu địa chỉ cửa hàng
-  const [sellingTime, setSellingTime] = useState([]); // State để lưu thông tin thời gian bán hàng
-  const [loading, setLoading] = useState(true); // State để theo dõi trạng thái tải dữ liệu
-  const [modalVisible, setModalVisible] = useState(false); // State để mở/đóng modal
-  const [newStoreName, setNewStoreName] = useState(storeName); // State để cập nhật tên cửa hàng mới
-  const [newStoreAddress, setNewStoreAddress] = useState(storeAddress); // State để cập nhật địa chỉ cửa hàng mới
-  const [isOpen, setIsOpen] = useState(false); // Thêm state để xác định mở/đóng cửa hàng
-  const placeholderImage = null; // Giả định không có ảnh
+  const [storeName, setStoreName] = useState("");
+  const [storeAddress, setStoreAddress] = useState("");
+  const [sellingTime, setSellingTime] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newStoreName, setNewStoreName] = useState(storeName);
+  const [newStoreAddress, setNewStoreAddress] = useState(storeAddress);
+  const [isOpen, setIsOpen] = useState(false);
+  const placeholderImage = null;
   const navigation = useNavigation();
   const [foodList, setFoodList] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Lấy thông tin từ GlobalContext
-  const { globalData, globalHandler } = useContext(globalContext); // Sử dụng globalContext
+  const { globalData, globalHandler } = useContext(globalContext);
 
   const checkStoreStatus = useCallback(async () => {
     try {
@@ -207,11 +209,6 @@ export default function HomeSeller() {
       .join("\n"); // Hiển thị từng dòng cho mỗi nhóm thời gian
   };
 
-  // Hàm xử lý tải ảnh lên
-  const handleUploadPhoto = () => {
-    console.log("Tải ảnh lên");
-  };
-
   const openEditModal = () => {
     setModalVisible(true);
     setNewStoreName(storeName);
@@ -271,34 +268,7 @@ export default function HomeSeller() {
     <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Bìa ảnh */}
       <View style={{ position: "relative" }}>
-        <View
-          style={{
-            backgroundColor: "#E53935", // Placeholder màu đỏ
-            height: height * 0.25, // Chiều cao linh hoạt dựa trên kích thước màn hình
-            borderRadius: 10,
-            marginBottom: 10,
-          }}
-        />
-
-        {/* Nút tải ảnh lên nằm ở góc phải trên cùng */}
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: 60,
-            right: 30,
-            backgroundColor: "#fff",
-            borderRadius: 20,
-            padding: 8,
-            elevation: 5, // Shadow cho Android
-            shadowColor: "#000", // Shadow cho iOS
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 2 },
-          }}
-          onPress={handleUploadPhoto}
-        >
-          <Icon name="cloud-upload" size={24} color="#E53935" />
-        </TouchableOpacity>
+        <ImagePickerScreen selectedImage={selectedImage} setSelectedImage={setSelectedImage} />
 
         {/* Thông tin cửa hàng - Khung nổi */}
         <View
