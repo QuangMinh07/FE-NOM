@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Image } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
@@ -114,8 +114,23 @@ const Seach = () => {
                     width: height * 0.12,
                     borderRadius: 10,
                     marginRight: width * 0.05,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
-                />
+                >
+                  {store.imageURL ? (
+                    <Image
+                      source={{ uri: store.imageURL }}
+                      style={{
+                        height: height * 0.12,
+                        width: height * 0.12,
+                        borderRadius: 10,
+                      }}
+                    />
+                  ) : (
+                    <Text style={{ color: "#888" }}>No Image</Text>
+                  )}
+                </View>
 
                 {/* Store Details */}
                 <View style={{ flex: 1 }}>

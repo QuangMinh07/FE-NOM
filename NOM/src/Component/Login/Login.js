@@ -111,13 +111,7 @@ export default function Login() {
 
         // Kiểm tra role và điều hướng tới trang phù hợp
         if (response.user.roleId === "staff") {
-          console.log("Store ID:", response.user.storeId); // Sử dụng storeId nếu cần
-          console.log("Trạng thái isActive của nhân viên:", response.user.isActive); // Log giá trị isActive để kiểm tra
-
           if (response.user.isActive) {
-            globalHandler.setStoreData(response.user.storeId); // Lưu storeId vào globalContext
-            console.log("Điều hướng đến HomeSeller");
-            console.log("Store ID:", response.user.storeId);
             navigation.navigate("HomeSeller");
           } else {
             Alert.alert("Tài khoản nhân viên chưa được kích hoạt. Vui lòng liên hệ quản trị viên.");
