@@ -65,15 +65,21 @@ const HomeKH = () => {
           <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>{userData ? userData.fullName : "Nguyễn Thị Kiều Nghi"}</Text>
         </View>
 
-        {/* Icons */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity style={{ marginRight: 15 }}>
-            <Ionicons name="cart-outline" size={30} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={30} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      {/* Icons */}
+<View style={{ flexDirection: "row", alignItems: "center" }}>
+  <TouchableOpacity 
+    style={{ marginRight: 15 }}
+    onPress={() => navigation.navigate('Shopping')} // Điều hướng sang trang Shopping
+  >
+    <Ionicons name="cart-outline" size={30} color="#fff" />
+  </TouchableOpacity>
+  
+  <TouchableOpacity 
+    onPress={() => navigation.navigate('CustomerNotice')} // Điều hướng sang trang CustomerNotice
+  >
+    <Ionicons name="notifications-outline" size={30} color="#fff" />
+  </TouchableOpacity>
+</View>
       </View>
 
       {/* Thanh tìm kiếm và trái tim */}
@@ -84,9 +90,14 @@ const HomeKH = () => {
             <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
           </View>
         </View>
-        <TouchableOpacity style={{ marginLeft: 10 }}>
+        <TouchableOpacity
+        onPress={() => navigation.navigate('FavoriteFood')} 
+
+        style={{ marginLeft: 10 }}>
           <View style={{ backgroundColor: "#fff", width: 50, height: 50, justifyContent: "center", alignItems: "center", borderRadius: 25 }}>
-            <Ionicons name="heart-outline" size={25} color="#E53935" />
+            <Ionicons
+                
+             name="heart-outline" size={25} color="#E53935" />
           </View>
         </TouchableOpacity>
       </View>

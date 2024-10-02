@@ -7,6 +7,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
+import {  CustomerNotice, FavoriteFood, Seemore , CustomerChat} from "./src/Component/Main";
+
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood } from "./src/Component/Customer";
 import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
@@ -155,6 +157,11 @@ const App = () => {
             <Stack.Screen name="SellerProfileScreen " component={SellerProfileScreen} />
             <Stack.Screen name="OrderManagementScreen " component={OrderManagementScreen} />
             <Stack.Screen name="ImagePickerScreen " component={ImagePickerScreen} />
+            <Stack.Screen name="CustomerNotice" component={CustomerNotice} />
+            <Stack.Screen name="FavoriteFood" component={FavoriteFood} />
+            <Stack.Screen name="Seemore" component={Seemore} />
+            <Stack.Screen name="CustomerChat" component={CustomerChat} />
+
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>
