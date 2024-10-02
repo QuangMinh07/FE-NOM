@@ -1,11 +1,13 @@
 import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import React, { useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get('window');
 
 export default function OrdersScreen() {
   const [selectedTab, setSelectedTab] = useState('Đang đặt');
+  const navigation = useNavigation();
 
   const tabs = ['Đang đặt', 'Lịch sử', 'Chờ thanh toán'];
 
@@ -173,7 +175,9 @@ export default function OrdersScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           {/* Icon giỏ hàng */}
           <TouchableOpacity style={{ marginRight: 15 }}>
-            <Ionicons name="cart-outline" size={30} color="#fff" />
+            <Ionicons
+             onPress={() => navigation.navigate('Shopping')}
+             name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
