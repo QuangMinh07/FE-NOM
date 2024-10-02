@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable
@@ -6,23 +6,17 @@ import { AntDesign } from "@expo/vector-icons"; // Import AntDesign
 import { globalContext } from "../../context/globalContext"; // Đảm bảo import đúng đường dẫn
 import { api, typeHTTP } from "../../utils/api"; // Đảm bảo import đúng API
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function ListFood({ navigation }) {
   const { globalData, globalHandler } = useContext(globalContext); // Truy cập globalData từ GlobalContext
   const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
-  const [filteredFoods, setFilteredFoods] = useState([]); // State để lưu món ăn đúng của cửa hàng hiện tại
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
+  const [foodList, setFoodList] = useState([]);
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
     console.log("StoreId from storeData:", storeData?._id); // Kiểm tra storeId từ storeData
-
-    if (storeData && storeData._id && foods.length > 0) {
-      // Lọc món ăn dựa trên storeId hiện tại
-      const filtered = foods.filter((food) => food.store === storeData._id);
-      console.log("Filtered Foods:", filtered); // Kiểm tra món ăn đã lọc
-      setFilteredFoods(filtered);
-    }
   }, [foods, storeData]); // Chỉ gọi lại khi foods hoặc storeData thay đổi
 
   const [selectedTab, setSelectedTab] = useState("Món");
@@ -127,7 +121,7 @@ export default function ListFood({ navigation }) {
   };
 
   // Sử dụng hàm groupFoodsByCategory với cả foods và foodGroups
-  const groupedFoods = groupFoodsByCategory(filteredFoods, foodGroups);
+  const groupedFoods = groupFoodsByCategory(foodList, foodGroups);
 
   const handleAddButtonPress = () => {
     if (selectedTab === "Nhóm món") {
@@ -137,50 +131,40 @@ export default function ListFood({ navigation }) {
     }
   };
 
-  const getFoodsByStoreId = async () => {
-    const storeId = storeData?._id; // Lấy storeId từ storeData
-    console.log("StoreId: ", storeId); // Kiểm tra giá trị storeId
-
-    if (!storeId) {
-      console.error("storeId không tồn tại");
-      return;
-    }
-
+  const fetchFoodsByStoreId = useCallback(async () => {
     try {
+      const storeId = globalData.storeData?._id;
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
+      }
+
+      // Gọi API để lấy danh sách món ăn
       const response = await api({
         method: typeHTTP.GET,
-        url: `/food/get-foodstore/${storeId}`, // Gọi API với storeId
-        sendToken: true, // Gửi token để xác thực
+        url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn theo storeId
+        sendToken: true,
       });
 
-      console.log("Response from API:", response);
+      // Kiểm tra phản hồi
+      console.log("Phản hồi từ API:", response); // Log phản hồi
 
-      if (response.status === 200 && response.data) {
-        if (response.data.foods && response.data.foods.length > 0) {
-          // Có món ăn trong cửa hàng
-          console.log("Danh sách món ăn:", response.data.foods);
-          globalHandler.setFoods(response.data.foods); // Cập nhật danh sách món ăn trong globalData
-        } else {
-          // Không có món ăn nào trong cửa hàng
-          console.log("Chưa có món ăn nào được thêm.");
-          globalHandler.setFoods([]); // Đảm bảo rằng foods được đặt thành mảng rỗng
-        }
-      } else if (response.status === 404) {
-        console.error("Không tìm thấy cửa hàng hoặc món ăn", response.data.message);
+      if (response && response.foods && Array.isArray(response.foods) && response.foods.length > 0) {
+        setFoodList(response.foods); // Lưu danh sách món ăn vào state
+        console.log("Danh sách món ăn:", response.foods);
+      } else {
+        console.log("Không tìm thấy món ăn nào");
       }
     } catch (error) {
-      if (error.response) {
-        console.error(`Lỗi ${error.response.status}:`, error.response.data.message);
-      } else {
-        console.error("Lỗi không xác định:", error.message);
-      }
+      console.error("Lỗi khi lấy dữ liệu món ăn:", error);
     }
-  };
+  }, [globalData.storeData?._id]);
 
-  // Gọi hàm getFoodsByStoreId khi component được mount
-  useEffect(() => {
-    getFoodsByStoreId(); // Gọi API khi storeData đã được tải
-  }, [storeData]); // Chỉ gọi khi storeData thay đổi
+  useFocusEffect(
+    useCallback(() => {
+      fetchFoodsByStoreId();
+    }, [fetchFoodsByStoreId])
+  );
 
   const handleDeleteFood = async (foodId) => {
     try {
@@ -288,7 +272,7 @@ export default function ListFood({ navigation }) {
       </View>
       {/* Kiểm tra nếu không có món ăn */}
       {selectedTab === "Món" &&
-        (filteredFoods.length === 0 ? (
+        (foodList.length === 0 ? (
           <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
             <Text style={{ fontSize: 18, color: "#999" }}>Không có món ăn nào</Text>
           </View>
