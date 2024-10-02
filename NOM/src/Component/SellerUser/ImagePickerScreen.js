@@ -1,16 +1,54 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, TouchableOpacity, Image, Dimensions, Modal, Pressable, Alert, Text } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { globalContext } from "../../context/globalContext";
+import { api, typeHTTP } from "../../utils/api"; // Import API module
 
 const { width, height } = Dimensions.get("window");
 
-export default function ImagePickerScreen({ selectedImage, setSelectedImage, storeId }) {
+export default function ImagePickerScreen({ selectedImage, setSelectedImage }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const { globalData } = useContext(globalContext);
+  const [loading, setLoading] = useState(true);
+  const { globalData } = useContext(globalContext); // Lấy storeId từ globalData
+
+  useEffect(() => {
+    const fetchStoreImage = async () => {
+      const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
+      }
+      try {
+        // Gọi API để lấy thông tin cửa hàng, bao gồm ảnh
+        const response = await api({
+          method: typeHTTP.GET,
+          url: `/store/get-store/${storeId}`, // Đường dẫn đầy đủ tới API
+          sendToken: true, // Gửi token để xác thực
+        });
+
+        // Truy cập đúng vào `imageURL` từ `response.data`
+        const storeData = response.data;
+
+        if (storeData && storeData.imageURL) {
+          setSelectedImage(storeData.imageURL); // Lưu `imageURL` vào state để hiển thị ảnh
+        } else {
+          console.log("Không tìm thấy `imageURL` trong dữ liệu cửa hàng");
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy ảnh cửa hàng:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (globalData.storeData?._id) {
+      fetchStoreImage(); // Gọi API để lấy ảnh cửa hàng khi storeId thay đổi
+    } else {
+      setSelectedImage(null); // Reset ảnh khi không có storeId
+      setLoading(false);
+    }
+  }, [globalData.storeData?._id]); // Theo dõi storeId để gọi lại API khi thay đổi
 
   const openImageLibrary = async () => {
     try {
@@ -43,8 +81,13 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage, sto
 
   // Hàm upload ảnh lên server
   const uploadImageToStore = async (imageUri) => {
+    const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+    if (!storeId) {
+      Alert.alert("Lỗi", "storeId không tồn tại.");
+      return;
+    }
+
     try {
-      const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
       const formData = new FormData();
       formData.append("image", {
         uri: imageUri,
@@ -52,24 +95,17 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage, sto
         name: "store_image.jpg",
       });
 
-      const token = await AsyncStorage.getItem("auth_token");
-
-      if (!token) {
-        Alert.alert("Lỗi", "Token không tồn tại.");
-        return;
-      }
-
-      const response = await axios.post(`http://192.168.1.213:5000/v1/upload/uploadStoreImage/${storeId}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      // Gọi API để upload ảnh
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/upload/uploadStoreImage/${storeId}`,
+        body: formData,
+        sendToken: true,
+        isMultipart: true, // multipart yêu cầu cấu hình đặc biệt
       });
 
-      if (response.status === 200) {
+      if (response) {
         Alert.alert("Thành công", "Upload ảnh cửa hàng thành công!");
-      } else {
-        Alert.alert("Lỗi", "Không thể upload ảnh.");
       }
     } catch (error) {
       console.error("Lỗi khi upload ảnh:", error);
@@ -96,6 +132,7 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage, sto
             marginBottom: 10,
             width: "100%",
           }}
+          resizeMode="cover"
         />
       ) : (
         <View
@@ -104,8 +141,12 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage, sto
             height: height * 0.25,
             borderRadius: 10,
             marginBottom: 10,
+            justifyContent: "center",
+            alignItems: "center",
           }}
-        />
+        >
+          <Text style={{ color: "#fff" }}>Không có ảnh</Text>
+        </View>
       )}
 
       {/* Nút tải ảnh lên */}
@@ -128,7 +169,7 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage, sto
         <Icon name="cloud-upload" size={24} color="#E53935" />
       </TouchableOpacity>
 
-      {/* Modal */}
+      {/* Modal chọn ảnh */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={closeEditModal}>
         <Pressable
           style={{

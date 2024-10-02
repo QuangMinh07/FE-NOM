@@ -19,26 +19,6 @@ export default function StoreKH() {
   const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
   const userId = globalData.user?.id; // Lấy userId từ globalData
 
-  const addToCart = async (foodId, quantity = 1) => {
-    try {
-      const response = await api({
-        method: typeHTTP.POST,
-        url: `/cart/add-to-cart/${userId}`, // API thêm món vào giỏ hàng
-        body: { foodId, quantity }, // Gửi foodId và quantity
-        sendToken: true, // Gửi token xác thực
-      });
-      if (response.message === "Thêm vào giỏ hàng thành công!") {
-        Alert.alert("Thành công", "Món ăn đã được thêm vào giỏ hàng");
-        navigation.navigate("Shopping");
-      } else {
-        Alert.alert("Thất bại", "Không thể thêm món ăn vào giỏ hàng");
-      }
-    } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-      Alert.alert("Lỗi", "Đã xảy ra lỗi khi thêm vào giỏ hàng");
-    }
-  };
-
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
   const groupFoodsByCategory = (foods, foodGroups) => {
     const groupedFoods = foods.reduce((groupedFoods, food) => {
@@ -275,7 +255,6 @@ export default function StoreKH() {
                   marginRight: 15,
                   width: width * 0.4, // Chiều rộng của khung chứa
                 }}
-                onPress={() => addToCart(food._id, 1)}
               >
                 {/* Placeholder cho ảnh */}
                 <View
