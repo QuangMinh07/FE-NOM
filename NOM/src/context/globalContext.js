@@ -9,6 +9,7 @@ export const GlobalContext = ({ children }) => {
   const [sellingTime, setSellingTime] = useState([]); // Thêm state lưu trữ sellingTime
   const [foods, setFoods] = useState([]); // Thêm state lưu trữ danh sách món ăn (foods)
   const [selectedFoodId, setSelectedFoodId] = useState(null); // Thêm state để lưu selectedFoodId
+  const [cart, setCart] = useState([]); // Thêm state để lưu giỏ hàng
 
   // Tải thông tin người dùng, cửa hàng, thời gian bán hàng và món ăn từ AsyncStorage khi khởi động
   useEffect(() => {
@@ -19,6 +20,9 @@ export const GlobalContext = ({ children }) => {
           setUser(JSON.parse(storedUser));
           console.log("User data loaded from AsyncStorage:", JSON.parse(storedUser));
         }
+
+        const storedCart = await AsyncStorage.getItem("cart");
+        if (storedCart) setCart(JSON.parse(storedCart));
 
         const storedStoreData = await AsyncStorage.getItem("storeData");
         if (storedStoreData) {
@@ -51,6 +55,7 @@ export const GlobalContext = ({ children }) => {
     sellingTime, // Thêm sellingTime vào globalData
     foods, // Thêm foods vào globalData
     selectedFoodId,
+    cart,
   };
 
   const globalHandler = {
@@ -75,6 +80,10 @@ export const GlobalContext = ({ children }) => {
       } catch (error) {
         console.error("Error saving store data to storage:", error);
       }
+    },
+    setCart: async (cartData) => {
+      setCart(cartData); // Cập nhật giỏ hàng trong state
+      await AsyncStorage.setItem("cart", JSON.stringify(cartData)); // Lưu giỏ hàng vào AsyncStorage
     },
     setSellingTime: async (timeData) => {
       // Hàm để lưu dữ liệu sellingTime
@@ -126,6 +135,7 @@ export const GlobalContext = ({ children }) => {
       }
     },
     clearUser: async () => {
+      setCart([]); // Xóa giỏ hàng khi đăng xuất
       setUser(null);
       setStoreData(null);
       setSellingTime([]);

@@ -62,12 +62,6 @@ export default function HomeSeller() {
     return () => clearInterval(interval);
   }, [checkStoreStatus]);
 
-  useFocusEffect(
-    useCallback(() => {
-      checkStoreStatus();
-    }, [checkStoreStatus])
-  );
-
   const fetchFoodsByStoreId = useCallback(async () => {
     try {
       const storeId = globalData.storeData?._id;

@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const baseURL = "http://192.168.0.190:5000/v1";
+const baseURL = "http://192.168.1.26:5000/v1";
 
 export const typeHTTP = {
   POST: "post",
@@ -14,12 +14,12 @@ export const api = async ({ method, url, body, sendToken, isMultipart = false })
   const headers = {};
 
   if (sendToken) {
-    const token = await AsyncStorage.getItem("auth_token"); // Lấy token từ AsyncStorage
+    const token = await AsyncStorage.getItem("auth_token");
     if (!token) {
       console.log("Token không tồn tại");
       return null;
     }
-    headers["Authorization"] = `Bearer ${token}`; // Gửi token trong header
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Nếu là multipart, không đặt Content-Type, Axios sẽ tự động thêm
