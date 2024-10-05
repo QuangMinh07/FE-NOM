@@ -17,7 +17,6 @@ export default function StoreKH() {
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const { globalData } = useContext(globalContext); // Sử dụng globalContext
   const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
-  const userId = globalData.user?.id; // Lấy userId từ globalData
 
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
   const groupFoodsByCategory = (foods, foodGroups) => {
@@ -150,25 +149,25 @@ export default function StoreKH() {
     );
   }
 
-  const groupedFoods = groupFoodsByCategory(foodList, foodGroups); // Nhóm món ăn theo nhóm món
-  const { storeName, storeAddress, isOpen, sellingTime } = store; // Destructure store data
+  const groupedFoods = groupFoodsByCategory(foodList, foodGroups);
+  const { storeName, storeAddress, isOpen, sellingTime } = store;
 
-  const firstGroup = Object.keys(groupedFoods)[0]; // Lấy nhóm đầu tiên
-  const remainingGroups = Object.keys(groupedFoods).slice(1); // Các nhóm còn lại
+  const firstGroup = Object.keys(groupedFoods)[0];
+  const remainingGroups = Object.keys(groupedFoods).slice(1);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: 100, // Ensure there is space for the footer
+          paddingBottom: 100,
         }}
       >
         {/* Header - Store Banner */}
         <View style={{ position: "relative" }}>
           <View
             style={{
-              backgroundColor: "#E53935", // Red placeholder color
-              height: height * 0.25, // Flexible height
+              backgroundColor: "#E53935",
+              height: height * 0.25,
               borderRadius: 10,
               marginBottom: 10,
             }}
@@ -255,6 +254,7 @@ export default function StoreKH() {
                   marginRight: 15,
                   width: width * 0.4, // Chiều rộng của khung chứa
                 }}
+                onPress={() => navigation.navigate("Orderfood", { foodId: food._id })} // Truyền foodId khi nhấn vào món ăn
               >
                 {/* Placeholder cho ảnh */}
                 <View
@@ -298,7 +298,7 @@ export default function StoreKH() {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {groupedFoods[firstGroup].map((food) => (
-                <View
+                <TouchableOpacity
                   key={food._id}
                   style={{
                     backgroundColor: "#fff",
@@ -309,6 +309,7 @@ export default function StoreKH() {
                     marginRight: 15,
                     width: width * 0.55,
                   }}
+                  onPress={() => navigation.navigate("Orderfood", { foodId: food._id })}
                 >
                   <View
                     style={{
@@ -334,7 +335,7 @@ export default function StoreKH() {
                   </View>
                   <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                   <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
@@ -344,7 +345,7 @@ export default function StoreKH() {
           <View key={group} style={{ marginTop: 20, paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
             {groupedFoods[group].map((food) => (
-              <View
+              <TouchableOpacity
                 key={food._id}
                 style={{
                   backgroundColor: "#fff",
@@ -356,6 +357,7 @@ export default function StoreKH() {
                   flexDirection: "row",
                   alignItems: "center",
                 }}
+                onPress={() => navigation.navigate("Orderfood", { foodId: food._id })}
               >
                 <View
                   style={{
@@ -385,7 +387,7 @@ export default function StoreKH() {
                   <Text style={{ fontSize: 14 }}>{food.description}</Text>
                   <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         ))}

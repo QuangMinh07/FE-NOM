@@ -4,17 +4,20 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import { globalContext } from "../../context/globalContext";
+import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable component
 
 const { width } = Dimensions.get("window");
 
 export default function Shopping() {
   const navigation = useNavigation();
-  const { globalData } = useContext(globalContext); // Sử dụng useContext để lấy globalData
+  const { globalData, globalHandler } = useContext(globalContext); // Sử dụng useContext để lấy globalData
   const userId = globalData?.user?.id; // Lấy userId từ globalData nếu có
+  const cart = globalData.cart || []; // Lấy cart từ globalData
 
-  const [orderItems, setOrderItems] = useState([]);
+  const [orderItems, setOrderItems] = useState(cart);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deliveryAddress, setDeliveryAddress] = useState(""); // State để lưu địa chỉ giao hàng
 
   // Hàm lấy giỏ hàng từ API
   const fetchCart = async () => {
@@ -26,29 +29,16 @@ export default function Shopping() {
         sendToken: true,
       });
 
-      // Lấy chi tiết của từng món ăn trong giỏ hàng bằng hàm getFoodById
-      const updatedOrderItems = await Promise.all(
-        data.cart.items.map(async (item) => {
-          const foodId = item.food; // Lấy foodId từ item
-          const foodResponse = await api({
-            method: typeHTTP.GET,
-            url: `/food/get-food/${foodId}`, // API lấy chi tiết món ăn
-            sendToken: true,
-          });
+      if (data.cart.items.length === 0) {
+        setOrderItems([]); // Nếu giỏ hàng rỗng, cập nhật giỏ hàng thành mảng rỗng
+      } else {
+        setOrderItems(data.cart.items); // Cập nhật orderItems từ dữ liệu giỏ hàng trả về
+      }
 
-          return {
-            ...item,
-            foodName: foodResponse.food.foodName, // Cập nhật tên món ăn từ response
-            foodPrice: foodResponse.food.price, // Cập nhật giá từ response
-          };
-        })
-      );
-
-      setOrderItems(updatedOrderItems); // Cập nhật orderItems với thông tin món ăn chi tiết
+      setDeliveryAddress(data.cart.deliveryAddress); // Cập nhật địa chỉ giao hàng từ dữ liệu giỏ hàng
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching cart:", error);
-      setError("Lỗi khi tải giỏ hàng");
+      setOrderItems([]); // Nếu có lỗi, đặt giỏ hàng rỗng và không cần log lỗi
       setLoading(false);
     }
   };
@@ -62,20 +52,63 @@ export default function Shopping() {
     }
   }, [userId]);
 
+  // Function to remove item from cart
+  const removeItem = async (foodId) => {
+    try {
+      console.log("Removing foodId:", foodId); // Debug log để kiểm tra foodId có được truyền đúng không
+
+      // Gọi API để xóa món ăn theo foodId
+      await api({
+        method: typeHTTP.DELETE,
+        url: `/cart/remove/${userId}/${foodId}`, // Gửi foodId thay vì foodName
+        sendToken: true,
+      });
+
+      // Xóa món ăn khỏi giỏ hàng trong state
+      const updatedCart = orderItems.filter((item) => item.foodId !== foodId);
+
+      // Cập nhật lại giỏ hàng trong globalData
+      globalHandler.setCart(updatedCart);
+      setOrderItems(updatedCart);
+    } catch (error) {
+      console.error("Error removing item from cart:", error);
+      setError("Lỗi khi xóa món ăn.");
+    }
+  };
+
   // Function to handle increasing the quantity
-  const increaseQuantity = (itemId) => {
-    setOrderItems((prevItems) => prevItems.map((item) => (item.food._id === itemId ? { ...item, quantity: item.quantity + 1 } : item)));
+  const increaseQuantity = (index) => {
+    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index ? { ...item, quantity: item.quantity + 1 } : item)));
   };
 
   // Function to handle decreasing the quantity
-  const decreaseQuantity = (itemId) => {
-    setOrderItems((prevItems) => prevItems.map((item) => (item.food._id === itemId && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item)).filter((item) => item.quantity > 0));
+  const decreaseQuantity = (index) => {
+    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item)).filter((item) => item.quantity > 0));
   };
 
-  // Calculate total price
+  // Tính tổng giá
   const calculateTotal = () => {
-    return orderItems.reduce((total, item) => total + item.foodPrice * item.quantity, 0); // Dùng foodPrice thay cho price cũ
+    return orderItems.reduce((total, item) => {
+      return total + (item.price || 0) * item.quantity;
+    }, 0);
   };
+
+  // Swipeable render right actions (delete button)
+  const renderRightActions = (foodId) => (
+    <TouchableOpacity
+      style={{
+        backgroundColor: "#E53935",
+        justifyContent: "center",
+        alignItems: "center",
+        width: 70,
+        height: "100%",
+        borderRadius: 10,
+      }}
+      onPress={() => removeItem(foodId)} // Đảm bảo foodId được truyền vào đây
+    >
+      <Icon name="delete" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
 
   if (loading) {
     return (
@@ -85,10 +118,10 @@ export default function Shopping() {
     );
   }
 
-  if (error) {
+  if (orderItems.length === 0) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>{error}</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+        <Text style={{ fontSize: 18, color: "#333" }}>Không có thức ăn trong giỏ hàng</Text>
       </View>
     );
   }
@@ -115,9 +148,9 @@ export default function Shopping() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingBottom: 100, // To make sure footer button is not overlapped
-          justifyContent: "space-between", // Push content down
-          flexGrow: 1, // Ensure the content expands to the full height
+          paddingBottom: 100,
+          justifyContent: "space-between",
+          flexGrow: 1,
         }}
       >
         {/* Floating Address Section */}
@@ -126,13 +159,13 @@ export default function Shopping() {
             backgroundColor: "#fff",
             padding: 15,
             borderRadius: 10,
-            elevation: 5, // For Android shadow
-            shadowColor: "#000", // For iOS shadow
+            elevation: 5,
+            shadowColor: "#000",
             shadowOpacity: 0.2,
             shadowRadius: 5,
             shadowOffset: { width: 0, height: 2 },
             marginBottom: 20,
-            marginTop: 30, // Raise the position to give it a floating feel
+            marginTop: 30,
           }}
         >
           <View
@@ -148,7 +181,8 @@ export default function Shopping() {
               <Icon name="edit" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
-          <Text style={{ fontSize: 14, color: "#333" }}>72, phường 5, Nguyễn Thái Sơn, Gò Vấp</Text>
+          {/* Hiển thị địa chỉ nhận món động */}
+          <Text style={{ fontSize: 14, color: "#333" }}>{deliveryAddress || "Không có địa chỉ"}</Text>
         </View>
 
         {/* Order Details */}
@@ -162,7 +196,6 @@ export default function Shopping() {
             }}
           >
             <Text style={{ fontSize: 16, fontWeight: "bold", color: "#333" }}>Đơn hàng</Text>
-            {/* Add Food Icon with "Thêm món" text */}
             <TouchableOpacity onPress={() => navigation.navigate("StoreKH")}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={{ marginLeft: 5, fontSize: 16, color: "#E53935" }}>Thêm món</Text>
@@ -171,37 +204,41 @@ export default function Shopping() {
           </View>
 
           {/* Render each order item */}
-          {orderItems.map((item) => (
-            <TouchableOpacity
-              key={item.food._id} // Use food ID from API response
-              onPress={() => navigation.navigate("Orderfood")}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                  padding: 10,
-                  backgroundColor: "#fff",
-                  borderRadius: 10,
-                  borderColor: "#eee",
-                  borderWidth: 1,
-                }}
-              >
-                <Text style={{ fontSize: 14, color: "#333" }}>{item.foodName}</Text>
-                <Text style={{ fontSize: 14, color: "#333" }}>{(item.foodPrice * item.quantity).toLocaleString()} VND</Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <TouchableOpacity onPress={() => decreaseQuantity(item.food._id)}>
-                    <Icon name="remove-circle-outline" size={24} color="#E53935" />
-                  </TouchableOpacity>
-                  <Text style={{ marginHorizontal: 10, fontSize: 14 }}>{item.quantity}</Text>
-                  <TouchableOpacity onPress={() => increaseQuantity(item.food._id)}>
-                    <Icon name="add-circle-outline" size={24} color="#E53935" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {orderItems.map((item, index) => {
+            console.log("Current item:", item); // Ghi log để kiểm tra dữ liệu của từng item
+            return (
+              <Swipeable key={index} renderRightActions={() => renderRightActions(item.foodId)}>
+                <TouchableOpacity>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 10,
+                      padding: 10,
+                      backgroundColor: "#fff",
+                      borderRadius: 10,
+                      borderColor: "#eee",
+                      borderWidth: 1,
+                    }}
+                  >
+                    <Text style={{ fontSize: 14, color: "#333" }}>{item.foodName || "Món ăn không tồn tại"}</Text>
+                    <Text style={{ fontSize: 14, color: "#333" }}>{(item.price * item.quantity).toLocaleString()} VND</Text>
+
+                    {/* Các nút tăng giảm số lượng */}
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <TouchableOpacity onPress={() => decreaseQuantity(index)}>
+                        <Icon name="remove-circle-outline" size={24} color="#E53935" />
+                      </TouchableOpacity>
+                      <Text style={{ marginHorizontal: 10, fontSize: 14 }}>{item.quantity}</Text>
+                      <TouchableOpacity onPress={() => increaseQuantity(index)}>
+                        <Icon name="add-circle-outline" size={24} color="#E53935" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Swipeable>
+            );
+          })}
         </View>
 
         {/* Payment Breakdown */}

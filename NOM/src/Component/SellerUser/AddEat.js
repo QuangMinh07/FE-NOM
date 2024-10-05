@@ -144,7 +144,7 @@ export default function AddEat() {
       }
 
       // Gọi API để thêm món ăn
-      const response = await fetch("http://192.168.1.213:5000/v1/food/add-food", {
+      const response = await fetch("http://192.168.1.26:5000/v1/food/add-food", {
         method: "POST",
         body: formData, // Gửi formData
         headers: {

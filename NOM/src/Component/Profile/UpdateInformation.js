@@ -135,7 +135,7 @@ export default function UpdateInformation() {
     });
 
     try {
-      const response = await fetch(`http://192.168.1.213:5000/v1/upload/uploadProfilePicture/${userId}`, {
+      const response = await fetch(`http://192.168.1.26:5000/v1/upload/uploadProfilePicture/${userId}`, {
         method: "POST",
         body: formData,
         headers: {
