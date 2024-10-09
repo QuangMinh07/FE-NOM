@@ -11,14 +11,14 @@ import { styles } from "./StyleShopping";
 
 export default function Shopping({ route }) {
   const navigation = useNavigation();
-  const { globalData, globalHandler } = useContext(globalContext); 
+  const { globalData, globalHandler } = useContext(globalContext);
   const userId = globalData?.user?.id;
   const cart = globalData.cart || [];
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [orderItems, setOrderItems] = useState(cart);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deliveryAddress, setDeliveryAddress] = useState(""); 
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const getDisplayPaymentMethod = (method) => {
     switch (method) {
@@ -53,7 +53,6 @@ export default function Shopping({ route }) {
       }
       setLoading(false);
     } catch (error) {
-      console.error("Lỗi khi lấy giỏ hàng:", error);
       setOrderItems([]);
       setLoading(false);
     }
@@ -91,21 +90,48 @@ export default function Shopping({ route }) {
   };
 
   const increaseQuantity = (index) => {
-    setOrderItems((prevItems) =>
-      prevItems.map((item, i) => (i === index ? { ...item, quantity: item.quantity + 1 } : item))
-    );
+    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index ? { ...item, quantity: item.quantity + 1 } : item)));
   };
 
   const decreaseQuantity = (index) => {
-    setOrderItems((prevItems) =>
-      prevItems.map((item, i) =>
-        i === index && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item
-      )
-    );
+    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item)));
   };
 
   const calculateTotal = () => {
     return orderItems.reduce((total, item) => total + (item.price || 0) * item.quantity, 0);
+  };
+
+  const handlePayment = async () => {
+    try {
+      const cartId = globalData.cart?._id; // Lấy cartId từ giỏ hàng hiện tại
+
+      if (!cartId) {
+        Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
+        return;
+      }
+
+      // Gọi API để tạo đơn hàng từ giỏ hàng hiện tại
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/storeOrder/create/${cartId}`,
+        sendToken: true,
+      });
+
+      if (response?.orderDetails) {
+        // Xóa giỏ hàng chỉ trên frontend
+        globalHandler.setCart([]); // Làm trống giỏ hàng trên frontend
+        setOrderItems([]); // Cập nhật danh sách món ăn trống
+
+        Alert.alert("Thành công", "Đơn hàng đã được tạo thành công.");
+        // Điều hướng người dùng về trang chính hoặc lịch sử đơn hàng
+        navigation.navigate("HomeKH");
+      } else {
+        Alert.alert("Lỗi", "Không thể tạo đơn hàng. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi thanh toán:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thanh toán.");
+    }
   };
 
   if (loading) {
@@ -118,7 +144,7 @@ export default function Shopping({ route }) {
 
   if (orderItems.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={styles.containergiohang}>
         <Text style={{ fontSize: 18, color: "#333" }}>Không có thức ăn trong giỏ hàng</Text>
       </View>
     );
@@ -146,12 +172,23 @@ export default function Shopping({ route }) {
 
         {/* Order Details */}
         <View style={styles.orderDetailsSection}>
+          <View style={styles.orderHeader}>
+            <Text style={styles.orderTitle}>Đơn hàng</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("StoreKH")}>
+              <View style={styles.addMore}>
+                <Text style={styles.addMoreText}>Thêm món</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
           {orderItems.map((item, index) => (
-            <Swipeable key={index} renderRightActions={() => (
-              <TouchableOpacity style={styles.swipeableDeleteButton} onPress={() => removeItem(item.foodId)}>
-                <Icon name="delete" size={24} color="#fff" />
-              </TouchableOpacity>
-            )}>
+            <Swipeable
+              key={index}
+              renderRightActions={() => (
+                <TouchableOpacity style={styles.swipeableDeleteButton} onPress={() => removeItem(item.foodId)}>
+                  <Icon name="delete" size={24} color="#fff" />
+                </TouchableOpacity>
+              )}
+            >
               <View style={styles.orderItemContainer}>
                 <Text style={styles.orderItemText}>{item.foodName || "Món ăn không tồn tại"}</Text>
                 <Text style={styles.priceText}>{(item.price * item.quantity).toLocaleString()} VND</Text>
@@ -169,23 +206,48 @@ export default function Shopping({ route }) {
           ))}
         </View>
 
+        <View style={styles.totalSection}>
+          <View style={styles.totalBreakdown}>
+            <Text style={styles.totalBreakdownText}>Thành tiền</Text>
+            <Text style={styles.totalBreakdownText}>{calculateTotal().toLocaleString()} VND</Text>
+          </View>
+
+          <View style={styles.totalBreakdown}>
+            <Text style={styles.totalBreakdownText}>Phí vận chuyển</Text>
+            <Text style={styles.totalBreakdownText}>0.000 VND</Text>
+          </View>
+
+          <View style={styles.totalBreakdown}>
+            <Text style={styles.totalBreakdownText}>Ưu đãi</Text>
+            <Text style={styles.totalBreakdownText}>0.000 VND</Text>
+          </View>
+
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalAmountText}>Thành tiền</Text>
+            <Text style={styles.totalAmountText}>{calculateTotal().toLocaleString()} VND</Text>
+          </View>
+        </View>
+
         {/* Payment Method Selection */}
-        <TouchableOpacity style={styles.paymentSection} onPress={async () => {
-          try {
-            const data = await api({
-              method: typeHTTP.GET,
-              url: `/cart/get-cart/${userId}`,
-              sendToken: true,
-            });
-            if (data.cart && data.cart._id) {
-              navigation.navigate("Select", { cartId: data.cart._id });
-            } else {
-              Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
+        <TouchableOpacity
+          style={styles.paymentSection}
+          onPress={async () => {
+            try {
+              const data = await api({
+                method: typeHTTP.GET,
+                url: `/cart/get-cart/${userId}`,
+                sendToken: true,
+              });
+              if (data.cart && data.cart._id) {
+                navigation.navigate("Select", { cartId: data.cart._id });
+              } else {
+                Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
+              }
+            } catch (error) {
+              Alert.alert("Lỗi", "Không thể lấy giỏ hàng.");
             }
-          } catch (error) {
-            Alert.alert("Lỗi", "Không thể lấy giỏ hàng.");
-          }
-        }}>
+          }}
+        >
           <Text style={{ fontSize: 16, color: "#666" }}>Phương thức thanh toán</Text>
           <View style={styles.paymentButton}>
             <Text style={styles.paymentButtonText}>{getDisplayPaymentMethod(selectedPaymentMethod)}</Text>
@@ -195,7 +257,7 @@ export default function Shopping({ route }) {
       </ScrollView>
 
       {/* Footer Button */}
-      <TouchableOpacity style={styles.footerButton} onPress={() => console.log("Thanh toán")}>
+      <TouchableOpacity style={styles.footerButton} onPress={handlePayment}>
         <Text style={styles.footerButtonText}>Thanh toán</Text>
       </TouchableOpacity>
     </View>

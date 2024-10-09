@@ -5,6 +5,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
 import { globalContext } from "../../context/globalContext";
 import ImagePickerScreen from "../SellerUser/ImagePickerScreen"; // Import ImageUploader
+import { styles } from "./StyleHomeSeller"; // Import styles từ file mới
 
 const { width, height } = Dimensions.get("window");
 
@@ -265,125 +266,35 @@ export default function HomeSeller() {
         <ImagePickerScreen selectedImage={selectedImage} setSelectedImage={setSelectedImage} />
 
         {/* Thông tin cửa hàng - Khung nổi */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: -40,
-            left: width * 0.05, // Canh giữa với tỷ lệ trên màn hình
-            right: width * 0.05,
-            backgroundColor: "#fff",
-            padding: 15,
-            borderRadius: 10,
-            elevation: 5, // Shadow cho Android
-            shadowColor: "#000", // Shadow cho iOS
-            shadowOpacity: 0.2,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 2 },
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000", width: 110 }}>{storeName}</Text>
-            <Text style={{ fontSize: 12, color: "#333", marginTop: 4 }}>4.5 ⭐ (25+)</Text>
-            <View
-              style={{
-                backgroundColor: isOpen ? "#00a651" : "#E53935", // Xanh lá khi mở, đỏ khi đóng
-                borderRadius: 3,
-                paddingHorizontal: 5,
-                paddingVertical: 4,
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>{isOpen ? "Đang mở cửa" : "Đã đóng cửa"}</Text>
+        <View style={styles.storeInfoContainer}>
+          <View style={styles.storeInfoHeader}>
+            <Text style={styles.storeNameText}>{storeName}</Text>
+            <Text style={styles.storeRatingText}>4.5 ⭐ (25+)</Text>
+            <View style={[styles.storeStatusContainer, { backgroundColor: isOpen ? "#00a651" : "#E53935" }]}>
+              <Text style={styles.storeStatusText}>{isOpen ? "Đang mở cửa" : "Đã đóng cửa"}</Text>
             </View>
-
             <TouchableOpacity onPress={openEditModal}>
               <Icon name="edit" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
-          {/* Hiển thị thời gian mở cửa từ dữ liệu */}
-          <Pressable
-            onPress={() => {
-              navigation.navigate("TimeClose");
-            }}
-          >
-            <Text style={{ fontSize: 14, color: "#E53935", marginTop: 5 }}>Thời gian mở cửa:</Text>
-            <Text style={{ paddingLeft: 20, fontSize: 14, color: "#E53935" }}>{formatSellingTime()}</Text>
+          <Pressable onPress={() => navigation.navigate("TimeClose")}>
+            <Text style={styles.timeSectionText}>Thời gian mở cửa:</Text>
+            <Text style={styles.timeSectionText}>{formatSellingTime()}</Text>
           </Pressable>
-
-          <Text style={{ fontSize: 14, color: "#333", marginTop: 5 }}>{storeAddress}</Text>
+          <Text style={styles.addressText}>{storeAddress}</Text>
         </View>
       </View>
 
       {/* Modal for Editing Store Info */}
       <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={closeEditModal}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.5)",
-          }}
-          activeOpacity={1}
-          onPress={closeEditModal} // Close modal when tapping outside
-        >
-          <View
-            style={{
-              width: "80%",
-              backgroundColor: "#fff",
-              padding: 20,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Cập nhật thông tin</Text>
-            <TextInput
-              value={newStoreName} // Sử dụng newStoreName
-              onChangeText={(value) => {
-                setNewStoreName(value); // Lấy giá trị từ sự kiện và cập nhật state
-              }}
-              placeholder="Tên cửa hàng"
-              style={{
-                borderWidth: 1,
-                borderColor: "#E53935",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 10,
-              }}
-            />
-            <TextInput
-              value={newStoreAddress} // Sử dụng newStoreAddress
-              onChangeText={(value) => {
-                setNewStoreAddress(value); // Lấy giá trị từ sự kiện và cập nhật state
-              }}
-              placeholder="Địa chỉ"
-              style={{
-                borderWidth: 1,
-                borderColor: "#E53935",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 10,
-              }}
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => updateStore(newStoreName, newStoreAddress)}
-                style={{
-                  backgroundColor: "#E53935",
-                  borderRadius: 5,
-                  paddingVertical: 10,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <Text style={{ color: "#fff" }}>Xác nhận</Text>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeEditModal}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Cập nhật thông tin</Text>
+            <TextInput value={newStoreName} onChangeText={(value) => setNewStoreName(value)} placeholder="Tên cửa hàng" style={styles.inputField} />
+            <TextInput value={newStoreAddress} onChangeText={(value) => setNewStoreAddress(value)} placeholder="Địa chỉ" style={styles.inputField} />
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <TouchableOpacity onPress={() => updateStore(newStoreName, newStoreAddress)} style={styles.confirmButton}>
+                <Text style={styles.confirmButtonText}>Xác nhận</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -394,135 +305,53 @@ export default function HomeSeller() {
       <View style={{ marginTop: 60 }} />
 
       {/* Doanh thu hôm nay */}
-      <View style={{ paddingHorizontal: width * 0.05, paddingBottom: 10 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={{ fontSize: 16, fontWeight: "bold", color: "#E53935" }}>Doanh thu Hôm nay</Text>
-          <Text style={{ fontSize: 16, color: "#999999" }}>100.000 VND</Text>
+      <View style={styles.revenueContainer}>
+        <View style={styles.revenueHeader}>
+          <Text style={styles.revenueTitle}>Doanh thu Hôm nay</Text>
+          <Text style={styles.revenueAmount}>100.000 VND</Text>
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginTop: 10,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => navigation.navigate("ListFood")}
-            style={{
-              backgroundColor: "#E53935",
-              padding: 20,
-              borderRadius: 10,
-              flex: 1,
-              alignItems: "center",
-              marginRight: 10,
-            }}
-          >
-            <Text style={{ color: "#fff" }}>Thực đơn</Text>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>Thực đơn</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("Comment")}
-            style={{
-              backgroundColor: "#E53935",
-              padding: 20,
-              borderRadius: 10,
-              flex: 1,
-              alignItems: "center",
-              marginRight: 10,
-            }}
-          >
-            <Text style={{ color: "#fff" }}>Phản hồi</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>Phản hồi</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("Staff")}
-            style={{
-              backgroundColor: "#E53935",
-              padding: 20,
-              borderRadius: 10,
-              flex: 1,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#fff" }}>Nhân viên</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Staff")} style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>Nhân viên</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Món bán chạy */}
-      <View style={{ backgroundColor: "#E53935", padding: 15 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold", color: "#fff" }}>Món bán chạy</Text>
+      <View style={styles.bestSellerContainer}>
+        <Text style={styles.bestSellerTitle}>Món bán chạy</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {/* Khung ảnh món bán chạy */}
-          {foodList.map((food, index) => (
-            <View
-              key={food._id}
-              style={{
-                backgroundColor: "#fff",
-                height: height * 0.23,
-                width: width * 0.55,
-                borderRadius: 10,
-                marginRight: 15,
-                padding: 10,
-                justifyContent: "space-between",
-                borderColor: "#D3D3D3", // Màu xám cho viền ảnh
-                borderWidth: 1,
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: placeholderImage ? "transparent" : "#D3D3D3",
-                  height: height * 0.15,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.15, borderRadius: 10, width: width * 0.5 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
-              </View>
-              <Text style={{ fontSize: 14, fontWeight: "bold", color: "#333" }}>{food.foodName}</Text>
-              <Text style={{ fontSize: 14, color: "#333" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+          {foodList.map((food) => (
+            <View key={food._id} style={styles.bestSellerCard}>
+              <View style={[styles.bestSellerImageContainer, { backgroundColor: placeholderImage ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.bestSellerImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
+              <Text style={styles.bestSellerFoodName}>{food.foodName}</Text>
+              <Text style={styles.bestSellerFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
             </View>
           ))}
         </ScrollView>
       </View>
 
       {/* Các món khác */}
-      <View style={{ padding: 20 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>Các món khác</Text>
-        <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
-          {foodList.map((food, index) => (
-            <View
-              key={food._id}
-              style={{
-                backgroundColor: "#fff",
-                height: height * 0.2,
-                borderRadius: 10,
-                padding: 10,
-                justifyContent: "space-between",
-                borderColor: "#D3D3D3",
-                borderWidth: 1,
-                flexDirection: "row",
-                marginBottom: 10,
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3",
-                  height: height * 0.15,
-                  width: width * 0.3,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ height: height * 0.12, borderRadius: 10, width: width * 0.3 }} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}
-              </View>
+      <View style={styles.otherFoodsContainer}>
+        <Text style={styles.otherFoodsTitle}>Các món khác</Text>
 
-              <View style={{ flex: 1, justifyContent: "center", paddingLeft: 10 }}>
-                <Text style={{ fontSize: 14, color: "#333" }}>4.5 ⭐ (25+)</Text>
-                <Text style={{ fontSize: 14, fontWeight: "bold", color: "#333" }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 14, color: "#333" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+        <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+          {foodList.map((food) => (
+            <View key={food._id} style={styles.otherFoodCard}>
+              <View style={[styles.otherFoodImageContainer, { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
+
+              <View style={styles.otherFoodDetails}>
+                <Text style={styles.otherFoodRating}>4.5 ⭐ (25+)</Text>
+                <Text style={styles.otherFoodName}>{food.foodName}</Text>
+                <Text style={styles.otherFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
               </View>
             </View>
           ))}

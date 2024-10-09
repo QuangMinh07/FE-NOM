@@ -3,6 +3,11 @@ import { Dimensions, StyleSheet } from "react-native";
 const { width } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
+  containergiohang: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -54,6 +59,26 @@ export const styles = StyleSheet.create({
   orderDetailsSection: {
     marginBottom: 20,
   },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  orderTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  addMore: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  addMoreText: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: "#E53935",
+  },
   orderItemContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -76,6 +101,9 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+  totalSection: {
+    marginBottom: 20,
+  },
   totalBreakdown: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -84,6 +112,10 @@ export const styles = StyleSheet.create({
   totalBreakdownText: {
     fontSize: 14,
     color: "#666",
+  },
+  totalContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   totalAmountText: {
     fontSize: 16,
