@@ -135,18 +135,17 @@ export default function UpdateInformation() {
     });
 
     try {
-      const response = await fetch(`http://192.168.1.26:5000/v1/upload/uploadProfilePicture/${userId}`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      // Sử dụng hàm `api` để gọi API upload ảnh
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/upload/uploadProfilePicture/${userId}`, // Endpoint API
+        body: formData, // Gửi FormData
+        sendToken: true, // Nếu cần gửi token trong header
+        isMultipart: true, // Bật multipart để gửi FormData
       });
 
-      const data = await response.json();
-
-      if (data.profilePictureURL) {
-        return data; // Return the Cloudinary URL from the server
+      if (response && response.profilePictureURL) {
+        return response; // Trả về URL từ Cloudinary
       } else {
         throw new Error("Upload failed");
       }

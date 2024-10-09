@@ -143,29 +143,26 @@ export default function AddEat() {
         });
       }
 
-      // Gọi API để thêm món ăn
-      const response = await fetch("http://192.168.1.26:5000/v1/food/add-food", {
-        method: "POST",
-        body: formData, // Gửi formData
-        headers: {
-          // Không cần `Content-Type` khi dùng `FormData`, trình duyệt tự thêm.
-          Authorization: `Bearer ${await AsyncStorage.getItem("auth_token")}`, // Gửi token trong header
-        },
+      // Sử dụng hàm `api` để gọi API thêm món ăn
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/food/add-food",
+        body: formData,
+        sendToken: true, // Gửi token
+        isMultipart: true, // Bật multipart để gửi FormData
       });
 
-      const data = await response.json(); // Xử lý phản hồi từ API
-
-      if (data && data.message === "Thêm món ăn thành công") {
+      if (response && response.message === "Thêm món ăn thành công") {
         Alert.alert("Thành công", "Món ăn đã được thêm!");
 
         // Cập nhật foods trong GlobalContext
-        const updatedFoods = globalData.foods ? [...globalData.foods, data.food] : [data.food];
+        const updatedFoods = globalData.foods ? [...globalData.foods, response.food] : [response.food];
         await globalHandler.setFoods(updatedFoods);
 
         // Điều hướng tới danh sách món ăn
         navigation.navigate("ListFood", { reload: true });
       } else {
-        Alert.alert("Lỗi", data.message || "Không thể thêm món ăn.");
+        Alert.alert("Lỗi", response.message || "Không thể thêm món ăn.");
       }
     } catch (error) {
       console.error("Lỗi khi thêm món ăn:", error);
