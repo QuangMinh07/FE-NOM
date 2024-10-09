@@ -55,8 +55,9 @@ export const useOrder = (foodId) => {
       });
       console.log("Added to cart:", response.message);
 
-      // Cập nhật giỏ hàng với foodId và đảm bảo foodId được thêm vào từng món ăn
-      const updatedCart = [...globalData.cart, { foodName: foodData._id, ...foodData, quantity }];
+      // Đảm bảo `globalData.cart` là một mảng
+      const updatedCart = Array.isArray(globalData.cart) ? [...globalData.cart, { foodName: foodData._id, ...foodData, quantity }] : [{ foodName: foodData._id, ...foodData, quantity }];
+
       await globalHandler.setCart(updatedCart);
       console.log("Cart saved to globalData:", updatedCart);
     } catch (error) {

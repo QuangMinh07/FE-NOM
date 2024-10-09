@@ -10,6 +10,7 @@ export const GlobalContext = ({ children }) => {
   const [foods, setFoods] = useState([]); // Thêm state lưu trữ danh sách món ăn (foods)
   const [selectedFoodId, setSelectedFoodId] = useState(null); // Thêm state để lưu selectedFoodId
   const [cart, setCart] = useState([]); // Thêm state để lưu giỏ hàng
+  const [orders, setOrders] = useState([]); // Thêm state để lưu đơn hàng
 
   // Tải thông tin người dùng, cửa hàng, thời gian bán hàng và món ăn từ AsyncStorage khi khởi động
   useEffect(() => {
@@ -41,6 +42,8 @@ export const GlobalContext = ({ children }) => {
           setFoods(JSON.parse(storedFoods));
           console.log("Foods data loaded from AsyncStorage:", JSON.parse(storedFoods));
         }
+        const storedOrders = await AsyncStorage.getItem("orders"); // Lấy orders từ AsyncStorage
+        if (storedOrders) setOrders(JSON.parse(storedOrders));
       } catch (error) {
         console.error("Error loading data from storage:", error);
       }
@@ -56,6 +59,7 @@ export const GlobalContext = ({ children }) => {
     foods, // Thêm foods vào globalData
     selectedFoodId,
     cart,
+    orders, // Thêm orders vào globalData
   };
 
   const globalHandler = {
@@ -84,6 +88,18 @@ export const GlobalContext = ({ children }) => {
     setCart: async (cartData) => {
       setCart(cartData); // Cập nhật giỏ hàng trong state
       await AsyncStorage.setItem("cart", JSON.stringify(cartData)); // Lưu giỏ hàng vào AsyncStorage
+    },
+    setOrders: async (ordersData) => {
+      setOrders(ordersData);
+      await AsyncStorage.setItem("orders", JSON.stringify(ordersData)); // Lưu đơn hàng vào AsyncStorage
+      console.log("Orders saved to AsyncStorage:", ordersData); // Kiểm tra sau khi lưu vào AsyncStorage
+    },
+
+    addOrder: async (newOrder) => {
+      const updatedOrders = [...orders, newOrder]; // Thêm đơn hàng mới
+      setOrders(updatedOrders); // Cập nhật lại state và lưu vào AsyncStorage
+      await AsyncStorage.setItem("orders", JSON.stringify(updatedOrders)); // Lưu đơn hàng mới vào AsyncStorage
+      console.log("Updated orders in globalData:", updatedOrders); // Log lại toàn bộ đơn hàng
     },
     setSellingTime: async (timeData) => {
       // Hàm để lưu dữ liệu sellingTime
