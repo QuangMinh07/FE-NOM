@@ -118,11 +118,19 @@ export default function Shopping({ route }) {
       });
 
       if (response?.orderDetails) {
+        // Lưu đơn hàng vào globalData
+        const newOrder = response.orderDetails; // Giả sử `orderDetails` chứa thông tin đơn hàng mới
+        console.log("New order details:", newOrder); // Log chi tiết đơn hàng mới
+
+        await globalHandler.addOrder(newOrder); // Lưu đơn hàng vào globalData
+        console.log("Updated globalData orders:", globalData.orders); // Log lại `globalData.orders` sau khi thêm
+
         // Xóa giỏ hàng chỉ trên frontend
         globalHandler.setCart([]); // Làm trống giỏ hàng trên frontend
         setOrderItems([]); // Cập nhật danh sách món ăn trống
 
         Alert.alert("Thành công", "Đơn hàng đã được tạo thành công.");
+
         // Điều hướng người dùng về trang chính hoặc lịch sử đơn hàng
         navigation.navigate("HomeKH");
       } else {
