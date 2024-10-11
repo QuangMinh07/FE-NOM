@@ -28,7 +28,7 @@ export default function OrdersScreen() {
       const { allOrdersDetails } = response;
 
       // Phân loại đơn hàng theo trạng thái
-      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending");
+      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending" || order.orderStatus === "Processing" || order.orderStatus === "Shipped");
       const history = allOrdersDetails.filter((order) => order.paymentStatus === "Paid");
 
       // Sửa lại điều kiện lọc cho tab "Chờ thanh toán"
@@ -45,6 +45,24 @@ export default function OrdersScreen() {
   useEffect(() => {
     fetchAllOrders();
   }, []);
+
+  // Hàm để hiển thị trạng thái đơn hàng theo điều kiện
+  const getOrderStatusDisplay = (status) => {
+    switch (status) {
+      case "Pending":
+        return "Đang xử lý";
+      case "Processing":
+        return "Đang chuẩn bị";
+      case "Shipped":
+        return "Đang giao";
+      case "Delivered":
+        return "Đã giao";
+      case "Cancelled":
+        return "Đã hủy";
+      default:
+        return status;
+    }
+  };
 
   // Hàm render đơn hàng dựa trên tab đã chọn
   const renderOrders = (orderList, tab) => {
@@ -68,7 +86,7 @@ export default function OrdersScreen() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold" }}>{order.store.storeName}</Text>
               {/* Hiển thị trạng thái tương ứng theo tab */}
-              {tab === "Đang đặt" && <Text style={{ fontSize: 14, color: "#E53935" }}>{order.orderStatus === "Pending" ? "Đang chờ xử lý" : order.orderStatus}</Text>}
+              {tab === "Đang đặt" && <Text style={{ fontSize: 14, color: "#E53935" }}>{getOrderStatusDisplay(order.orderStatus)}</Text>}
               {tab === "Chờ thanh toán" && <Text style={{ fontSize: 14, color: "#E53935" }}>{order.paymentStatus === "Pending" ? "Chờ thanh toán" : order.paymentStatus}</Text>}
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
