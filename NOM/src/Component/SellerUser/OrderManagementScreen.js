@@ -1,191 +1,187 @@
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, TextInput } from 'react-native';
-import React, { useState } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Swipeable } from 'react-native-gesture-handler'; // Import Swipeable
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, TextInput } from "react-native";
+import React, { useState, useEffect, useContext } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable
+import { api, typeHTTP } from "../../utils/api"; // Import API
+import { globalContext } from "../../context/globalContext";
+import { styles } from "./OrderManagementStyles"; // Import style từ file đã tách
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function OrderManagementScreen() {
-  const [selectedTab, setSelectedTab] = useState('Mới');
+  const [selectedTab, setSelectedTab] = useState("Mới");
+  const [newOrders, setNewOrders] = useState([]); // Lưu trữ danh sách đơn hàng mới
+  const [receivedOrders, setReceivedOrders] = useState([]); // Lưu trữ danh sách đơn hàng đã nhận
+  const { globalData } = useContext(globalContext);
 
-  const tabs = ['Mới', 'Đã Nhận', 'Lịch sử'];
+  const storeId = globalData.storeData?._id;
 
-  const renderOrders = () => {
-    switch (selectedTab) {
-      case 'Mới':
-        return (
-          <View style={{ paddingHorizontal: width * 0.05 }}>
-            {/* Đơn hàng mới */}
-            <Swipeable>
-              <View style={{
-                backgroundColor: '#fff',
-                borderRadius: 10,
-                padding: 15,
-                marginBottom: 15,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3
-              }}>
-                <Text style={{ fontSize: 14, color: '#666', marginBottom: 5 }}>12/08/2024</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{
-                    backgroundColor: '#E53935',
-                    borderRadius: 20,
-                    padding: 10,
-                  }}>
-                    <Text style={{ color: '#fff', fontSize: 14 }}>03</Text>
-                  </View>
-                  <View style={{ marginLeft: 10, flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Nguyễn Thị Kiều Nghi</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Đặt đơn</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>12:30</Text>
-                      </View>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Món</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>1</Text>
-                      </View>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Giá đơn hàng</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>20.000 VND</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+  const tabs = ["Mới", "Đã Nhận", "Lịch sử"];
 
-                {/* Nút xác nhận */}
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
-                  <TouchableOpacity style={{
-                    backgroundColor: '#E53935',
-                    borderRadius: 5,
-                    paddingVertical: 8,
-                    paddingHorizontal: 12,
-                  }}>
-                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Xác nhận</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Swipeable>
-          </View>
-        );
-      
-      case 'Đã Nhận':
-        return (
-          <View style={{ paddingHorizontal: width * 0.05 }}>
-            {/* Đơn hàng đã nhận */}
-            <Swipeable>
-              <View style={{
-                backgroundColor: '#fff',
-                borderRadius: 10,
-                padding: 15,
-                marginBottom: 15,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3
-              }}>
-                <Text style={{ fontSize: 14, color: '#666', marginBottom: 5 }}>12/08/2024</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{
-                    backgroundColor: '#E53935',
-                    borderRadius: 20,
-                    padding: 10,
-                  }}>
-                    <Text style={{ color: '#fff', fontSize: 14 }}>03</Text>
-                  </View>
-                  <View style={{ marginLeft: 10, flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Nguyễn Thị Kiều Nghi</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Đặt đơn</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>12:30</Text>
-                      </View>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Món</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>1</Text>
-                      </View>
-                      <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, color: '#666' }}>Giá đơn hàng</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>20.000 VND</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+  const fetchOrders = async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: "/storeOrder/get-all-orders",
+        sendToken: true,
+      });
 
-                {/* Nút hoàn thành */}
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
-                  <TouchableOpacity style={{
-                    backgroundColor: '#E53935',
-                    borderRadius: 5,
-                    paddingVertical: 8,
-                    paddingHorizontal: 12,
-                  }}>
-                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: 'bold' }}>Hoàn thành</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Swipeable>
-          </View>
-        );
-        
-      case 'Lịch sử':
-        return (
-          <View style={{ paddingHorizontal: width * 0.05 }}>
-            {/* Lịch sử đơn hàng */}
-            <View style={{
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              padding: 15,
-              marginBottom: 15,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-              position: 'relative' // Chỉnh vị trí cho trạng thái Đã giao
-            }}>
-              <Text style={{ fontSize: 14, color: '#666', marginBottom: 5 }}>12/08/2024</Text>
-              
-              {/* Hiển thị trạng thái Đã giao ở góc trên bên phải */}
-              <View style={{ position: 'absolute', top: 10, right: 10 }}>
-                <Text style={{ color: '#E53935', fontSize: 14, fontWeight: 'bold' }}>Đã giao</Text>
-              </View>
+      const { allOrdersDetails } = response;
 
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{
-                  backgroundColor: '#E53935',
-                  borderRadius: 20,
-                  padding: 10,
-                }}>
-                  <Text style={{ color: '#fff', fontSize: 14 }}>01</Text>
+      const newOrdersData = allOrdersDetails.filter((order) => order.orderStatus === "Pending");
+      const receivedOrdersData = allOrdersDetails.filter((order) => order.orderStatus === "Processing");
+
+      setNewOrders(newOrdersData);
+      setReceivedOrders(receivedOrdersData);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleConfirmOrder = async (orderId) => {
+    console.log("ID đơn hàng cần xác nhận:", orderId); // Log lại để kiểm tra
+    console.log("Store ID:", storeId); // Log lại Store ID để kiểm tra
+
+    console.log("Request Body:", { orderId });
+    console.log("Request URL:", `/storeOrder/update-status/${storeId}`);
+
+    try {
+      const response = await api({
+        method: typeHTTP.PUT,
+        url: `/storeOrder/update-status/${storeId}`,
+        sendToken: true,
+        body: { orderId: orderId }, // Gửi orderId vào body của request
+      });
+
+      console.log("Kết quả trả về từ API:", response); // Log kết quả trả về từ API
+
+      alert(`Đơn hàng đã được cập nhật trạng thái.`);
+      fetchOrders(); // Cập nhật lại danh sách đơn hàng sau khi thành công
+    } catch (error) {
+      console.error("Lỗi xảy ra:", error);
+
+      if (error.response) {
+        console.error("Lỗi từ phía server:", error.response.data);
+        alert(`Lỗi: ${error.response.data.message || "Không thể cập nhật trạng thái đơn hàng."}`);
+      } else if (error.request) {
+        console.error("Không có phản hồi từ server:", error.request);
+        alert("Không có phản hồi từ server. Vui lòng kiểm tra kết nối mạng.");
+      } else {
+        console.error("Lỗi khi gửi yêu cầu:", error.message);
+        alert("Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.");
+      }
+    }
+  };
+
+  // Hàm render đơn hàng mới (Pending)
+  const renderNewOrders = () => {
+    if (newOrders.length === 0) {
+      return (
+        <View style={{ paddingHorizontal: width * 0.05 }}>
+          <Text>Không có đơn hàng mới.</Text>
+        </View>
+      );
+    }
+
+    return newOrders.map((order, index) => (
+      <Swipeable key={index}>
+        <View style={styles.container}>
+          <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+          <View style={styles.row}>
+            <View style={styles.itemCountContainer}>
+              <Text style={styles.itemCountText}>{order.foods.length}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{order.user.fullName}</Text>
+              <View style={styles.infoContainer}>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Đặt đơn</Text>
+                  <Text style={styles.boldText}>{new Date(order.orderDate).toLocaleTimeString()}</Text>
                 </View>
-                <View style={{ marginLeft: 10, flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Nguyễn Thị Kiều Nghi</Text>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-                    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 14, color: '#666' }}>Lấy đơn</Text>
-                      <Text style={{ fontSize: 14, fontWeight: 'bold' }}>12:30</Text>
-                    </View>
-                    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 14, color: '#666' }}>Đã giao</Text>
-                      <Text style={{ fontSize: 14, fontWeight: 'bold' }}>12:50</Text>
-                    </View>
-                    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 14, color: '#666' }}>Món</Text>
-                      <Text style={{ fontSize: 14, color: '#E53935', fontWeight: 'bold' }}>1</Text>
-                    </View>
-                    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 14, color: '#666' }}>Khoảng cách</Text>
-                      <Text style={{ fontSize: 14, fontWeight: 'bold' }}>2km</Text>
-                    </View>
-                  </View>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Món</Text>
+                  <Text style={styles.boldText}>{order.foods.length}</Text>
+                </View>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Giá đơn hàng</Text>
+                  <Text style={styles.boldText}>{order.totalAmount.toLocaleString()} VND</Text>
                 </View>
               </View>
             </View>
+          </View>
+          {/* Nút xác nhận */}
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+            <TouchableOpacity onPress={() => handleConfirmOrder(order.orderId)} style={styles.button}>
+              <Text style={styles.buttonText}>Xác nhận</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Swipeable>
+    ));
+  };
+
+  // Hàm render đơn hàng đã nhận (Processing)
+  const renderReceivedOrders = () => {
+    if (receivedOrders.length === 0) {
+      return (
+        <View style={{ paddingHorizontal: width * 0.05 }}>
+          <Text>Không có đơn hàng đã nhận.</Text>
+        </View>
+      );
+    }
+
+    return receivedOrders.map((order, index) => (
+      <Swipeable key={index}>
+        <View style={styles.container}>
+          <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+          <View style={styles.row}>
+            <View style={styles.itemCountContainer}>
+              <Text style={styles.itemCountText}>{order.foods.length}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{order.user.fullName}</Text>
+              <View style={styles.infoContainer}>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Đặt đơn</Text>
+                  <Text style={styles.boldText}>{new Date(order.orderDate).toLocaleTimeString()}</Text>
+                </View>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Món</Text>
+                  <Text style={styles.boldText}>{order.foods.length}</Text>
+                </View>
+                <View style={{ flexDirection: "column", alignItems: "center" }}>
+                  <Text style={styles.infoText}>Giá đơn hàng</Text>
+                  <Text style={styles.boldText}>{order.totalAmount.toLocaleString()} VND</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Nút "Đã hoàn thành" */}
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+            <View style={styles.completedButton}>
+              <Text style={styles.buttonText}>Đã Nhận</Text>
+            </View>
+          </View>
+        </View>
+      </Swipeable>
+    ));
+  };
+
+  const renderOrders = () => {
+    switch (selectedTab) {
+      case "Mới":
+        return <View style={{ paddingHorizontal: width * 0.05 }}>{renderNewOrders()}</View>;
+      case "Đã Nhận":
+        return <View style={{ paddingHorizontal: width * 0.05 }}>{renderReceivedOrders()}</View>;
+      case "Lịch sử":
+        return (
+          <View style={{ paddingHorizontal: width * 0.05 }}>
+            <Text>Đang xử lý...</Text>
           </View>
         );
       default:
@@ -194,71 +190,29 @@ export default function OrderManagementScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       {/* Header */}
-      <View style={{
-        backgroundColor: '#E53935',
-        paddingTop: 50, // Để chữ "Đơn hàng" xuống dưới một chút
-        height: 140,
-      }}>
-        <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold',marginLeft:20 }}>Đơn hàng</Text>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Đơn hàng</Text>
       </View>
 
       {/* Search Bar */}
-      <View style={{
-        position: 'absolute',
-        top: 110, // Để thanh tìm kiếm nằm đúng vị trí
-        left: width * 0.05,
-        right: width * 0.05,
-        backgroundColor: '#fff',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        borderRadius: 20,
-        alignItems: 'center',
-        flexDirection: 'row',
-        shadowColor: '#000',
-        shadowOffset: { width: 10, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        height:50
-      }}>
+      <View style={styles.searchBarContainer}>
         <Ionicons name="search-outline" size={20} color="#E53935" />
-        <TextInput
-          placeholder="Tìm kiếm"
-          style={{ marginLeft: 10, fontSize: 16, color: '#000', flex: 1 }}
-        />
+        <TextInput placeholder="Tìm kiếm" style={styles.searchInput} />
       </View>
 
       {/* Tabs */}
-      <View style={{ marginTop: 30, flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#fff', paddingVertical: 20 }}>
+      <View style={{ marginTop: 30, flexDirection: "row", justifyContent: "space-around", backgroundColor: "#fff", paddingVertical: 20 }}>
         {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setSelectedTab(tab)}
-            style={{
-              paddingBottom: 10,
-              borderBottomWidth: selectedTab === tab ? 4 : 0,
-              borderBottomColor: '#E53935'
-            }}
-          >
-            <Text
-              style={{
-                color: selectedTab === tab ? '#E53935' : '#6B7280',
-                fontSize: selectedTab === tab ? 18 : 16,
-                fontWeight: selectedTab === tab ? 'bold' : 'normal'
-              }}
-            >
-              {tab}
-            </Text>
+          <TouchableOpacity key={tab} onPress={() => setSelectedTab(tab)} style={{ paddingBottom: 10, borderBottomWidth: selectedTab === tab ? 4 : 0, borderBottomColor: "#E53935" }}>
+            <Text style={{ color: selectedTab === tab ? "#E53935" : "#6B7280", fontSize: selectedTab === tab ? 18 : 16, fontWeight: selectedTab === tab ? "bold" : "normal" }}>{tab}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Orders */}
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: 10 }}>
-        {renderOrders()}
-      </ScrollView>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: 10 }}>{renderOrders()}</ScrollView>
     </View>
   );
 }
