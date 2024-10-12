@@ -2,7 +2,8 @@ import { useState, useEffect, useContext } from "react";
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
 
-export const useOrder = (foodId) => {
+export const useOrder = (foodId, storeId) => {
+  // Accept storeId as an argument
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
   const [foodData, setFoodData] = useState(null);
@@ -44,24 +45,24 @@ export const useOrder = (foodId) => {
     }
   };
 
-  const addToCart = async () => {
+  const addToCart = async (userId) => {
     try {
-      const userId = globalData.user?.id;
+      console.log("Adding to cart:", { foodId: foodData._id, quantity, storeId }); // Log to check data
+
       const response = await api({
         method: typeHTTP.POST,
         url: `/cart/add-to-cart/${userId}`,
-        body: { foodId: foodData._id, quantity },
+        body: { foodId: foodData._id, quantity, storeId },
         sendToken: true,
       });
-      console.log("Added to cart:", response.message);
 
-      // Đảm bảo `globalData.cart` là một mảng
+      console.log("Added to cart:", response.message); // Log response after adding to cart
+
       const updatedCart = Array.isArray(globalData.cart) ? [...globalData.cart, { foodName: foodData._id, ...foodData, quantity }] : [{ foodName: foodData._id, ...foodData, quantity }];
-
       await globalHandler.setCart(updatedCart);
-      console.log("Cart saved to globalData:", updatedCart);
+      console.log("Cart saved to globalData:", updatedCart); // Log cart after updating
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Error adding to cart:", error); // Log the error
     }
   };
 

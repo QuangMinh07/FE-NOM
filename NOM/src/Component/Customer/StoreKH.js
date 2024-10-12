@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
-import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
@@ -15,9 +14,16 @@ export default function StoreKH() {
   const [foodList, setFoodList] = useState([]); // Food data state
   const [error, setError] = useState(null); // Error state
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
-  const { globalData } = useContext(globalContext); // Sử dụng globalContext
-  const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+  const route = useRoute();
+  const { storeId } = route.params; // Kiểm tra nếu storeId có tồn tại trong route params
+  console.log("storeId:", storeId);
+  const [storeIdState, setStoreIdState] = useState(storeId);
 
+  useEffect(() => {
+    if (storeId) {
+      setStoreIdState(storeId);
+    }
+  }, [storeId]);
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
   const groupFoodsByCategory = (foods, foodGroups) => {
     const groupedFoods = foods.reduce((groupedFoods, food) => {
@@ -188,7 +194,10 @@ export default function StoreKH() {
               shadowRadius: 5,
               shadowOffset: { width: 0, height: 2 },
             }}
-            onPress={() => navigation.navigate("Shopping")}
+            onPress={() => {
+              console.log("Navigating to Shopping with Store ID:", storeId); // Log để kiểm tra storeId
+              navigation.navigate("Shopping", { storeId });
+            }}
           >
             <Icon name="shopping-cart" size={24} color="#E53935" />
           </TouchableOpacity>
@@ -254,7 +263,15 @@ export default function StoreKH() {
                   marginRight: 15,
                   width: width * 0.4, // Chiều rộng của khung chứa
                 }}
-                onPress={() => navigation.navigate("Orderfood", { foodId: food._id })} // Truyền foodId khi nhấn vào món ăn
+                onPress={() => {
+                  console.log("Navigating to Orderfood with foodId:", food._id);
+                  console.log("Navigating to Orderfood with storeId:", storeIdState);
+                  if (storeIdState) {
+                    navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                  } else {
+                    console.error("storeIdState is undefined!");
+                  }
+                }} 
               >
                 {/* Placeholder cho ảnh */}
                 <View
@@ -309,7 +326,15 @@ export default function StoreKH() {
                     marginRight: 15,
                     width: width * 0.55,
                   }}
-                  onPress={() => navigation.navigate("Orderfood", { foodId: food._id })}
+                  onPress={() => {
+                    console.log("Navigating to Orderfood with foodId:", food._id);
+                    console.log("Navigating to Orderfood with storeId:", storeIdState);
+                    if (storeIdState) {
+                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                    } else {
+                      console.error("storeIdState is undefined!");
+                    }
+                  }}
                 >
                   <View
                     style={{
@@ -346,18 +371,25 @@ export default function StoreKH() {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
             {groupedFoods[group].map((food) => (
               <TouchableOpacity
-                key={food._id}
+                key={food._id} // Sử dụng id chính xác cho key
                 style={{
                   backgroundColor: "#fff",
                   padding: 10,
                   borderRadius: 10,
                   borderWidth: 1,
                   borderColor: "#eee",
-                  marginBottom: 10,
-                  flexDirection: "row",
-                  alignItems: "center",
+                  marginRight: 15,
+                  width: width * 0.4, // Chiều rộng của khung chứa
                 }}
-                onPress={() => navigation.navigate("Orderfood", { foodId: food._id })}
+                onPress={() => {
+                  console.log("Navigating to Orderfood with foodId:", food._id);
+                  console.log("Navigating to Orderfood with storeId:", storeIdState);
+                  if (storeIdState) {
+                    navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                  } else {
+                    console.error("storeIdState is undefined!");
+                  }
+                }}
               >
                 <View
                   style={{

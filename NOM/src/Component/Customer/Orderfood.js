@@ -1,13 +1,19 @@
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useOrder } from "./useOrder"; // Import hook useOrder
+import { globalContext } from "../../context/globalContext"; // Import globalContext
 
 export default function Orderfood() {
-  const navigation = useNavigation(); // Access navigation prop
-  const route = useRoute(); // Get route params
-  const { foodId, userId } = route.params; // Assuming foodId and userId are passed via navigation route params
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { foodId, storeId } = route.params;
+  console.log("storeId in Orderfood:", storeId);
+  console.log("foodId in Orderfood:", foodId);
+
+  const { globalData } = useContext(globalContext);
+  const userId = globalData.user?.id;
 
   const { quantity, price, foodData, loading, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId); // Sử dụng hook useOrder
 
@@ -102,9 +108,9 @@ export default function Orderfood() {
             width: "48%",
           }}
           onPress={async () => {
-            await addToCart(userId); // Thực hiện thêm món vào giỏ hàng
-            navigation.navigate("Shopping", { foodId });
-            // Điều hướng đến màn hình giỏ hàng (Shopping)
+            console.log("userId:", userId, "foodId:", foodId, "storeId:", storeId);
+            await addToCart(userId, storeId);
+            navigation.navigate("Shopping", { storeId, userId });
           }}
         >
           <Ionicons name="cart-outline" size={24} color="#E53935" />
