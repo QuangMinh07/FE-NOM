@@ -19,6 +19,65 @@ export default function Shopping({ route }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const storeId = route.params?.storeId;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.paymentMethod) {
+        setSelectedPaymentMethod(route.params.paymentMethod);
+      }
+
+      if (userId && storeId) {
+        // Kiểm tra xem storeId có tồn tại
+        fetchStoreCartItems();
+      } else {
+        setError("Không tìm thấy người dùng hoặc cửa hàng.");
+      }
+    }, [userId, storeId, route.params?.paymentMethod])
+  );
+
+  const fetchStoreCartItems = useCallback(async () => {
+    console.log("Fetching cart for userId:", userId, "and storeId:", storeId);
+
+    if (!storeId || storeId === "undefined") {
+      console.error("Invalid storeId:", storeId);
+      setError("Không tìm thấy cửa hàng hợp lệ.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/cart/getcart/${userId}/${storeId}`, // Ensure storeId is valid
+        sendToken: true,
+      });
+
+      console.log("API Response:", JSON.stringify(response, null, 2));
+
+      const cartData = response.data ? response.data.cart : response.cart;
+
+      if (cartData) {
+        const storeItems = Array.isArray(cartData.items) ? cartData.items.filter((item) => item.store === storeId) : [];
+
+        // Chắc chắn rằng `orderItems` chỉ được cập nhật với dữ liệu từ API
+        setOrderItems(storeItems);
+        setDeliveryAddress(cartData.deliveryAddress || "");
+        setError(null);
+
+        // Save the cartId to global context or state
+        globalHandler.setCart({ ...cartData, _id: cartData.cartId }); // Ensure cartId is saved in globalData
+      } else {
+        setOrderItems([]); // If no cart, return an empty array
+        setError("Không có món ăn nào trong giỏ hàng từ cửa hàng này.");
+      }
+    } catch (error) {
+      setOrderItems([]); // Return an empty array on error to avoid issues with map
+      setError("Lỗi khi lấy giỏ hàng từ cửa hàng.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, storeId]);
 
   const getDisplayPaymentMethod = (method) => {
     switch (method) {
@@ -35,56 +94,23 @@ export default function Shopping({ route }) {
     }
   };
 
-  const fetchCart = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await api({
-        method: typeHTTP.GET,
-        url: `/cart/get-cart/${userId}`,
-        sendToken: true,
-      });
-
-      if (data.cart) {
-        globalHandler.setCart(data.cart);
-        setOrderItems(data.cart.items || []);
-        setDeliveryAddress(data.cart.deliveryAddress);
-      } else {
-        setOrderItems([]);
-      }
-      setLoading(false);
-    } catch (error) {
-      setOrderItems([]);
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (route.params?.paymentMethod) {
-        setSelectedPaymentMethod(route.params.paymentMethod);
-      }
-
-      if (userId) {
-        fetchCart();
-      } else {
-        setError("Không tìm thấy người dùng.");
-      }
-    }, [userId, fetchCart, route.params?.paymentMethod])
-  );
-
   const removeItem = async (foodId) => {
     try {
-      await api({
+      console.log("Attempting to remove item from cart. UserId:", userId, "FoodId:", foodId); // Log userId and foodId
+
+      const response = await api({
         method: typeHTTP.DELETE,
         url: `/cart/remove/${userId}/${foodId}`,
         sendToken: true,
       });
 
-      const updatedCart = orderItems.filter((item) => item.foodId !== foodId);
+      console.log("API Response:", response); // Log the response from the API
+
+      const updatedCart = orderItems.filter((item) => item.food._id !== foodId);
       globalHandler.setCart(updatedCart);
       setOrderItems(updatedCart);
     } catch (error) {
-      console.error("Error removing item from cart:", error);
+      console.error("Error removing item from cart:", error); // Log the error details
       setError("Lỗi khi xóa món ăn.");
     }
   };
@@ -98,40 +124,34 @@ export default function Shopping({ route }) {
   };
 
   const calculateTotal = () => {
-    return orderItems.reduce((total, item) => total + (item.price || 0) * item.quantity, 0);
+    const total = orderItems.reduce((accumulator, item) => {
+      return accumulator + item.price; // Không nhân với item.quantity vì item.price đã bao gồm giá trị này
+    }, 0);
+    console.log("Total calculated:", total); // Log để kiểm tra
+    return total;
   };
 
   const handlePayment = async () => {
     try {
-      const cartId = globalData.cart?._id; // Lấy cartId từ giỏ hàng hiện tại
+      const cartId = globalData.cart?._id; // Make sure you retrieve the cartId from global state
 
       if (!cartId) {
         Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
         return;
       }
 
-      // Gọi API để tạo đơn hàng từ giỏ hàng hiện tại
       const response = await api({
         method: typeHTTP.POST,
-        url: `/storeOrder/create/${cartId}`,
+        url: `/storeOrder/create/${cartId}`, // Pass the correct cartId
         sendToken: true,
       });
 
       if (response?.orderDetails) {
-        // Lưu đơn hàng vào globalData
-        const newOrder = response.orderDetails; // Giả sử `orderDetails` chứa thông tin đơn hàng mới
-        console.log("New order details:", newOrder); // Log chi tiết đơn hàng mới
-
-        await globalHandler.addOrder(newOrder); // Lưu đơn hàng vào globalData
-        console.log("Updated globalData orders:", globalData.orders); // Log lại `globalData.orders` sau khi thêm
-
-        // Xóa giỏ hàng chỉ trên frontend
-        globalHandler.setCart([]); // Làm trống giỏ hàng trên frontend
-        setOrderItems([]); // Cập nhật danh sách món ăn trống
-
+        const newOrder = response.orderDetails;
+        await globalHandler.addOrder(newOrder);
+        globalHandler.setCart([]); // Clear the cart after successful payment
+        setOrderItems([]); // Clear local order items
         Alert.alert("Thành công", "Đơn hàng đã được tạo thành công.");
-
-        // Điều hướng người dùng về trang chính hoặc lịch sử đơn hàng
         navigation.navigate("HomeKH");
       } else {
         Alert.alert("Lỗi", "Không thể tạo đơn hàng. Vui lòng thử lại.");
@@ -171,7 +191,7 @@ export default function Shopping({ route }) {
         <View style={styles.addressSection}>
           <View style={styles.addressHeader}>
             <Text style={styles.addressText}>Địa chỉ nhận món</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("EditAddress")}>
+            <TouchableOpacity onPress={() => navigation.navigate("EditAddress", { storeId })}>
               <Icon name="edit" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
@@ -182,7 +202,7 @@ export default function Shopping({ route }) {
         <View style={styles.orderDetailsSection}>
           <View style={styles.orderHeader}>
             <Text style={styles.orderTitle}>Đơn hàng</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("StoreKH")}>
+            <TouchableOpacity onPress={() => navigation.navigate("StoreKH", { storeId })}>
               <View style={styles.addMore}>
                 <Text style={styles.addMoreText}>Thêm món</Text>
               </View>
@@ -192,14 +212,14 @@ export default function Shopping({ route }) {
             <Swipeable
               key={index}
               renderRightActions={() => (
-                <TouchableOpacity style={styles.swipeableDeleteButton} onPress={() => removeItem(item.foodId)}>
+                <TouchableOpacity style={styles.swipeableDeleteButton} onPress={() => removeItem(item.food._id)}>
                   <Icon name="delete" size={24} color="#fff" />
                 </TouchableOpacity>
               )}
             >
               <View style={styles.orderItemContainer}>
-                <Text style={styles.orderItemText}>{item.foodName || "Món ăn không tồn tại"}</Text>
-                <Text style={styles.priceText}>{(item.price * item.quantity).toLocaleString()} VND</Text>
+                <Text style={styles.orderItemText}>{item.food ? item.food.foodName : "Món ăn không tồn tại"}</Text>
+                <Text style={styles.priceText}>{item.price.toLocaleString()} VND</Text>
                 <View style={styles.quantityContainer}>
                   <TouchableOpacity onPress={() => decreaseQuantity(index)}>
                     <Icon name="remove-circle-outline" size={24} color="#E53935" />
@@ -241,13 +261,18 @@ export default function Shopping({ route }) {
           style={styles.paymentSection}
           onPress={async () => {
             try {
+              // Gọi API để lấy giỏ hàng theo userId và storeId
               const data = await api({
                 method: typeHTTP.GET,
-                url: `/cart/get-cart/${userId}`,
+                url: `/cart/getcart/${userId}/${storeId}`, // Sử dụng API lấy giỏ hàng theo storeId
                 sendToken: true,
               });
-              if (data.cart && data.cart._id) {
-                navigation.navigate("Select", { cartId: data.cart._id });
+
+              // Kiểm tra dữ liệu trả về từ API
+              if (data.cart && data.cart.cartId) {
+                console.log("Navigating to Select screen with cartId:", data.cart.cartId, "and storeId:", storeId);
+                // Điều hướng tới trang Select với cartId và storeId
+                navigation.navigate("Select", { cartId: data.cart.cartId, storeId });
               } else {
                 Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
               }

@@ -13,9 +13,10 @@ export default function Select() {
   const navigation = useNavigation();
   const route = useRoute(); // Lấy route để truy cập params
   const cartId = route.params?.cartId; // Lấy cartId từ params
+  const storeId = route.params?.storeId;
 
   console.log(cartId); // Kiểm tra giá trị cartId
-
+  console.log(storeId); // Kiểm tra giá trị cartId
   const { globalData } = useContext(globalContext); // Lấy globalData từ context
 
   // State để lưu thông tin thẻ và phương thức thanh toán
@@ -43,7 +44,7 @@ export default function Select() {
       const transactionAmount = globalData.cart.totalPrice; // Lấy số tiền từ giỏ hàng
       const response = await api({
         method: typeHTTP.POST,
-        url: `/PaymentTransaction/create-payment/${cartId}`, // Sử dụng cartId từ params
+        url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`, // Sử dụng cartId từ params
         body: {
           paymentMethod: selectedPaymentMethod,
           transactionAmount,

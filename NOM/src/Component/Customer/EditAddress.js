@@ -6,6 +6,7 @@ import MapView, { Marker } from "react-native-maps";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import { globalContext } from "../../context/globalContext"; // Lấy globalContext để lấy userId
 import { styles } from "./EditAddressStyles"; // Import styles từ file mới
+import { useRoute } from "@react-navigation/native"; // Import useRoute
 
 export default function EditAddress() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -19,14 +20,18 @@ export default function EditAddress() {
 
   const { globalData } = useContext(globalContext); // Lấy userId từ globalContext
   const userId = globalData?.user?.id; // Lấy userId từ globalData nếu có
-
+  const route = useRoute(); // Lấy route để nhận storeId từ params
+  const storeId = route.params?.storeId; // Lấy storeId từ route.params
   // Gọi API để lấy thông tin giỏ hàng và địa chỉ
+
+  console.log(userId);
+  console.log(storeId);
   useEffect(() => {
     const fetchCartData = async () => {
       try {
         const response = await api({
           method: typeHTTP.GET,
-          url: `/cart/get-cart/${userId}`, // API để lấy giỏ hàng dựa trên userId
+          url: `/cart/getcart/${userId}/${storeId}`, // Gọi API với cả userId và storeId
           sendToken: true,
         });
 
@@ -45,10 +50,11 @@ export default function EditAddress() {
       }
     };
 
-    if (userId) {
-      fetchCartData(); // Gọi hàm để lấy dữ liệu khi userId có sẵn
+    if (userId && storeId) {
+      // Kiểm tra nếu có userId và storeId
+      fetchCartData();
     }
-  }, [userId]); // Gọi lại hàm này nếu userId thay đổi
+  }, [userId, storeId]); // Gọi lại hàm này nếu userId hoặc storeId thay đổi
 
   // Function to toggle the modal
   const toggleModal = () => {
@@ -85,7 +91,7 @@ export default function EditAddress() {
         // Gọi API cập nhật địa chỉ (updateShippingInfo)
         const data = await api({
           method: typeHTTP.PUT, // API cập nhật sử dụng PUT method
-          url: `/cart/update/${userId}`, // API cập nhật địa chỉ giao hàng
+          url: `/cart/update/${userId}/${storeId}`, // Gọi API với userId và storeId
           body: {
             deliveryAddress: address.location,
             receiverName: address.name,
@@ -99,7 +105,7 @@ export default function EditAddress() {
         // Gọi API thêm mới địa chỉ (checkout)
         const data = await api({
           method: typeHTTP.POST,
-          url: `/cart/checkout/${userId}`, // API checkout
+          url: `/cart/checkout/${userId}/${storeId}`, // Gọi API với userId và storeId
           body: {
             deliveryAddress: address.location,
             receiverName: address.name,
