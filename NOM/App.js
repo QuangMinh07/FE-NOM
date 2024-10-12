@@ -5,8 +5,10 @@ import { ActivityIndicator, View, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route } from "./src/Component/Login";
+import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
+import {HomeShiper} from "./src/Component/Shipper";
+
 import {  CustomerNotice, FavoriteFood, Seemore , CustomerChat} from "./src/Component/Main";
 
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood } from "./src/Component/Customer";
@@ -130,6 +132,8 @@ const App = () => {
             <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
             <Stack.Screen name="UpdateAccount" component={UpdateAccount} />
             <Stack.Screen name="SignUpSeller" component={SignUpSeller} />
+            <Stack.Screen name="SignUpShiper" component={SignUpShiper} />
+
             <Stack.Screen name="SignUpMailOrPhone" component={SignUpMailOrPhone} />
             <Stack.Screen name="Route" component={Route} />
             <Stack.Screen name="LoginSeller" component={LoginSeller} />
@@ -161,6 +165,7 @@ const App = () => {
             <Stack.Screen name="FavoriteFood" component={FavoriteFood} />
             <Stack.Screen name="Seemore" component={Seemore} />
             <Stack.Screen name="CustomerChat" component={CustomerChat} />
+            <Stack.Screen name="HomeShiper" component={HomeShiper} />
 
           </Stack.Navigator>
         </NavigationContainer>
