@@ -158,7 +158,7 @@ export default function ProfileScreen() {
                   navigation.navigate("Route"); // Navigate to seller login/sign-up screen
                   break;
                 case "Ngân hàng liên kết":
-                  navigation.navigate("HomeSeller"); // Navigate to linked bank screen
+                  navigation.navigate("HomeShiper"); // Navigate to linked bank screen
                   break;
                 case "Ngôn ngữ":
                   navigation.navigate("LanguageSettingsScreen"); // Navigate to language settings screen
