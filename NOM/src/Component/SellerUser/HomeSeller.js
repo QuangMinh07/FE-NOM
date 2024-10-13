@@ -7,8 +7,6 @@ import { globalContext } from "../../context/globalContext";
 import ImagePickerScreen from "../SellerUser/ImagePickerScreen"; // Import ImageUploader
 import { styles } from "./StyleHomeSeller"; // Import styles từ file mới
 
-const { width, height } = Dimensions.get("window");
-
 export default function HomeSeller() {
   const [storeName, setStoreName] = useState("");
   const [storeAddress, setStoreAddress] = useState("");

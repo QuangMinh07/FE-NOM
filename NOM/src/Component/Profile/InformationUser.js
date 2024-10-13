@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";  // For settings icon
 import { api, typeHTTP } from "../../utils/api"; // Import the API utility
-import AsyncStorage from '@react-native-async-storage/async-storage'; // In case you need it for authentication
 import { useNavigation } from "@react-navigation/native";
 import { useFocusEffect } from '@react-navigation/native';
 

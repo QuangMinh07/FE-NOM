@@ -1,28 +1,13 @@
 import React, { useState, useContext } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-  ScrollView,
-  Dimensions,
-  SafeAreaView // To handle notch areas on iPhone
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Dimensions, SafeAreaView } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { globalContext } from "../../context/globalContext";
 import { api, typeHTTP } from "../../utils/api";
-import * as ImagePicker from 'expo-image-picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'; // Import thư viện mới
-
-const { width, height } = Dimensions.get('window');
+import * as ImagePicker from "expo-image-picker";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"; // Import thư viện mới
+import styles from "./StyleSignUpShiper"; // Import styles từ file styles.js
 
 export default function SignUpShiper() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -40,15 +25,49 @@ export default function SignUpShiper() {
   const { globalData } = useContext(globalContext);
 
   const handlePickAvatar = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setAvatar(result.assets[0].uri); // Lưu URI của ảnh đã chọn vào state
+      }
+    } catch (error) {
+      console.error("Lỗi khi chọn ảnh:", error);
+      alert("Đã xảy ra lỗi khi chọn ảnh.");
+    }
+  };
+
+  const uploadProfilePicture = async (userId, uri) => {
+    const formData = new FormData();
+    formData.append("image", {
+      uri,
+      type: "image/jpeg", // Hoặc image/png tùy vào định dạng ảnh
+      name: "profilePicture.jpg", // Tên ảnh
     });
 
-    if (!result.canceled) {
-      setAvatar(result.uri);
+    try {
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/upload/uploadProfilePicture/${userId}`, // Đường dẫn API để upload ảnh
+        body: formData,
+        sendToken: true, // Gửi token nếu cần
+        isMultipart: true, // Multipart để gửi FormData
+      });
+
+      if (response && response.profilePictureURL) {
+        return response.profilePictureURL; // Trả về URL ảnh đã upload
+      } else {
+        throw new Error("Upload ảnh thất bại");
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload ảnh:", error);
+      alert("Đã xảy ra lỗi khi upload ảnh.");
+      throw error;
     }
   };
 
@@ -89,28 +108,37 @@ export default function SignUpShiper() {
     }
 
     try {
+      let imageUrl = avatar; // Lưu URL ảnh từ state `avatar`
+
+      // Nếu người dùng chọn ảnh, upload ảnh trước khi đăng ký
+      if (avatar) {
+        imageUrl = await uploadProfilePicture(globalData.user?.id, avatar); // Gọi hàm upload ảnh
+      }
+
+      // Tạo body để gửi request API
       const body = {
-        userId: globalData.user?.id,
-        representativeName: shopRepresentative,
-        cccd,
-        permanentAddress,
-        temporaryAddress,
-        dateOfBirth,
-        vehicleNumber,
-        bankAccount,
-        avatar,
+        userId: globalData.user?.id, // Lấy userId từ globalContext
+        fullName: shopRepresentative, // Họ và tên đại diện
+        cccd, // CCCD/CMND
+        address: permanentAddress, // Địa chỉ thường trú
+        dateOfBirth: dateOfBirth, // Ngày sinh
+        temporaryAddress, // Địa chỉ tạm trú
+        bankAccount, // Số tài khoản ngân hàng
+        vehicleNumber, // Mã số xe của shipper
+        profilePictureURL: imageUrl, // URL ảnh đã upload
       };
 
+      // Gọi API đăng ký Shipper
       const response = await api({
         method: typeHTTP.POST,
-        url: "/shipper/register",
-        body,
-        sendToken: true,
+        url: "/user/register-shipper", // Endpoint của API backend
+        body, // Body chứa thông tin từ form nhập liệu
+        sendToken: true, // Gửi token nếu cần xác thực
       });
 
       if (response) {
         alert("Đăng ký Shipper thành công, chờ admin duyệt.");
-        navigation.navigate("Login");
+        navigation.navigate("Login"); // Điều hướng về trang đăng nhập sau khi thành công
       }
     } catch (error) {
       console.error("Lỗi khi đăng ký Shipper:", error);
@@ -140,36 +168,16 @@ export default function SignUpShiper() {
       <Text style={styles.title}>Thông tin cá nhân</Text>
 
       <Text style={styles.label}>Họ và Tên</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập họ và tên"
-        value={shopRepresentative}
-        onChangeText={setShopRepresentative}
-      />
+      <TextInput style={styles.input} placeholder="Nhập họ và tên" value={shopRepresentative} onChangeText={setShopRepresentative} />
 
       <Text style={styles.label}>CCCD/CMND</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập CCCD/CMND"
-        value={cccd}
-        onChangeText={setCCCD}
-      />
+      <TextInput style={styles.input} placeholder="Nhập CCCD/CMND" value={cccd} onChangeText={setCCCD} />
 
       <Text style={styles.label}>Địa chỉ thường trú</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập địa chỉ thường trú"
-        value={permanentAddress}
-        onChangeText={setPermanentAddress}
-      />
+      <TextInput style={styles.input} placeholder="Nhập địa chỉ thường trú" value={permanentAddress} onChangeText={setPermanentAddress} />
 
       <Text style={styles.label}>Địa chỉ tạm trú</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập địa chỉ tạm trú"
-        value={temporaryAddress}
-        onChangeText={setTemporaryAddress}
-      />
+      <TextInput style={styles.input} placeholder="Nhập địa chỉ tạm trú" value={temporaryAddress} onChangeText={setTemporaryAddress} />
 
       <TouchableOpacity style={styles.button} onPress={handleNextStep}>
         <Text style={styles.buttonText}>Xác nhận</Text>
@@ -184,12 +192,7 @@ export default function SignUpShiper() {
       {/* Ngày Tháng Năm Sinh */}
       <Text style={styles.label}>Ngày tháng năm sinh</Text>
       <View style={styles.dateRow}>
-        <TextInput
-          style={styles.dateInputField}
-          placeholder="dd/mm/yyyy"
-          value={dateOfBirth.toLocaleDateString("vi-VN")} // Shows selected date
-          editable={false}
-        />
+        <TextInput style={styles.dateInputField} placeholder="dd/mm/yyyy" value={dateOfBirth.toLocaleDateString("vi-VN")} editable={false} />
         <TouchableOpacity onPress={showDatePicker}>
           <View style={styles.iconContainer}>
             <Icon name="calendar-today" size={24} color="#E53935" />
@@ -197,32 +200,15 @@ export default function SignUpShiper() {
         </TouchableOpacity>
       </View>
 
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleDateConfirm}
-        onCancel={hideDatePicker}
-        confirmTextIOS="Xác nhận"
-        cancelTextIOS="Hủy"
-      />
+      <DateTimePickerModal isVisible={isDatePickerVisible} mode="date" onConfirm={handleDateConfirm} onCancel={hideDatePicker} confirmTextIOS="Xác nhận" cancelTextIOS="Hủy" />
 
       {/* Số Tài Khoản */}
       <Text style={styles.label}>Số Tài Khoản</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập số tài khoản"
-        value={bankAccount}
-        onChangeText={setBankAccount}
-      />
+      <TextInput style={styles.input} placeholder="Nhập số tài khoản" value={bankAccount} onChangeText={setBankAccount} />
 
       {/* Mã Số Xe */}
       <Text style={styles.label}>Mã số xe</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập mã số xe"
-        value={vehicleNumber}
-        onChangeText={setVehicleNumber}
-      />
+      <TextInput style={styles.input} placeholder="Nhập mã số xe" value={vehicleNumber} onChangeText={setVehicleNumber} />
 
       {/* Ảnh Đại Diện */}
       <Text style={styles.label}>Ảnh đại diện</Text>
@@ -264,20 +250,12 @@ export default function SignUpShiper() {
 
       <View style={styles.checkboxContainer}>
         <TouchableOpacity onPress={() => setIsChecked(!isChecked)}>
-          <Icon
-            name={isChecked ? "check-box" : "check-box-outline-blank"}
-            size={24}
-            color="#E53935"
-          />
+          <Icon name={isChecked ? "check-box" : "check-box-outline-blank"} size={24} color="#E53935" />
         </TouchableOpacity>
         <Text style={styles.checkboxLabel}>Tôi đã đọc và đồng ý với điều khoản của ứng dụng</Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleRegisterShipper}
-        disabled={!isChecked}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleRegisterShipper} disabled={!isChecked}>
         <Text style={styles.buttonText}>Đăng ký</Text>
       </TouchableOpacity>
     </View>
@@ -307,7 +285,7 @@ export default function SignUpShiper() {
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-        //   keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} // Điều chỉnh offset cho iOS
+          //   keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} // Điều chỉnh offset cho iOS
         >
           {/* Sử dụng thêm KeyboardAwareScrollView để đảm bảo cuộn hợp lý */}
           <KeyboardAwareScrollView
@@ -315,10 +293,7 @@ export default function SignUpShiper() {
             keyboardShouldPersistTaps="handled"
             // extraScrollHeight={Platform.OS === "android" ? 60 : 20}  // Điều chỉnh độ cuộn khi bàn phím hiện
           >
-            <Image
-              source={require("../../img/LOGOBLACK.png")}
-              style={styles.banner}
-            />
+            <Image source={require("../../img/LOGOBLACK.png")} style={styles.banner} />
             {renderProgressBar()}
             {renderStep()}
           </KeyboardAwareScrollView>
@@ -327,163 +302,3 @@ export default function SignUpShiper() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff", // Handles iPhone notches
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: width * 0.05,
-    paddingVertical: height * 0.02,
-    backgroundColor: "#fff",
-  },
-  banner: {
-    width: 120,
-    height: 120,
-    alignSelf: "center",
-    marginBottom: 30,
-  },
-  stepContainer: {
-    marginBottom: height * 0.02,
-  },
-  title: {
-    fontSize: width * 0.05,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: height * 0.02,
-    color: "#333",
-  },
-  label: {
-    fontSize: width * 0.04,
-    fontWeight: "500",
-    marginBottom: height * 0.01,
-    color: "#333",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E53935",
-    padding: height * 0.02,
-    borderRadius: 8,
-    marginBottom: height * 0.02,
-    backgroundColor: "#fff",
-    color: "#000",
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: height * 0.02,
-  },
-  dateInputField: {
-    borderWidth: 1,
-    borderColor: "#E53935",
-    padding: height * 0.02,
-    borderRadius: 8,
-    flex: 1,
-    marginRight: width * 0.02,
-    color: "#000",
-  },
-  iconContainer: {
-    borderWidth: 1,
-    borderColor: "#E53935",
-    padding: height * 0.02,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  button: {
-    backgroundColor: "#E53935",
-    paddingVertical: height * 0.02,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: height * 0.02,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: width * 0.045,
-    fontWeight: "bold",
-  },
-  avatar: {
-    width: width * 0.2,
-    height: width * 0.2,
-    borderRadius: width * 0.1,
-    alignSelf: "center",
-    marginBottom: height * 0.02,
-  },
-  avatarButton: {
-    backgroundColor: "#E53935",
-    padding: height * 0.015,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: height * 0.02,
-  },
-  progressBarContainer: {
-    alignItems: "center",
-    marginBottom: height * 0.03,
-  },
-  progressBar: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  progressDot: {
-    width: width * 0.04,
-    height: width * 0.04,
-    borderRadius: width * 0.02,
-    backgroundColor: "#ccc",
-  },
-  progressLine: {
-    width: width * 0.15,
-    height: 2,
-    backgroundColor: "#ccc",
-  },
-  activeDot: {
-    backgroundColor: "#E53935",
-  },
-  activeLine: {
-    backgroundColor: "#E53935",
-  },
-  termsBox: {
-    padding: width * 0.05,
-    borderColor: "#E53935",
-    borderWidth: 2,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: height * 0.03,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  termsText: {
-    fontSize: width * 0.035,
-    color: "#333",
-    lineHeight: height * 0.025,
-    marginBottom: height * 0.01,
-  },
-  viewTerms: {
-    marginVertical: height * 0.02,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  linkText: {
-    fontSize: width * 0.04,
-    color: "#E53935",
-    fontWeight: "bold",
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: height * 0.03,
-    paddingHorizontal: width * 0.05,
-  },
-  checkboxLabel: {
-    fontSize: width * 0.04,
-    marginLeft: width * 0.02,
-    color: "#333",
-    fontWeight: "600",
-  },
-});
