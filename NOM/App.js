@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
-import {HomeShiper} from "./src/Component/Shipper";
+import {HomeShiper, DeliveryODDetails,HistoryScreenSP,NotificationsScreenSP} from "./src/Component/Shipper";
 
 import {  CustomerNotice, FavoriteFood, Seemore , CustomerChat} from "./src/Component/Main";
 
@@ -166,7 +166,9 @@ const App = () => {
             <Stack.Screen name="Seemore" component={Seemore} />
             <Stack.Screen name="CustomerChat" component={CustomerChat} />
             <Stack.Screen name="HomeShiper" component={HomeShiper} />
-
+            <Stack.Screen name="DeliveryODDetails" component={DeliveryODDetails} />
+            <Stack.Screen name="HistoryScreenSP" component={HistoryScreenSP} />
+            <Stack.Screen name="NotificationsScreenSP" component={NotificationsScreenSP} />
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>
