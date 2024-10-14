@@ -20,6 +20,7 @@ export default function OrderManagementScreen() {
   const [historyOrders, setHistoryOrders] = useState([]); // Lưu trữ danh sách đơn hàng lịch sử (đã hủy)
 
   const storeId = globalData.storeData?._id;
+  const userId = globalData.user?.id;
 
   const tabs = ["Mới", "Đã Nhận", "Lịch sử"];
 
@@ -27,25 +28,25 @@ export default function OrderManagementScreen() {
     try {
       const response = await api({
         method: typeHTTP.GET,
-        url: "/storeOrder/get-all-orders",
+        url: `/storeOrder/get-orders/${storeId}`, // URL mới lấy đơn hàng theo storeId
         sendToken: true,
       });
 
-      const { allOrdersDetails } = response;
+      const { storeOrdersDetails } = response; // Thay đổi response từ storeOrdersDetails
 
-      const newOrdersData = allOrdersDetails.filter((order) => order.orderStatus === "Pending");
-      const receivedOrdersData = allOrdersDetails.filter((order) => order.orderStatus === "Processing");
-
-      // Thêm đơn hàng đã bị hủy vào danh sách lịch sử
-      const historyOrdersData = allOrdersDetails.filter((order) => order.orderStatus === "Cancelled");
+      // Lọc đơn hàng theo trạng thái: Mới, Đã nhận và Đã hủy
+      const newOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Pending");
+      const receivedOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Shipped");
+      const historyOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Cancelled");
 
       setNewOrders(newOrdersData);
       setReceivedOrders(receivedOrdersData);
-      setHistoryOrders(historyOrdersData); // Lưu đơn hàng bị hủy vào state history
+      setHistoryOrders(historyOrdersData);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách đơn hàng:", error);
     }
-  }, []);
+  }, [storeId]);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -54,24 +55,19 @@ export default function OrderManagementScreen() {
   );
 
   const handleConfirmOrder = async (orderId) => {
-    console.log("ID đơn hàng cần xác nhận:", orderId); // Log lại để kiểm tra
-    console.log("Store ID:", storeId); // Log lại Store ID để kiểm tra
-
-    console.log("Request Body:", { orderId });
-    console.log("Request URL:", `/storeOrder/update-status/${storeId}`);
-
     try {
       const response = await api({
         method: typeHTTP.PUT,
-        url: `/storeOrder/update-status/${storeId}`,
+        url: `/storeOrder/update-status/${storeId}/${userId}`, // Cập nhật URL API để truyền storeId và userId
         sendToken: true,
-        body: { orderId: orderId }, // Gửi orderId vào body của request
+        body: {
+          orderId: orderId, // Gửi orderId vào body của request
+        },
       });
 
-      console.log("Kết quả trả về từ API:", response); // Log kết quả trả về từ API
-
-      alert(`Đơn hàng đã được cập nhật trạng thái.`);
-      fetchOrders(); // Cập nhật lại danh sách đơn hàng sau khi thành công
+      // Hiển thị thông báo và cập nhật danh sách đơn hàng sau khi thành công
+      alert(`Đơn hàng đã được cập nhật trạng thái: ${response.message}`);
+      fetchOrders(); // Cập nhật lại danh sách đơn hàng
     } catch (error) {
       console.error("Lỗi xảy ra:", error);
 
@@ -87,6 +83,8 @@ export default function OrderManagementScreen() {
       }
     }
   };
+
+
 
   // Hàm để mở modal nhập lý do hủy
   const openCancelModal = (order) => {

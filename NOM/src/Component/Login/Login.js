@@ -88,8 +88,8 @@ export default function Login() {
         await AsyncStorage.setItem("auth_token", response.token);
         await AsyncStorage.setItem("user", JSON.stringify(response.user));
 
-        console.log("Token saved:", response.token); // Log token để kiểm tra
-        console.log("User saved:", response.user); // Log user để kiểm tra
+        console.log("Token saved:", response.token);
+        console.log("User saved:", response.user);
 
         if (isRememberMeChecked) {
           await AsyncStorage.setItem("saved_phone", phone);
@@ -122,6 +122,9 @@ export default function Login() {
         } else if (response.user.roleId === "seller") {
           console.log("Điều hướng đến HomeSeller");
           navigation.navigate("HomeSeller");
+        } else if (response.user.roleId === "shipper") {
+          console.log("Điều hướng đến HomeShiper");
+          navigation.navigate("HomeShiper");
         } else {
           Alert.alert("Lỗi", "Không xác định được vai trò người dùng!");
         }
@@ -136,6 +139,7 @@ export default function Login() {
       Alert.alert("Lỗi", errorMessage);
     }
   };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
