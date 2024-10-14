@@ -7,9 +7,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
-import {HomeShiper, DeliveryODDetails,HistoryScreenSP,NotificationsScreenSP} from "./src/Component/Shipper";
+import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP } from "./src/Component/Shipper";
 
-import {  CustomerNotice, FavoriteFood, Seemore , CustomerChat} from "./src/Component/Main";
+import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Component/Main";
 
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood } from "./src/Component/Customer";
 import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen } from "./src/Component/SellerUser";
@@ -47,6 +47,8 @@ const App = () => {
             setInitialRoute("HomeSeller"); // Điều hướng đến trang Home của người bán
           } else if (userData.roleId === "staff" && userData.isActive) {
             setInitialRoute("HomeSeller"); // Điều hướng đến trang Home của nhân viên nếu isActive là true
+          } else if (userData.roleId === "shipper") {
+            setInitialRoute("HomeShiper"); // Điều hướng đến trang Home của shipper
           } else {
             setInitialRoute("WelcomeScreen"); // Fallback nếu không xác định được role
           }
