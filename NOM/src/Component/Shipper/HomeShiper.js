@@ -36,6 +36,11 @@ export default function HomeShiper() {
   const navigation = useNavigation();
   const { globalData } = useContext(globalContext);
 
+  useEffect(() => {
+    console.log("Orders fetched:", orders);
+    console.log("Accepted Order ID:", acceptedOrderId);
+  }, [orders, acceptedOrderId]);
+
   // Gọi API để lấy tất cả đơn hàng
   useEffect(() => {
     const fetchOrders = async () => {
@@ -46,17 +51,17 @@ export default function HomeShiper() {
           sendToken: true,
         });
 
-        // Lọc những đơn hàng có trạng thái "Processing", "Shipped", "Completed", "Received"
         const filteredOrders = response.allOrdersDetails.filter(order =>
           ["Processing", "Shipped", "Completed", "Received"].includes(order.orderStatus)
         );
 
-        setOrders(filteredOrders); // Lưu trữ các đơn hàng đã được lọc
+        setOrders(filteredOrders);
 
-        // Tìm đơn hàng nào có trạng thái "Shipped" để hiển thị đúng trạng thái "Đã chấp nhận"
-        const shippedOrder = filteredOrders.find(order => order.orderStatus === "Shipped");
-        if (shippedOrder) {
-          setAcceptedOrderId(shippedOrder.orderId); // Đánh dấu đơn hàng đã được chấp nhận
+        // Khôi phục trạng thái `acceptedOrderId` từ AsyncStorage
+        const savedOrderId = await AsyncStorage.getItem('acceptedOrderId');
+        if (savedOrderId) {
+          console.log("Saved Order ID:", savedOrderId); // Log để kiểm tra
+          setAcceptedOrderId(savedOrderId);
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -71,32 +76,26 @@ export default function HomeShiper() {
   const handleAcceptOrder = async (orderId) => {
     if (acceptedOrderId === null) {
       try {
-        // Lấy đơn hàng đang được chọn
         const order = orders.find(order => order.orderId === orderId);
-
-        // Lấy storeId từ đơn hàng đã chọn
         const storeId = order.store?.storeId;
+        const userId = globalData.user?.id;
 
-        const userId = globalData.user?.id; // Lấy userId từ globalData
-
-        // Gọi API để cập nhật trạng thái đơn hàng thành "Shipped"
         const response = await api({
           method: typeHTTP.PUT,
           url: `/storeOrder/update-status/${storeId}/${userId}`,
-          body: { orderId: orderId }, // Truyền orderId
+          body: { orderId: orderId },
           sendToken: true,
         });
 
         if (response.message) {
-          // Cập nhật trạng thái đơn hàng thành "Shipped" trong danh sách orders
           const updatedOrders = orders.map((o) =>
             o.orderId === orderId ? { ...o, orderStatus: "Shipped" } : o
           );
 
-          setOrders(updatedOrders); // Cập nhật danh sách đơn hàng
-          setAcceptedOrderId(orderId); // Đánh dấu đơn hàng đã chấp nhận
-          setAcceptedOrder(order); // Cập nhật đơn hàng đã chấp nhận
-          navigation.navigate('DeliveryODDetails', { order });
+          setOrders(updatedOrders);
+          setAcceptedOrderId(orderId);
+          await AsyncStorage.setItem('acceptedOrderId', orderId); // Lưu trạng thái vào AsyncStorage
+          navigation.navigate('DeliveryODDetails', { orderId });
         } else {
           Alert.alert("Lỗi", "Cập nhật trạng thái đơn hàng thất bại.");
         }
@@ -107,10 +106,9 @@ export default function HomeShiper() {
     }
   };
 
-  const handleSelectedOrderPress = () => {
-    if (acceptedOrder) {
-      navigation.navigate('DeliveryODDetails', { order: acceptedOrder });
-    }
+  const handleSelectedOrderPress = (item) => {
+    console.log("Navigating to DeliveryODDetails with orderId:", item.orderId); // Log để kiểm tra điều hướng
+    navigation.navigate('DeliveryODDetails', { orderId: item.orderId });
   };
 
   const handleLogout = async () => {
@@ -179,7 +177,9 @@ export default function HomeShiper() {
           keyExtractor={item => item.orderId}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => (acceptedOrderId === item.orderId ? handleSelectedOrderPress() : handleAcceptOrder(item.orderId))}
+              onPress={() => (acceptedOrderId === item.orderId || item.orderStatus === 'Shipped')
+                ? handleSelectedOrderPress(item)
+                : handleAcceptOrder(item.orderId)}
               disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId}
             >
               <View style={{ backgroundColor: '#f9f9f9', padding: 15, marginBottom: 10, borderRadius: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 }}>
@@ -196,7 +196,14 @@ export default function HomeShiper() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  onPress={() => { navigation.navigate("DeliveryODDetails") }}
+                  onPress={() => {
+                    console.log("Button pressed!"); // Log để kiểm tra nút được nhấn
+                    if (acceptedOrderId === item.orderId || item.orderStatus === 'Shipped') {
+                      handleSelectedOrderPress(item);
+                    } else {
+                      handleAcceptOrder(item.orderId);
+                    }
+                  }}
                   style={{
                     marginTop: 10,
                     backgroundColor: acceptedOrderId === item.orderId || item.orderStatus === 'Shipped' ? '#ccc' : '#E53935',
@@ -205,7 +212,7 @@ export default function HomeShiper() {
                   }}
                   disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId || item.orderStatus === 'Shipped'}
                 >
-                  <Text onPress={() => handleAcceptOrder(item.orderId)} style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>
+                  <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>
                     {acceptedOrderId === item.orderId || item.orderStatus === 'Shipped' ? "Đã chấp nhận" : "Chấp nhận"}
                   </Text>
                 </TouchableOpacity>
