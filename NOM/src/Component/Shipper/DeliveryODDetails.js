@@ -151,7 +151,7 @@ export default function DeliveryODDetails() {
           fontSize: 18,
           fontWeight: "bold",
           marginHorizontal: 16,
-          marginTop: 16,
+          marginTop: 50,
           marginBottom: 8,
         }}
       >
