@@ -215,34 +215,61 @@ export default function HomeShiper() {
       </View>
 
       {/* Modal Đăng xuất */}
-      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <Pressable style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.5)" }} onPress={() => setModalVisible(false)}>
-          <Pressable
-            style={{
-              width: "100%",
-              backgroundColor: "#fff",
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 20,
-            }}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <TouchableOpacity
-              onPress={handleLogout}
-              style={{
-                backgroundColor: "#E53935",
-                paddingVertical: 15,
-                paddingHorizontal: 40,
-                borderRadius: 10,
-                alignItems: "center",
-                marginBottom: 20,
-              }}
-            >
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đăng xuất</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+<Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <Pressable
+    style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)" }}
+    onPress={() => setModalVisible(false)}
+  >
+    <Pressable
+      style={{
+        width: "100%",
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+      }}
+      onPress={(e) => e.stopPropagation()}
+    >
+      {/* Xem thông tin button */}
+      <TouchableOpacity
+        onPress={() => {
+          setModalVisible(false);
+          navigation.navigate("ProfileShipper");
+        }}
+        style={{
+          backgroundColor: "#ffa500",
+          paddingVertical: 15,
+          paddingHorizontal: 40,
+          borderRadius: 10,
+          alignItems: "center",
+          marginBottom: 20, // Provides space between buttons
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Xem thông tin</Text>
+      </TouchableOpacity>
+
+      {/* Đăng xuất button */}
+      <TouchableOpacity
+        onPress={handleLogout}
+        style={{
+          backgroundColor: "#E53935",
+          paddingVertical: 15,
+          paddingHorizontal: 40,
+          borderRadius: 10,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đăng xuất</Text>
+      </TouchableOpacity>
+    </Pressable>
+  </Pressable>
+</Modal>
+
     </View>
   );
 }
