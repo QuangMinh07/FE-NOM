@@ -12,7 +12,7 @@ import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP,P
 import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Component/Main";
 
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood,OrderingProcess } from "./src/Component/Customer";
-import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen } from "./src/Component/SellerUser";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen,InvoiceDetails } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
 import { api, typeHTTP } from "./src/utils/api";
@@ -139,6 +139,8 @@ const App = () => {
             <Stack.Screen name="SignUpMailOrPhone" component={SignUpMailOrPhone} />
             <Stack.Screen name="Route" component={Route} />
             <Stack.Screen name="LoginSeller" component={LoginSeller} />
+            <Stack.Screen name="InvoiceDetails" component={InvoiceDetails} />
+
             <Stack.Screen name="InformationUser" component={InformationUser} />
             <Stack.Screen name="Information" component={Information} />
             <Stack.Screen name="UpdateInformation" component={UpdateInformation} />

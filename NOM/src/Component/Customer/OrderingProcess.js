@@ -45,40 +45,40 @@ const OrderingProcess = () => {
     navigation.goBack();
   };
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.02 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff',  }}>
+      <View contentContainerStyle={{ flex:1 ,paddingHorizontal: width * 0.05, paddingTop: height * 0.02, }}>
         {/* Logo và tên app */}
-        <View style={{ alignItems: 'center', marginBottom: height * 0.02 }}>
+        <View style={{ alignItems: 'center', marginBottom: height * 0.02 ,}}>
           <Image
             source={require('../../img/LOGOBLACK.png')}
             style={{ width: width * 0.3, height: height * 0.15 }}
           />
         </View>
         {/* Thanh tiến trình */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
           {steps.map((step, index) => (
             <TouchableOpacity key={index} onPress={() => handleStepSelect(index)} style={{ flexDirection: 'row', alignItems: 'center', }}>
               <View style={{
                 width: 16,
                 height: 16,
                 borderRadius: 8,
-                backgroundColor: activeStep >= index ? 'red' : 'white',
+                backgroundColor: activeStep >= index ? '#E53935' : 'white',
                 borderWidth: 2,
-                borderColor: 'red',
+                borderColor: '#E53935',
               }} />
               {index < steps.length - 1 && (
-                <View style={{ width: width * 0.18, height: 2, backgroundColor: activeStep > index ? 'red' : 'red' }} />
+                <View style={{ width: width * 0.18, height: 2, backgroundColor: activeStep > index ? '#E53935' : '#E53935' }} />
               )}
             </TouchableOpacity>
           ))}
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05}}>
           {steps.map((step, index) => (
             <Text
               key={index}
               style={{
                 fontSize: width * 0.035,
-                color: activeStep === index ? 'red' : 'gray',
+                color: activeStep === index ? '#E53935' : 'gray',
                 textAlign: 'center',
                 flex: 1,
                 fontWeight: 'bold',
@@ -90,7 +90,7 @@ const OrderingProcess = () => {
           ))}
         </View>
         {/* Thông tin thời gian */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.03 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.03,paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Thời gian đặt hàng:</Text>
           <Text style={{ fontSize: width * 0.04 }}>09:00 PM 12/08/2024</Text>
         </View>
@@ -107,6 +107,7 @@ const OrderingProcess = () => {
           shadowOpacity: 0.2, // Độ mờ của bóng
           shadowRadius: 5, // Bán kính đổ bóng
           elevation: 5, // Đổ bóng cho Android
+          paddingHorizontal: width * 0.05
         }}>
           <MaterialIcons name="location-on" size={24} color="green" />
           <View>
@@ -127,20 +128,21 @@ const OrderingProcess = () => {
           shadowOpacity: 0.2, // Độ mờ của bóng
           shadowRadius: 5, // Bán kính đổ bóng
           elevation: 5, // Đổ bóng cho Android
+          paddingHorizontal: width * 0.05
         }}>
-          <MaterialIcons name="location-on" size={24} color="red" />
-          <View>
+          <MaterialIcons name="location-on" size={24} color="#E53935" />
+          <View style={{}}>
             <Text style={{ fontSize: width * 0.045, fontWeight: 'bold', marginLeft: 10 }}>Nguyễn Thị Kiều Nghi</Text>
             <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>72, phường 5, Nguyễn Thái Sơn, Gò Vấp</Text>
           </View>
         </View>
         {/* Tóm tắt đơn hàng */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
           <Text style={{ fontSize: width * 0.045, fontWeight: 'bold' }}>Tổng phí tạm tính</Text>
-          <Text style={{ fontSize: width * 0.05, color: 'red', fontWeight: 'bold', }}>40.000 VND</Text>
+          <Text style={{ fontSize: width * 0.05, color: '#E53935', fontWeight: 'bold', }}>40.000 VND</Text>
         </View>
         {/* Chi tiết đơn hàng */}
-        <View style={{ backgroundColor: '#FFFFFF', padding: width * 0.01, borderRadius: 10, marginBottom: height * 0.02 }}>
+        <View style={{ backgroundColor: '#FFFFFF', padding: width * 0.01, borderRadius: 10, marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
           <Text style={{ fontSize: width * 0.045, fontWeight: 'bold' }}>Tóm tắt đơn hàng</Text>
           {/* Hàng 1 */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: height * 0.01 }}>
@@ -156,11 +158,11 @@ const OrderingProcess = () => {
           </View>
         </View>
         {/* Dụng cụ ăn uống và phương thức thanh toán */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
           <Text style={{ fontSize: width * 0.04 }}>Dụng cụ ăn uống</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Có</Text>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
           <Text style={{ fontSize: width * 0.04 }}>Phương thức thanh toán</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold', }}>Tiền mặt</Text>
         </View>
@@ -168,7 +170,7 @@ const OrderingProcess = () => {
         {activeStep === 0 ? (
           // Display 'Hủy đơn hàng' button only for step 1 (tap 1)
           <TouchableOpacity onPress={openCancelModal}>
-            <View style={{ backgroundColor: '#FF0000', paddingVertical: height * 0.02, borderRadius: 10, alignItems: 'center', marginTop: height * 0.03 }}>
+            <View style={{ backgroundColor: '#E53935', paddingVertical: height * 0.02, borderRadius: 1, alignItems: 'center', marginTop: height * 0.03, }}>
               <Text style={{ color: '#FFFFFF', fontSize: width * 0.05 }}>Hủy đơn hàng</Text>
             </View>
           </TouchableOpacity>
@@ -177,7 +179,7 @@ const OrderingProcess = () => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: width * 0.03, backgroundColor: '#FFFFFF', borderRadius: 10 }}>
             <Text style={{ fontSize: width * 0.045, fontWeight: 'bold' }}>Thông tin tài xế</Text>
             <TouchableOpacity onPress={openModal}>
-              <Text style={{ fontSize: width * 0.045, color: 'red', fontWeight: 'bold' }}>Xem chi tiết</Text>
+              <Text style={{ fontSize: width * 0.045, color: '#E53935', fontWeight: 'bold' }}>Xem chi tiết</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -214,7 +216,7 @@ const OrderingProcess = () => {
                 fontSize: height * 0.025,
                 fontWeight: 'bold',
                 textAlign: 'center',
-                color: 'red',
+                color: '#E53935',
                 marginBottom: height * 0.02,
               }}>
                 Lý do hủy đơn hàng
@@ -300,7 +302,7 @@ const OrderingProcess = () => {
             >
               {/* Title */}
               <Text style={{
-                fontSize: height * 0.022,
+                fontSize: height * 0.02,
                 fontWeight: 'bold',
                 textAlign: 'center',
                 marginBottom: height * 0.03,
@@ -317,7 +319,7 @@ const OrderingProcess = () => {
                       height: height * 0.06,
                       borderRadius: (height * 0.06) / 2, // Circle shape
                       borderWidth: 2,
-                      borderColor: 'red', // Red border
+                      borderColor: '#E53935', // Red border
                       justifyContent: 'center',
                       alignItems: 'center',
                       marginRight: 15,
@@ -327,13 +329,13 @@ const OrderingProcess = () => {
                     <FontAwesome
                       name="user" // User icon to represent the avatar if no image
                       size={height * 0.03} // Icon size
-                      color="red" // Icon color
+                      color="#E53935" // Icon color
                     />
                   </View>
                   {/* Name and Rating */}
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontSize: height * 0.02, fontWeight: 'bold', color: 'red', marginRight: 10 }}>
+                      <Text style={{ fontSize: height * 0.02, fontWeight: 'bold', color: '#E53935', marginRight: 10 }}>
                         Nguyễn Thị Kiều Nghi
                       </Text>
                       {/* Rating Section aligned with the name */}
@@ -363,13 +365,13 @@ const OrderingProcess = () => {
                 borderTopColor: '#eee',
                 paddingTop: height * 0.01
               }}>
-                <FontAwesome name="comments" size={height * 0.025} color="red" style={{ marginLeft: 20 }} />
+                <FontAwesome name="comments" size={height * 0.025} color="#E53935" style={{ marginLeft: 20 }} />
                 <Text style={{ fontSize: height * 0.02, color: 'black', marginLeft: 10, fontWeight: 'bold' }}>Liên hệ với tài xế</Text>
               </View>
             </Pressable>
           </Pressable>
         </Modal>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
