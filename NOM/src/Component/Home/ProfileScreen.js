@@ -161,7 +161,7 @@ export default function ProfileScreen() {
                   navigation.navigate("OrderingProcess"); // Navigate to linked bank screen
                   break;
                 case "Ngôn ngữ":
-                  navigation.navigate("LanguageSettingsScreen"); // Navigate to language settings screen
+                  navigation.navigate("InvoiceDetails"); // Navigate to language settings screen
                   break;
                 case "Nhận xét đánh giá":
                   navigation.navigate("ReviewsScreen"); // Navigate to reviews screen
