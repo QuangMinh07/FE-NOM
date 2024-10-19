@@ -10,6 +10,8 @@ const OrderingProcess = () => {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [selectedReason, setSelectedReason] = useState(null);
   const navigation = useNavigation();
+  const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal cho danh sách món ăn
+
   const steps = [
     { label: 'Đang chờ duyệt', visible: true },
     { label: 'Đã nhận đơn hàng', visible: false },
@@ -44,18 +46,28 @@ const OrderingProcess = () => {
     // Navigate back to the previous page after selecting a reason
     navigation.goBack();
   };
+  // Function to open the food modal
+  const openFoodModal = () => {
+    setFoodModalVisible(true);
+  };
+
+  // Function to close the food modal
+  const closeFoodModal = () => {
+    setFoodModalVisible(false);
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff',  }}>
-      <View contentContainerStyle={{ flex:1 ,paddingHorizontal: width * 0.05, paddingTop: height * 0.02, }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', }}>
+      <View contentContainerStyle={{ flex: 1, paddingHorizontal: width * 0.05, paddingTop: height * 0.02, }}>
         {/* Logo và tên app */}
-        <View style={{ alignItems: 'center', marginBottom: height * 0.02 ,}}>
+        <View style={{ alignItems: 'center', marginBottom: height * 0.02, }}>
           <Image
             source={require('../../img/LOGOBLACK.png')}
             style={{ width: width * 0.3, height: height * 0.15 }}
           />
         </View>
         {/* Thanh tiến trình */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           {steps.map((step, index) => (
             <TouchableOpacity key={index} onPress={() => handleStepSelect(index)} style={{ flexDirection: 'row', alignItems: 'center', }}>
               <View style={{
@@ -72,7 +84,7 @@ const OrderingProcess = () => {
             </TouchableOpacity>
           ))}
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05}}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           {steps.map((step, index) => (
             <Text
               key={index}
@@ -90,7 +102,7 @@ const OrderingProcess = () => {
           ))}
         </View>
         {/* Thông tin thời gian */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.03,paddingHorizontal: width * 0.05 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.03, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Thời gian đặt hàng:</Text>
           <Text style={{ fontSize: width * 0.04 }}>09:00 PM 12/08/2024</Text>
         </View>
@@ -136,33 +148,88 @@ const OrderingProcess = () => {
             <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>72, phường 5, Nguyễn Thái Sơn, Gò Vấp</Text>
           </View>
         </View>
-        {/* Tóm tắt đơn hàng */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
-          <Text style={{ fontSize: width * 0.045, fontWeight: 'bold' }}>Tổng phí tạm tính</Text>
-          <Text style={{ fontSize: width * 0.05, color: '#E53935', fontWeight: 'bold', }}>40.000 VND</Text>
-        </View>
-        {/* Chi tiết đơn hàng */}
-        <View style={{ backgroundColor: '#FFFFFF', padding: width * 0.01, borderRadius: 10, marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
-          <Text style={{ fontSize: width * 0.045, fontWeight: 'bold' }}>Tóm tắt đơn hàng</Text>
-          {/* Hàng 1 */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: height * 0.01 }}>
-            <Text style={{ fontSize: width * 0.04 }}>1x</Text>
-            <Text style={{ fontSize: width * 0.04, flex: 1, marginLeft: width * 0.02 }}>Cơm tấm sườn bì</Text>
-            <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
-          </View>
-          {/* Hàng 2 */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: height * 0.01 }}>
-            <Text style={{ fontSize: width * 0.04 }}>3x</Text>
-            <Text style={{ fontSize: width * 0.04, flex: 1, marginLeft: width * 0.02 }}>Cơm tấm sườn bì</Text>
-            <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
-          </View>
-        </View>
+        <ScrollView
+          style={{ marginBottom: height * 0.03 }}
+          contentContainerStyle={{ paddingBottom: height * 0.03 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableOpacity onLongPress={openFoodModal}>
+            <View style={{ maxHeight: height * 0.1 , paddingHorizontal: width * 0.05
+ }}>
+              {/* List of food items */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                <Text style={{ fontSize: width * 0.04 }}>1x Cơm tấm sườn bì</Text>
+                <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                <Text style={{ fontSize: width * 0.04 }}>3x Cơm tấm sườn bì</Text>
+                <Text style={{ fontSize: width * 0.04 }}>60.000 VND</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                <Text style={{ fontSize: width * 0.04 }}>2x Gỏi cuốn tôm thịt</Text>
+                <Text style={{ fontSize: width * 0.04 }}>40.000 VND</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                <Text style={{ fontSize: width * 0.04 }}>1x Nước mía</Text>
+                <Text style={{ fontSize: width * 0.04 }}>10.000 VND</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                <Text style={{ fontSize: width * 0.04 }}>2x Bánh mì</Text>
+                <Text style={{ fontSize: width * 0.04 }}>15.000 VND</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={foodModalVisible}
+          onRequestClose={closeFoodModal}
+        >
+          <TouchableOpacity
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0)', shadowOffset: { width: 0, height: 10 }, elevation: 3, shadowRadius: 10, shadowOpacity: 0.7, shadowColor: '#000', }}
+            onPress={closeFoodModal}
+            activeOpacity={1}
+          >
+            <Pressable
+              style={{ width: width * 0.8, backgroundColor: '#fff', padding: 20, borderRadius: 10 }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <Text style={{ fontSize: width * 0.05, fontWeight: 'bold', marginBottom: height * 0.02 }}>Danh sách món ăn</Text>
+              <ScrollView>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                  <Text style={{ fontSize: width * 0.04 }}>1x Cơm tấm sườn bì</Text>
+                  <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                  <Text style={{ fontSize: width * 0.04 }}>3x Cơm tấm sườn bì</Text>
+                  <Text style={{ fontSize: width * 0.04 }}>60.000 VND</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                  <Text style={{ fontSize: width * 0.04 }}>2x Gỏi cuốn tôm thịt</Text>
+                  <Text style={{ fontSize: width * 0.04 }}>40.000 VND</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                  <Text style={{ fontSize: width * 0.04 }}>1x Nước mía</Text>
+                  <Text style={{ fontSize: width * 0.04 }}>10.000 VND</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                  <Text style={{ fontSize: width * 0.04 }}>2x Bánh mì</Text>
+                  <Text style={{ fontSize: width * 0.04 }}>15.000 VND</Text>
+                </View>
+                {/* Add more food items as needed */}
+              </ScrollView>
+            </Pressable>
+          </TouchableOpacity>
+        </Modal>
+
         {/* Dụng cụ ăn uống và phương thức thanh toán */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Dụng cụ ăn uống</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Có</Text>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02 ,paddingHorizontal: width * 0.05}}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Phương thức thanh toán</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold', }}>Tiền mặt</Text>
         </View>

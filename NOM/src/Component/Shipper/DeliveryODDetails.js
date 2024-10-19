@@ -71,7 +71,7 @@ export default function DeliveryODDetails() {
           borderBottomLeftRadius: 8,
           borderBottomRightRadius: 8,
           width: "100%",
-          height: "15%",
+          height: "20%",
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
@@ -151,8 +151,9 @@ export default function DeliveryODDetails() {
           fontSize: 18,
           fontWeight: "bold",
           marginHorizontal: 16,
-          marginTop: 50,
+          marginTop: 25,
           marginBottom: 8,
+         
         }}
       >
         Chi tiết đơn hàng
