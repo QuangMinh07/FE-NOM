@@ -1,16 +1,17 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, Dimensions, ActivityIndicator, Image } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions, ActivityIndicator, Image, ScrollView } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ProfileShipper() {
-  const [showMore, setShowMore] = useState(false);
+  const [showMore, setShowMore] = useState(false); // State to toggle the visibility of additional information
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true); // Trạng thái chờ
+  const [loading, setLoading] = useState(true); // Loading state for API data
+  const [shipperInfo, setShipperInfo] = useState(null); // State to store shipperInfo data
 
-  // Hàm định dạng ngày theo DD/MM/YYYY
+  // Function to format date as DD/MM/YYYY
   const formatDate = (date) => {
     if (!date) return "Không có thông tin";
     const d = new Date(date);
@@ -20,13 +21,13 @@ export default function ProfileShipper() {
     return `${day}/${month}/${year}`;
   };
 
-  // Hàm lấy thông tin người dùng từ API
+  // Function to fetch user profile data from the API
   const getUserProfile = async () => {
     let profileData = {};
     let personalInfoData = {};
+    let shipperInfoData = {}; // Thêm biến cho thông tin shipper
 
     try {
-      // Gọi API lấy thông tin người dùng
       const profileResponse = await api({
         method: typeHTTP.GET,
         url: "/user/profile",
@@ -34,14 +35,17 @@ export default function ProfileShipper() {
       });
 
       if (profileResponse.success) {
-        profileData = profileResponse.user; // Lưu thông tin người dùng vào biến profileData
+        profileData = profileResponse.user;
+        setShipperInfo(profileResponse.shipperInfo); // Set shipperInfo data
+
       }
     } catch (error) {
-      // Không log lỗi, chỉ để yên
+      // Handle error (log or ignore as needed)
+    } finally {
+      setLoading(false); // Turn off loading state once data is fetched
     }
-
+  
     try {
-      // Gọi API lấy thông tin cá nhân người dùng
       const personalInfoResponse = await api({
         method: typeHTTP.GET,
         url: "/userPersonal/personal-info",
@@ -49,16 +53,16 @@ export default function ProfileShipper() {
       });
 
       if (personalInfoResponse.success) {
-        personalInfoData = personalInfoResponse.userPersonalInfo; // Lưu thông tin cá nhân vào biến personalInfoData
+        personalInfoData = personalInfoResponse.userPersonalInfo;
       }
     } catch (error) {
-      // Không log lỗi, chỉ để yên
+      // Handle error (log or ignore as needed)
     }
 
-    // Kết hợp cả hai dữ liệu profile và personal info
+    // Combine both profile and personal info data into one object
     const combinedUserData = { ...profileData, ...personalInfoData };
-    setUserData(combinedUserData); // Cập nhật state với dữ liệu kết hợp
-    setLoading(false); // Tắt trạng thái chờ
+    setUserData(combinedUserData);
+    setLoading(false); // Turn off loading state once data is fetched
   };
 
   useFocusEffect(
@@ -68,7 +72,7 @@ export default function ProfileShipper() {
   );
 
   if (loading) {
-    // Hiển thị thông báo chờ khi dữ liệu đang tải
+    // Display loading spinner while data is being fetched
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#E53935" />
@@ -103,32 +107,33 @@ export default function ProfileShipper() {
               borderColor: "#E53935",
               borderWidth: 2,
               backgroundColor: "#fff",
-              overflow: "hidden", // Đảm bảo ảnh nằm gọn trong khung tròn
+              overflow: "hidden",
             }}
           >
             {userData?.profilePictureURL ? (
               <Image
-                source={{ uri: userData.profilePictureURL }} // Hiển thị ảnh từ URL
+                source={{ uri: userData.profilePictureURL }}
                 style={{
                   width: "100%",
                   height: "100%",
-                  borderRadius: (width * 0.2) / 2, // Đảm bảo ảnh được bo tròn
+                  borderRadius: (width * 0.2) / 2,
                 }}
               />
             ) : (
-              <Text style={{ textAlign: "center", marginTop: 40 }}>Avatar</Text> // Hiển thị văn bản nếu không có ảnh
+              <Text style={{ textAlign: "center", marginTop: 40 }}>Avatar</Text>
             )}
           </View>
         </View>
       </View>
 
       {/* User Information */}
-      <View
+      <ScrollView
         style={{
           padding: width * 0.05,
           marginTop: height * 0.05,
         }}
       >
+        {/* Show the first three fields (Name, Phone, and Email) */}
         <Text
           style={{
             fontSize: 16,
@@ -145,7 +150,7 @@ export default function ProfileShipper() {
             color: "#333",
             marginBottom: 15,
             marginLeft: 30,
-            marginTop: 20,
+            marginTop: 10,
           }}
         >
           {userData?.fullName ? userData.fullName : "Không có thông tin"}
@@ -209,8 +214,121 @@ export default function ProfileShipper() {
           </Text>
         </TouchableOpacity>
 
+        {/* Show more fields when the button is pressed */}
         {showMore && (
           <>
+             <Text
+              style={{
+                fontSize: 16,
+                color: "#333",
+                marginBottom: 5,
+              }}
+            >
+              Số CCCD/CMND
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 15,
+                marginLeft: 30,
+                marginTop: 20,
+              }}
+            >
+              {userData?.cccd ? userData.cccd : "Không có thông tin"}
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#333",
+                marginBottom: 5,
+              }}
+            >
+              Bảng số xe
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 15,
+                marginLeft: 30,
+                marginTop: 20,
+              }}
+            >
+              {shipperInfo?.vehicleNumber ? shipperInfo.vehicleNumber : "Không có thông tin"}
+            </Text>
+
+
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#333",
+                marginBottom: 5,
+              }}
+            >
+              Tài khoản ngân hàng
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 15,
+                marginLeft: 30,
+                marginTop: 20,
+              }}
+            >
+              {shipperInfo?.bankAccount ? shipperInfo.bankAccount : "Không có thông tin"}
+            </Text>
+
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#333",
+                marginBottom: 5,
+              }}
+            >
+              Địa chỉ thường trú
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 15,
+                marginLeft: 30,
+                marginTop: 20,
+              }}
+            >
+              {userData?.address ? userData.address : "Không có thông tin"}
+            </Text>
+
+            {/* Địa chỉ tạm trú */}
+           
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#333",
+                marginBottom: 5,
+              }}
+            >
+              Địa chỉ tạm trú
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 15,
+                marginLeft: 30,
+                marginTop: 20,
+              }}
+            >
+              {shipperInfo?.temporaryAddress ? shipperInfo.temporaryAddress : "Không có thông tin"}
+            </Text>
+
             <Text
               style={{
                 fontSize: 16,
@@ -278,7 +396,7 @@ export default function ProfileShipper() {
             </Text>
           </>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }

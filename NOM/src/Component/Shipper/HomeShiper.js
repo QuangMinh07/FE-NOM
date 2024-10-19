@@ -34,14 +34,32 @@ export default function HomeShiper() {
   const [modalVisible, setModalVisible] = useState(false); // Quản lý trạng thái của modal
   const navigation = useNavigation();
   const { globalData } = useContext(globalContext);
+  const [showAddress, setShowAddress] = useState(false);
+  const [shipperInfo, setShipperInfo] = useState(null); // State to store shipperInfo data
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     console.log("Orders fetched:", orders);
     console.log("Accepted Order ID:", acceptedOrderId);
   }, [orders, acceptedOrderId]);
+// Gọi API để lấy thông tin của shipper
+const fetchShipperInfo = useCallback(async () => {
+  try {
+    const response = await api({
+      method: typeHTTP.GET,
+      url: "/user/profile", // Giả sử API lấy thông tin của người dùng và shipper
+      sendToken: true,
+    });
+    setShipperInfo(response.shipperInfo);
+    setUserData(response.user);
+  } catch (error) {
+    console.error("Lỗi khi lấy dữ liệu shipper:", error);
+  }
+}, []);
 
   // Gọi API để lấy tất cả đơn hàng
   const fetchOrders = useCallback(async () => {
+    
     try {
       const response = await api({
         method: typeHTTP.GET,
@@ -71,7 +89,9 @@ export default function HomeShiper() {
     useCallback(() => {
       setLoading(true);
       fetchOrders();
-    }, [fetchOrders])
+      fetchShipperInfo(); // Gọi API lấy thông tin shipper khi màn hình được focus
+
+    }, [fetchOrders,fetchShipperInfo])
   );
 
   const handleAcceptOrder = async (orderId) => {
@@ -149,15 +169,43 @@ export default function HomeShiper() {
             backgroundColor: "#fff",
             justifyContent: "center",
             alignItems: "center",
-            marginRight: 10,
+            marginLeft: 10,
+            marginTop: 40
           }}
         >
           <Icon name="person" size={24} color="#E53935" />
         </TouchableOpacity>
-        <View>
-          <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>Nguyễn Thị Kiều Nghi</Text>
-          <Text style={{ color: "#fff", fontSize: 16 }}>4.5 ⭐ (25)</Text>
+
+        <View style={{ padding: 10, marginRight: 50 }}>
+          {/* Hiển thị tên và nút mũi tên */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop:40}}>
+            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>
+              {userData?.fullName || "Chưa có thông tin"}
+            </Text>
+            <TouchableOpacity onPress={() => setShowAddress(!showAddress)}>
+              <Icon
+                name={showAddress ? "chevron-up-outline" : "chevron-down-outline"}
+                size={24}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Địa chỉ và đánh giá */}
+          {showAddress && (
+            <View style={{ marginTop: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="location-outline" size={20} color="#fff" />
+                <Text style={{ color: "#fff", fontSize: 16, marginLeft: 5 }}>
+                  {shipperInfo?.temporaryAddress || "Chưa có thông tin "}
+                </Text>
+              </View>
+              <Text style={{ color: "#fff", fontSize: 16, marginTop: 5 }}>4.5 ⭐ (25)</Text>
+            </View>
+          )}
         </View>
+
+
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity onPress={() => navigation.navigate("NotificationsScreenSP")}>
             <Icon name="notifications" size={24} color="#fff" style={{ marginLeft: 15 }} />
@@ -215,60 +263,60 @@ export default function HomeShiper() {
       </View>
 
       {/* Modal Đăng xuất */}
-<Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <Pressable
-    style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)" }}
-    onPress={() => setModalVisible(false)}
-  >
-    <Pressable
-      style={{
-        width: "100%",
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-      }}
-      onPress={(e) => e.stopPropagation()}
-    >
-      {/* Xem thông tin button */}
-      <TouchableOpacity
-        onPress={() => {
-          setModalVisible(false);
-          navigation.navigate("ProfileShipper");
-        }}
-        style={{
-          backgroundColor: "#ffa500",
-          paddingVertical: 15,
-          paddingHorizontal: 40,
-          borderRadius: 10,
-          alignItems: "center",
-          marginBottom: 20, // Provides space between buttons
-        }}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
       >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Xem thông tin</Text>
-      </TouchableOpacity>
+        <Pressable
+          style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)" }}
+          onPress={() => setModalVisible(false)}
+        >
+          <Pressable
+            style={{
+              width: "100%",
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Xem thông tin button */}
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate("ProfileShipper");
+              }}
+              style={{
+                backgroundColor: "#ffa500",
+                paddingVertical: 15,
+                paddingHorizontal: 40,
+                borderRadius: 10,
+                alignItems: "center",
+                marginBottom: 20, // Provides space between buttons
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Xem thông tin</Text>
+            </TouchableOpacity>
 
-      {/* Đăng xuất button */}
-      <TouchableOpacity
-        onPress={handleLogout}
-        style={{
-          backgroundColor: "#E53935",
-          paddingVertical: 15,
-          paddingHorizontal: 40,
-          borderRadius: 10,
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đăng xuất</Text>
-      </TouchableOpacity>
-    </Pressable>
-  </Pressable>
-</Modal>
+            {/* Đăng xuất button */}
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{
+                backgroundColor: "#E53935",
+                paddingVertical: 15,
+                paddingHorizontal: 40,
+                borderRadius: 10,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đăng xuất</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
     </View>
   );
