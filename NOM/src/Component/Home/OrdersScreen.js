@@ -13,9 +13,6 @@ export default function OrdersScreen() {
     history: [],
     pendingPayment: [],
   }); // Chứa các đơn hàng được phân loại theo tab
-  const [modalVisible, setModalVisible] = useState(false); // State để quản lý modal
-  const [cancelReason, setCancelReason] = useState(""); // State để lưu lý do hủy
-  const [currentOrder, setCurrentOrder] = useState(null); // State để lưu đơn hàng hiện tại khi nhấn hủy
   const navigation = useNavigation();
 
   const tabs = ["Đang đặt", "Lịch sử", "Chờ thanh toán"];
@@ -68,46 +65,14 @@ export default function OrdersScreen() {
     }
   };
 
-  // Hàm để hủy đơn hàng
-  const handleCancelOrder = async () => {
-    if (!cancelReason) {
-      Alert.alert("Lý do hủy", "Vui lòng nhập lý do hủy đơn hàng.");
-      return;
-    }
-
-    try {
-      // Cập nhật URL để truyền userId và orderId qua params
-      const response = await api({
-        method: typeHTTP.POST,
-        url: `/OrderCancellation/cancel/${currentOrder.user.userId}/${currentOrder.orderId}`, // Sử dụng params trong URL
-        body: { reason: cancelReason }, // Truyền lý do vào body
-        sendToken: true,
-      });
-
-      if (response.message) {
-        Alert.alert("Thành công", response.message);
-        setModalVisible(false); // Đóng modal sau khi hủy thành công
-        fetchAllOrders(); // Cập nhật lại danh sách đơn hàng
-      }
-    } catch (error) {
-      console.error("Lỗi khi hủy đơn hàng:", error);
-      Alert.alert("Lỗi", "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
-    }
-  };
-
-  // Hàm để mở modal nhập lý do khi nhấn nút hủy đơn
-  const openCancelModal = (order) => {
-    setCurrentOrder(order); // Lưu đơn hàng hiện tại
-    setModalVisible(true); // Mở modal
-  };
-
   // Hàm render đơn hàng dựa trên tab đã chọn
   const renderOrders = (orderList, tab) => {
     return (
       <View style={{ paddingHorizontal: width * 0.05 }}>
         {orderList.map((order, index) => (
-          <View
+          <TouchableOpacity
             key={index}
+            onPress={() => navigation.navigate("OrderingProcess", { orderId: order.orderId })}
             style={{
               backgroundColor: "#fff",
               borderRadius: 10,
@@ -133,27 +98,7 @@ export default function OrdersScreen() {
               <Text style={{ fontSize: 14, color: "#666" }}>{new Date(order.orderDate).toLocaleString()}</Text>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>{order.totalAmount.toLocaleString()} VND</Text>
             </View>
-
-            {/* Chỉ hiển thị nút hủy khi trạng thái đơn hàng là Pending */}
-            {order.orderStatus === "Pending" && (
-              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
-                <TouchableOpacity
-                  onPress={() => openCancelModal(order)}
-                  style={{
-                    backgroundColor: "#E53935",
-                    borderRadius: 5,
-                    paddingVertical: 5,
-                    paddingHorizontal: 10,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: 120, // Đặt chiều rộng nhỏ hơn vừa đủ cho nút
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 14, fontWeight: "bold", textAlign: "center" }}>Hủy đơn hàng</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     );
@@ -199,30 +144,6 @@ export default function OrdersScreen() {
         {selectedTab === "Lịch sử" && renderOrders(orders.history, "Lịch sử")}
         {selectedTab === "Chờ thanh toán" && renderOrders(orders.pendingPayment, "Chờ thanh toán")}
       </ScrollView>
-
-      {/* Modal nhập lý do hủy đơn hàng */}
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 10, width: width * 0.8 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Nhập lý do hủy đơn hàng</Text>
-            <TextInput
-              placeholder="Lý do hủy đơn hàng"
-              style={{
-                borderWidth: 1,
-                borderColor: "#ccc",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 10,
-                width: "100%",
-              }}
-              value={cancelReason}
-              onChangeText={setCancelReason}
-            />
-            <Button title="Xác nhận hủy" onPress={handleCancelOrder} />
-            <Button title="Hủy" color="red" onPress={() => setModalVisible(false)} />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
