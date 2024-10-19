@@ -152,19 +152,19 @@ export default function ProfileScreen() {
             onPress={() => {
               switch (item) {
                 case "Thông tin cá nhân":
-                  navigation.navigate("InformationUser"); // Navigate to personal info screen
+                  navigation.navigate("InformationUser");
                   break;
                 case "Chuyển đổi tài khoản":
-                  navigation.navigate("Route"); // Navigate to seller login/sign-up screen
+                  navigation.navigate("Route");
                   break;
                 case "Ngân hàng liên kết":
-                  navigation.navigate("OrderingProcess"); // Navigate to linked bank screen
+                  navigation.navigate("OrderingProcess");
                   break;
                 case "Ngôn ngữ":
-                  navigation.navigate("InvoiceDetails"); // Navigate to language settings screen
+                  navigation.navigate("InvoiceDetails");
                   break;
                 case "Nhận xét đánh giá":
-                  navigation.navigate("ReviewsScreen"); // Navigate to reviews screen
+                  navigation.navigate("ReviewsScreen");
                   break;
                 default:
                   console.log("No action assigned for this item");

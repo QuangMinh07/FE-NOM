@@ -152,7 +152,7 @@ export default function Shopping({ route }) {
         globalHandler.setCart([]); // Clear the cart after successful payment
         setOrderItems([]); // Clear local order items
         Alert.alert("Thành công", "Đơn hàng đã được tạo thành công.");
-        navigation.navigate("HomeKH");
+        navigation.navigate("OrderingProcess", { orderId: newOrder.orderId });
       } else {
         Alert.alert("Lỗi", "Không thể tạo đơn hàng. Vui lòng thử lại.");
       }

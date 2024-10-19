@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
-import { View, Text, Image, Dimensions, ScrollView, TouchableOpacity, SafeAreaView, Modal, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, Dimensions, ScrollView, TouchableOpacity, SafeAreaView, Modal, Pressable, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation, useRoute } from '@react-navigation/native'; // Import useNavigation
+import { api, typeHTTP } from '../../utils/api'; // Import API
+
 const { width, height } = Dimensions.get('window');
+
 const OrderingProcess = () => {
-  const [activeStep, setActiveStep] = useState(0); // Quản lý tap đang được chọn
-  const [modalVisible, setModalVisible] = useState(false); // Trạng thái của modal
-  const [cancelModalVisible, setCancelModalVisible] = useState(false);
-  const [selectedReason, setSelectedReason] = useState(null);
+  const [activeStep, setActiveStep] = useState(0); // Manage the active step
+  const [modalVisible, setModalVisible] = useState(false); // Modal state
+  const [cancelModalVisible, setCancelModalVisible] = useState(false); // Cancel modal state
+  const [selectedReason, setSelectedReason] = useState(null); // Selected cancellation reason
   const navigation = useNavigation();
-  const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal cho danh sách món ăn
+  const route = useRoute(); // Retrieve orderId from params
+  const [orderDetails, setOrderDetails] = useState(null); // Order details data
+
+  const { orderId } = route.params; // Extract orderId from route params
+  const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal for food list
 
   const steps = [
     { label: 'Đang chờ duyệt', visible: true },
@@ -19,39 +26,120 @@ const OrderingProcess = () => {
     { label: 'Đang giao tới bạn', visible: false },
     { label: 'Giao hàng thành công', visible: false },
   ];
-  // Hàm để chọn tap và ẩn các tap còn lại
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false, // 24-hour format
+    }).format(date);
+  };
+
+  // API call to get order details
+  const fetchOrderDetails = async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/storeOrder/details/${orderId}`,
+        sendToken: true, // If token is needed in the header
+      });
+      setOrderDetails(response.orderDetails); // Save order details in state
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrderDetails(); // Call fetchOrderDetails when screen opens
+  }, []);
+
+  const handleCancelOrder = async () => {
+    if (!selectedReason) {
+      Alert.alert("Lý do hủy", "Vui lòng chọn lý do hủy đơn hàng.");
+      return;
+    }
+
+    try {
+      // Call the API to cancel the order using the order ID and user ID
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/OrderCancellation/cancel/${orderDetails.user.userId}/${orderId}`, // Assuming this is the API format
+        body: { reason: selectedReason },
+        sendToken: true,
+      });
+
+      if (response.message) {
+        Alert.alert("Thành công", response.message);
+        setCancelModalVisible(false); // Close modal after successful cancellation
+        navigation.goBack(); // Navigate back after cancellation
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      Alert.alert("Lỗi", "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
+    }
+  };
+
+  useEffect(() => {
+    // Handle activeStep based on order status
+    if (orderDetails) {
+      switch (orderDetails.orderStatus) {
+        case "Pending":
+          setActiveStep(0); // "Đang chờ duyệt"
+          break;
+        case "Shipped":
+          setActiveStep(1); // "Đã nhận đơn hàng"
+          break;
+        case "Completed":
+          setActiveStep(2); // "Đang hoàn thành đơn hàng"
+          break;
+        case "Received":
+          setActiveStep(3); // "Đang giao tới bạn"
+          break;
+        case "Delivered":
+          setActiveStep(4); // "Giao hàng thành công"
+          break;
+        default:
+          setActiveStep(0); // Default to "Đang chờ duyệt"
+          break;
+      }
+    }
+  }, [orderDetails]);
+
+  // Handle selecting a step and hiding others
   const handleStepSelect = (index) => {
     setActiveStep(index);
   };
-  // Hàm để mở modal
+
   const openModal = () => {
     setModalVisible(true);
   };
-  // Hàm để đóng modal
+
   const closeModal = () => {
     setModalVisible(false);
   };
-  // Function to open the cancel modal
+
   const openCancelModal = () => {
     setCancelModalVisible(true);
   };
-  // Function to close the cancel modal
+
   const closeCancelModal = () => {
     setCancelModalVisible(false);
   };
-  // Function to handle reason selection and close modal
+
   const selectReason = (reason) => {
     setSelectedReason(reason);
     closeCancelModal();
-    // Navigate back to the previous page after selecting a reason
-    navigation.goBack();
+    navigation.goBack(); // Navigate back after selecting a reason
   };
-  // Function to open the food modal
+
   const openFoodModal = () => {
     setFoodModalVisible(true);
   };
 
-  // Function to close the food modal
   const closeFoodModal = () => {
     setFoodModalVisible(false);
   };
@@ -59,17 +147,17 @@ const OrderingProcess = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', }}>
       <View contentContainerStyle={{ flex: 1, paddingHorizontal: width * 0.05, paddingTop: height * 0.02, }}>
-        {/* Logo và tên app */}
+        {/* App Logo */}
         <View style={{ alignItems: 'center', marginBottom: height * 0.02, }}>
           <Image
             source={require('../../img/LOGOBLACK.png')}
             style={{ width: width * 0.3, height: height * 0.15 }}
           />
         </View>
-        {/* Thanh tiến trình */}
+        {/* Progress bar */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           {steps.map((step, index) => (
-            <TouchableOpacity key={index} onPress={() => handleStepSelect(index)} style={{ flexDirection: 'row', alignItems: 'center', }}>
+            <View key={index} style={{ flexDirection: 'row', alignItems: 'center', }}>
               <View style={{
                 width: 16,
                 height: 16,
@@ -81,7 +169,7 @@ const OrderingProcess = () => {
               {index < steps.length - 1 && (
                 <View style={{ width: width * 0.18, height: 2, backgroundColor: activeStep > index ? '#E53935' : '#E53935' }} />
               )}
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
@@ -94,58 +182,60 @@ const OrderingProcess = () => {
                 textAlign: 'center',
                 flex: 1,
                 fontWeight: 'bold',
-                display: activeStep === index ? 'flex' : 'none', // Chỉ hiển thị tap được chọn
+                display: activeStep === index ? 'flex' : 'none', // Only display the selected step
               }}
             >
               {step.label}
             </Text>
           ))}
         </View>
-        {/* Thông tin thời gian */}
+        {/* Order time info */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.03, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Thời gian đặt hàng:</Text>
-          <Text style={{ fontSize: width * 0.04 }}>09:00 PM 12/08/2024</Text>
+          <Text style={{ fontSize: width * 0.04 }}>
+            {orderDetails ? formatDateTime(orderDetails.orderDate) : "Đang tải..."}
+          </Text>
         </View>
-        {/* Địa chỉ đi */}
+        {/* Store address */}
         <View style={{
-          backgroundColor: '#FFFFFF', // Nền trắng
+          backgroundColor: '#FFFFFF',
           padding: width * 0.03,
           borderRadius: 10,
           marginBottom: height * 0.02,
           flexDirection: 'row',
           alignItems: 'center',
-          shadowColor: '#000', // Bóng đổ màu đen
-          shadowOffset: { width: 0, height: 2 }, // Độ lệch bóng
-          shadowOpacity: 0.2, // Độ mờ của bóng
-          shadowRadius: 5, // Bán kính đổ bóng
-          elevation: 5, // Đổ bóng cho Android
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 5,
+          elevation: 5,
           paddingHorizontal: width * 0.05
         }}>
           <MaterialIcons name="location-on" size={24} color="green" />
           <View>
-            <Text style={{ fontSize: width * 0.045, fontWeight: 'bold', marginLeft: 10 }}>Cơm tấm sườn</Text>
-            <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>72, phường 5, Nguyễn Thái Sơn, Gò Vấp</Text>
+            <Text style={{ fontSize: width * 0.045, fontWeight: 'bold', marginLeft: 10 }}>{orderDetails ? orderDetails.store.storeName : "Đang tải..."}</Text>
+            <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>{orderDetails ? orderDetails.store.storeAddress : "Đang tải..."}</Text>
           </View>
         </View>
-        {/* Địa chỉ đến */}
+        {/* Customer address */}
         <View style={{
-          backgroundColor: '#FFFFFF', // Nền trắng
+          backgroundColor: '#FFFFFF',
           padding: width * 0.03,
           borderRadius: 10,
           marginBottom: height * 0.02,
           flexDirection: 'row',
           alignItems: 'center',
-          shadowColor: '#000', // Bóng đổ màu đen
-          shadowOffset: { width: 0, height: 2 }, // Độ lệch bóng
-          shadowOpacity: 0.2, // Độ mờ của bóng
-          shadowRadius: 5, // Bán kính đổ bóng
-          elevation: 5, // Đổ bóng cho Android
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 5,
+          elevation: 5,
           paddingHorizontal: width * 0.05
         }}>
           <MaterialIcons name="location-on" size={24} color="#E53935" />
           <View style={{}}>
-            <Text style={{ fontSize: width * 0.045, fontWeight: 'bold', marginLeft: 10 }}>Nguyễn Thị Kiều Nghi</Text>
-            <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>72, phường 5, Nguyễn Thái Sơn, Gò Vấp</Text>
+            <Text style={{ fontSize: width * 0.045, fontWeight: 'bold', marginLeft: 10 }}>{orderDetails ? orderDetails.user.fullName : "Đang tải..."}</Text>
+            <Text style={{ fontSize: width * 0.04, color: '#A9A9A9', marginLeft: 10 }}>{orderDetails ? orderDetails.cartSnapshot.deliveryAddress : "Đang tải..."}</Text>
           </View>
         </View>
         <ScrollView
@@ -154,33 +244,27 @@ const OrderingProcess = () => {
           showsVerticalScrollIndicator={false}
         >
           <TouchableOpacity onLongPress={openFoodModal}>
-            <View style={{ maxHeight: height * 0.1 , paddingHorizontal: width * 0.05
- }}>
-              {/* List of food items */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                <Text style={{ fontSize: width * 0.04 }}>1x Cơm tấm sườn bì</Text>
-                <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                <Text style={{ fontSize: width * 0.04 }}>3x Cơm tấm sườn bì</Text>
-                <Text style={{ fontSize: width * 0.04 }}>60.000 VND</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                <Text style={{ fontSize: width * 0.04 }}>2x Gỏi cuốn tôm thịt</Text>
-                <Text style={{ fontSize: width * 0.04 }}>40.000 VND</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                <Text style={{ fontSize: width * 0.04 }}>1x Nước mía</Text>
-                <Text style={{ fontSize: width * 0.04 }}>10.000 VND</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                <Text style={{ fontSize: width * 0.04 }}>2x Bánh mì</Text>
-                <Text style={{ fontSize: width * 0.04 }}>15.000 VND</Text>
-              </View>
+            <View style={{
+              maxHeight: height * 0.1, paddingHorizontal: width * 0.05
+            }}>
+              {/* Check if orderDetails and items exist */}
+              {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
+                orderDetails.cartSnapshot.items.map((item, index) => (
+                  <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                    {/* Display quantity and food name */}
+                    <Text style={{ fontSize: width * 0.04 }}>{item.quantity}x {item.foodName}</Text>
+                    {/* Display food price */}
+                    <Text style={{ fontSize: width * 0.04 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  </View>
+                ))
+              ) : (
+                <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
+              )}
             </View>
           </TouchableOpacity>
         </ScrollView>
 
+        {/* Food modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -198,40 +282,33 @@ const OrderingProcess = () => {
             >
               <Text style={{ fontSize: width * 0.05, fontWeight: 'bold', marginBottom: height * 0.02 }}>Danh sách món ăn</Text>
               <ScrollView>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                  <Text style={{ fontSize: width * 0.04 }}>1x Cơm tấm sườn bì</Text>
-                  <Text style={{ fontSize: width * 0.04 }}>20.000 VND</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                  <Text style={{ fontSize: width * 0.04 }}>3x Cơm tấm sườn bì</Text>
-                  <Text style={{ fontSize: width * 0.04 }}>60.000 VND</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                  <Text style={{ fontSize: width * 0.04 }}>2x Gỏi cuốn tôm thịt</Text>
-                  <Text style={{ fontSize: width * 0.04 }}>40.000 VND</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                  <Text style={{ fontSize: width * 0.04 }}>1x Nước mía</Text>
-                  <Text style={{ fontSize: width * 0.04 }}>10.000 VND</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
-                  <Text style={{ fontSize: width * 0.04 }}>2x Bánh mì</Text>
-                  <Text style={{ fontSize: width * 0.04 }}>15.000 VND</Text>
-                </View>
-                {/* Add more food items as needed */}
+                {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
+                  orderDetails.cartSnapshot.items.map((item, index) => (
+                    <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.01 }}>
+                      {/* Display quantity and food name */}
+                      <Text style={{ fontSize: width * 0.04 }}>{item.quantity}x {item.foodName}</Text>
+                      {/* Display food price */}
+                      <Text style={{ fontSize: width * 0.04 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
+                )}
               </ScrollView>
             </Pressable>
           </TouchableOpacity>
         </Modal>
 
-        {/* Dụng cụ ăn uống và phương thức thanh toán */}
+        {/* Order info (e.g., utensils and payment method) */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Dụng cụ ăn uống</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: 'bold' }}>Có</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Phương thức thanh toán</Text>
-          <Text style={{ fontSize: width * 0.04, fontWeight: 'bold', }}>Tiền mặt</Text>
+          <Text style={{ fontSize: width * 0.04, fontWeight: 'bold', }}>
+            {orderDetails ? (orderDetails.paymentMethod === "Cash" ? "Tiền mặt" : orderDetails.paymentMethod) : "Đang tải..."}
+          </Text>
         </View>
         {/* Conditional rendering based on the active step */}
         {activeStep === 0 ? (
@@ -250,11 +327,12 @@ const OrderingProcess = () => {
             </TouchableOpacity>
           </View>
         )}
-        {/* Modal for Cancel Order Reasons */}
+
+        {/* Cancel order modal */}
         <Modal
           animationType="slide"
           transparent={true}
-          visible={cancelModalVisible} // Modal visibility state
+          visible={cancelModalVisible}
           onRequestClose={closeCancelModal}
         >
           <TouchableOpacity
@@ -262,7 +340,7 @@ const OrderingProcess = () => {
               flex: 1,
               justifyContent: 'flex-end',
               alignItems: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0)', // Background dimming effect
+              backgroundColor: 'rgba(0, 0, 0, 0)', // Dimmed background effect
             }}
             onPress={closeCancelModal} // Close modal when clicking outside
           >
@@ -276,9 +354,8 @@ const OrderingProcess = () => {
                 borderColor: '#D3D3D3', // Light gray border
                 borderWidth: 1,
               }}
-              onPress={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
+              onPress={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
             >
-              {/* Title */}
               <Text style={{
                 fontSize: height * 0.025,
                 fontWeight: 'bold',
@@ -288,10 +365,9 @@ const OrderingProcess = () => {
               }}>
                 Lý do hủy đơn hàng
               </Text>
-              {/* List of cancellation reasons */}
               <View style={{ marginBottom: height * 0.015 }}>
                 <TouchableOpacity
-                  onPress={() => selectReason('Thay đổi phương thức thanh toán')}
+                  onPress={() => setSelectedReason('Thay đổi phương thức thanh toán')}
                   style={{
                     padding: height * 0.02,
                     backgroundColor: selectedReason === 'Thay đổi phương thức thanh toán' ? '#E0E0E0' : '#F5F5F5',
@@ -301,7 +377,7 @@ const OrderingProcess = () => {
                   <Text style={{ fontSize: height * 0.02, color: '#555' }}>Thay đổi phương thức thanh toán</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => selectReason('Thay đổi địa chỉ')}
+                  onPress={() => setSelectedReason('Thay đổi địa chỉ')}
                   style={{
                     padding: height * 0.02,
                     backgroundColor: selectedReason === 'Thay đổi địa chỉ' ? '#E0E0E0' : '#F5F5F5',
@@ -311,7 +387,7 @@ const OrderingProcess = () => {
                   <Text style={{ fontSize: height * 0.02, color: '#555' }}>Thay đổi địa chỉ</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => selectReason('Đặt thêm món ăn')}
+                  onPress={() => setSelectedReason('Đặt thêm món ăn')}
                   style={{
                     padding: height * 0.02,
                     backgroundColor: selectedReason === 'Đặt thêm món ăn' ? '#E0E0E0' : '#F5F5F5',
@@ -321,7 +397,7 @@ const OrderingProcess = () => {
                   <Text style={{ fontSize: height * 0.02, color: '#555' }}>Đặt thêm món ăn</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => selectReason('Lý do khác')}
+                  onPress={() => setSelectedReason('Lý do khác')}
                   style={{
                     padding: height * 0.02,
                     backgroundColor: selectedReason === 'Lý do khác' ? '#E0E0E0' : '#F5F5F5',
@@ -331,10 +407,17 @@ const OrderingProcess = () => {
                   <Text style={{ fontSize: height * 0.02, color: '#555' }}>Lý do khác...</Text>
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity onPress={handleCancelOrder}>
+                <View style={{ backgroundColor: '#E53935', paddingVertical: height * 0.02, borderRadius: 5, alignItems: 'center' }}>
+                  <Text style={{ color: '#fff', fontSize: width * 0.04 }}>Xác nhận hủy</Text>
+                </View>
+              </TouchableOpacity>
             </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
-        {/* Modal hiển thị thông tin tài xế */}
+
+
+        {/* Driver info modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -346,100 +429,103 @@ const OrderingProcess = () => {
               flex: 1,
               justifyContent: 'flex-end',
               alignItems: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0)', // Add some opacity to highlight the modal
+              backgroundColor: 'rgba(0, 0, 0, 0)', // Highlight modal with background opacity
               shadowColor: '#000',
-              shadowOffset: { width: 0, height: -3 }, // Shadow from the top
+              shadowOffset: { width: 0, height: -3 }, // Top shadow
               shadowOpacity: 0.1, // Adjust shadow visibility
-              shadowRadius: 20,   // Make shadow softer
+              shadowRadius: 20, // Soften shadow
               elevation: 20,
             }}
-            onPress={closeModal} // Close the modal when clicking outside the content
+            onPress={closeModal} // Close modal when clicking outside content
           >
-            <Pressable
-              style={{
-                width: '100%',
-                backgroundColor: '#fff',
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                padding: height * 0.03,
-                borderColor: '#fff', // Light gray color for border
-                borderWidth: 1, // Border width
-              }}
-              onPress={(e) => e.stopPropagation()}  // Prevent closing the modal when clicking inside the content
-            >
-              {/* Title */}
-              <Text style={{
-                fontSize: height * 0.02,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                marginBottom: height * 0.03,
-              }}>
-                Thông tin tài xế
-              </Text>
-              <View style={{ marginBottom: height * 0.02 }}>
-                {/* Avatar, Name, Rating, and Vehicle Info */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  {/* Avatar Placeholder */}
-                  <View
-                    style={{
-                      width: height * 0.06,  // Size of the circle
-                      height: height * 0.06,
-                      borderRadius: (height * 0.06) / 2, // Circle shape
-                      borderWidth: 2,
-                      borderColor: '#E53935', // Red border
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginRight: 15,
-                    }}
-                  >
-                    {/* Avatar Icon */}
-                    <FontAwesome
-                      name="user" // User icon to represent the avatar if no image
-                      size={height * 0.03} // Icon size
-                      color="#E53935" // Icon color
-                    />
-                  </View>
-                  {/* Name and Rating */}
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontSize: height * 0.02, fontWeight: 'bold', color: '#E53935', marginRight: 10 }}>
-                        Nguyễn Thị Kiều Nghi
-                      </Text>
-                      {/* Rating Section aligned with the name */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: height * 0.016, color: '#333', marginRight: 5 }}>
-                          4.5
-                        </Text>
-                        <Text style={{ fontSize: height * 0.015, color: '#f39c12' }}>⭐</Text>
-                        <Text style={{ fontSize: height * 0.012, color: '#333', marginLeft: 5 }}>
-                          (25+)
-                        </Text>
-                      </View>
+            {orderDetails && orderDetails.shipper ? (
+              <Pressable
+                style={{
+                  width: '100%',
+                  backgroundColor: '#fff',
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  padding: height * 0.03,
+                  borderColor: '#fff', // Light gray for border
+                  borderWidth: 1, // Border width
+                }}
+                onPress={(e) => e.stopPropagation()}  // Prevent modal close on inside click
+              >
+                {/* Title */}
+                <Text style={{
+                  fontSize: height * 0.02,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  marginBottom: height * 0.03,
+                }}>
+                  Thông tin tài xế
+                </Text>
+                <View style={{ marginBottom: height * 0.02 }}>
+                  {/* Avatar, Name, Rating, and Vehicle Info */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {/* Avatar Placeholder */}
+                    <View
+                      style={{
+                        width: height * 0.06,  // Circle size
+                        height: height * 0.06,
+                        borderRadius: (height * 0.06) / 2, // Circle shape
+                        borderWidth: 2,
+                        borderColor: '#E53935', // Red border
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 15,
+                      }}
+                    >
+                      {/* Avatar Icon */}
+                      <FontAwesome
+                        name="user" // User icon for avatar
+                        size={height * 0.03} // Icon size
+                        color="#E53935" // Icon color
+                      />
                     </View>
-                    {/* Vehicle Information */}
-                    <Text style={{ fontSize: height * 0.018, color: '#555', marginTop: 5 }}>
-                      63P-P7 5566.01
-                    </Text>
+                    {/* Name and Rating */}
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: height * 0.02, fontWeight: 'bold', color: '#E53935', marginRight: 10 }}>
+                          {orderDetails ? orderDetails.shipper.fullName : "Đang tải..."}
+                        </Text>
+                        {/* Rating Section */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={{ fontSize: height * 0.016, color: '#333', marginRight: 5 }}>
+                            4.5
+                          </Text>
+                          <Text style={{ fontSize: height * 0.015, color: '#f39c12' }}>⭐</Text>
+                          <Text style={{ fontSize: height * 0.012, color: '#333', marginLeft: 5 }}>
+                            (25+)
+                          </Text>
+                        </View>
+                      </View>
+                      {/* Vehicle Information */}
+                      <Text style={{ fontSize: height * 0.018, color: '#555', marginTop: 5 }}>
+                        {orderDetails ? orderDetails.shipper.vehicleNumber : "Đang tải..."}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-              {/* Contact Info */}
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginTop: height * 0.02,
-                borderTopWidth: 2,
-                borderTopColor: '#eee',
-                paddingTop: height * 0.01
-              }}>
-                <FontAwesome name="comments" size={height * 0.025} color="#E53935" style={{ marginLeft: 20 }} />
-                <Text style={{ fontSize: height * 0.02, color: 'black', marginLeft: 10, fontWeight: 'bold' }}>Liên hệ với tài xế</Text>
-              </View>
-            </Pressable>
+                {/* Contact Info */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: height * 0.02,
+                  borderTopWidth: 2,
+                  borderTopColor: '#eee',
+                  paddingTop: height * 0.01
+                }}>
+                  <FontAwesome name="comments" size={height * 0.025} color="#E53935" style={{ marginLeft: 20 }} />
+                  <Text style={{ fontSize: height * 0.02, color: 'black', marginLeft: 10, fontWeight: 'bold' }}>Liên hệ với tài xế</Text>
+                </View>
+              </Pressable>
+            ) : null}
           </Pressable>
         </Modal>
       </View>
     </SafeAreaView>
   );
 };
+
 export default OrderingProcess;
