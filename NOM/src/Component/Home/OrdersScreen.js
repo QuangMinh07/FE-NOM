@@ -28,7 +28,7 @@ export default function OrdersScreen() {
       const { allOrdersDetails } = response;
 
       // Phân loại đơn hàng theo trạng thái
-      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending" || order.orderStatus === "Processing" || order.orderStatus === "Shipped");
+      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending" || order.orderStatus === "Processing" || order.orderStatus === "Shipped" || order.orderStatus === "Completed" || order.orderStatus === "Received" || order.orderStatus === "Delivered");
       const history = allOrdersDetails.filter((order) => order.paymentStatus === "Paid" || order.orderStatus === "Cancelled");
 
       // Sửa lại điều kiện lọc cho tab "Chờ thanh toán"
@@ -56,6 +56,10 @@ export default function OrdersScreen() {
         return "Đang chuẩn bị";
       case "Shipped":
         return "Đang giao";
+      case "Completed":
+        return "Đã hoàn thành món ăn";
+      case "Received":
+        return "Shipper đã nhận hàng";
       case "Delivered":
         return "Đã giao";
       case "Cancelled": // Trạng thái đã hủy

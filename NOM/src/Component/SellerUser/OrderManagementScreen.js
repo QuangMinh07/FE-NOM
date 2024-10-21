@@ -9,7 +9,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
-export default function OrderManagementScreen() {
+export default function OrderManagementScreen({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("Mới");
   const [newOrders, setNewOrders] = useState([]); // Lưu trữ danh sách đơn hàng mới
   const [receivedOrders, setReceivedOrders] = useState([]); // Lưu trữ danh sách đơn hàng đã nhận
@@ -21,6 +21,7 @@ export default function OrderManagementScreen() {
 
   const storeId = globalData.storeData?._id;
   const userId = globalData.user?.id;
+  console.log(storeId);
 
   const tabs = ["Mới", "Đã Nhận", "Lịch sử"];
 
@@ -46,7 +47,6 @@ export default function OrderManagementScreen() {
       console.error("Lỗi khi lấy danh sách đơn hàng:", error);
     }
   }, [storeId]);
-
 
   useFocusEffect(
     useCallback(() => {
@@ -83,8 +83,6 @@ export default function OrderManagementScreen() {
       }
     }
   };
-
-
 
   // Hàm để mở modal nhập lý do hủy
   const openCancelModal = (order) => {
@@ -153,6 +151,7 @@ export default function OrderManagementScreen() {
               </View>
             </View>
           </View>
+
           {/* Nút xác nhận */}
           <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
             <TouchableOpacity onPress={() => handleConfirmOrder(order.orderId)} style={styles.button}>
@@ -182,38 +181,45 @@ export default function OrderManagementScreen() {
 
     return receivedOrders.map((order, index) => (
       <Swipeable key={index}>
-        <View style={styles.container}>
-          <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
-          <View style={styles.row}>
-            <View style={styles.itemCountContainer}>
-              <Text style={styles.itemCountText}>{order.foods.length}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{order.user.fullName}</Text>
-              <View style={styles.infoContainer}>
-                <View style={{ flexDirection: "column", alignItems: "center" }}>
-                  <Text style={styles.infoText}>Đặt đơn</Text>
-                  <Text style={styles.boldText}>{new Date(order.orderDate).toLocaleTimeString()}</Text>
-                </View>
-                <View style={{ flexDirection: "column", alignItems: "center" }}>
-                  <Text style={styles.infoText}>Món</Text>
-                  <Text style={styles.boldText}>{order.foods.length}</Text>
-                </View>
-                <View style={{ flexDirection: "column", alignItems: "center" }}>
-                  <Text style={styles.infoText}>Giá đơn hàng</Text>
-                  <Text style={styles.boldText}>{order.totalAmount.toLocaleString()} VND</Text>
+        <TouchableOpacity
+          onPress={() => {
+            console.log("Navigating to InvoiceDetails with orderId:", order.orderId);
+            navigation.navigate("InvoiceDetails", { orderId: order.orderId });
+          }}
+        >
+          <View style={styles.container}>
+            <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+            <View style={styles.row}>
+              <View style={styles.itemCountContainer}>
+                <Text style={styles.itemCountText}>{order.foods.length}</Text>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName}>{order.user.fullName}</Text>
+                <View style={styles.infoContainer}>
+                  <View style={{ flexDirection: "column", alignItems: "center" }}>
+                    <Text style={styles.infoText}>Đặt đơn</Text>
+                    <Text style={styles.boldText}>{new Date(order.orderDate).toLocaleTimeString()}</Text>
+                  </View>
+                  <View style={{ flexDirection: "column", alignItems: "center" }}>
+                    <Text style={styles.infoText}>Món</Text>
+                    <Text style={styles.boldText}>{order.foods.length}</Text>
+                  </View>
+                  <View style={{ flexDirection: "column", alignItems: "center" }}>
+                    <Text style={styles.infoText}>Giá đơn hàng</Text>
+                    <Text style={styles.boldText}>{order.totalAmount.toLocaleString()} VND</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          {/* Nút "Đã hoàn thành" */}
-          <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
-            <View style={styles.completedButton}>
-              <Text style={styles.buttonText}>Đã Nhận</Text>
+            {/* Nút "Đã hoàn thành" */}
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+              <View style={styles.completedButton}>
+                <Text style={styles.buttonText}>Đã Nhận</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Swipeable>
     ));
   };
