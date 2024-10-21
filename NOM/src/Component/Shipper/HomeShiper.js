@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert, Image } from "react-native";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -42,31 +42,48 @@ export default function HomeShiper() {
     console.log("Orders fetched:", orders);
     console.log("Accepted Order ID:", acceptedOrderId);
   }, [orders, acceptedOrderId]);
-// Gọi API để lấy thông tin của shipper
-const fetchShipperInfo = useCallback(async () => {
-  try {
-    const response = await api({
-      method: typeHTTP.GET,
-      url: "/user/profile", // Giả sử API lấy thông tin của người dùng và shipper
-      sendToken: true,
-    });
-    setShipperInfo(response.shipperInfo);
-    setUserData(response.user);
-  } catch (error) {
-    console.error("Lỗi khi lấy dữ liệu shipper:", error);
-  }
-}, []);
+  // Gọi API để lấy thông tin của shipper
+
+  const fetchShipperInfo = useCallback(async () => {
+    try {
+      // Gọi API lấy thông tin user
+      const profileResponse = await api({
+        method: typeHTTP.GET,
+        url: "/user/profile", // API lấy thông tin của người dùng
+        sendToken: true,
+      });
+
+      // Lưu thông tin user và shipper
+      setShipperInfo(profileResponse.shipperInfo);
+      setUserData(profileResponse.user);
+
+      // Gọi API lấy thông tin cá nhân (bao gồm cả ảnh)
+      const personalInfoResponse = await api({
+        method: typeHTTP.GET,
+        url: "/userPersonal/personal-info", // API lấy thông tin cá nhân
+        sendToken: true,
+      });
+
+      // Kết hợp dữ liệu cá nhân vào userData
+      if (personalInfoResponse.success) {
+        setUserData((prevData) => ({
+          ...prevData,
+          profilePictureURL: personalInfoResponse.userPersonalInfo.profilePictureURL || prevData.profilePictureURL,
+        }));
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu shipper hoặc thông tin cá nhân:", error);
+    }
+  }, []);
 
   // Gọi API để lấy tất cả đơn hàng
   const fetchOrders = useCallback(async () => {
-    
     try {
       const response = await api({
         method: typeHTTP.GET,
         url: "/storeOrder/get-all-orders",
         sendToken: true,
       });
-
       const filteredOrders = response.allOrdersDetails.filter((order) => ["Processing", "Shipped", "Completed", "Received"].includes(order.orderStatus));
 
       setOrders(filteredOrders);
@@ -90,8 +107,7 @@ const fetchShipperInfo = useCallback(async () => {
       setLoading(true);
       fetchOrders();
       fetchShipperInfo(); // Gọi API lấy thông tin shipper khi màn hình được focus
-
-    }, [fetchOrders,fetchShipperInfo])
+    }, [fetchOrders, fetchShipperInfo])
   );
 
   const handleAcceptOrder = async (orderId) => {
@@ -161,7 +177,7 @@ const fetchShipperInfo = useCallback(async () => {
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ backgroundColor: "#E53935", padding: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 140 }}>
         <TouchableOpacity
-          onPress={() => setModalVisible(true)} // Mở modal khi nhấn vào avatar
+          onPress={() => setModalVisible(true)}
           style={{
             width: 50,
             height: 50,
@@ -170,41 +186,44 @@ const fetchShipperInfo = useCallback(async () => {
             justifyContent: "center",
             alignItems: "center",
             marginLeft: 10,
-            marginTop: 40
+            marginTop: 40,
+            overflow: "hidden",
           }}
         >
-          <Icon name="person" size={24} color="#E53935" />
+          {userData?.profilePictureURL ? (
+            <Image
+              source={{ uri: userData.profilePictureURL }}
+              style={{
+                width: "100%",
+                height: "100%",
+                resizeMode: "cover",
+              }}
+            />
+          ) : (
+            <Icon name="person" size={24} color="#E53935" />
+          )}
         </TouchableOpacity>
 
         <View style={{ padding: 10, marginRight: 50 }}>
           {/* Hiển thị tên và nút mũi tên */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop:40}}>
-            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>
-              {userData?.fullName || "Chưa có thông tin"}
-            </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 40 }}>
+            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>{userData?.fullName || "Chưa có thông tin"}</Text>
             <TouchableOpacity onPress={() => setShowAddress(!showAddress)}>
-              <Icon
-                name={showAddress ? "chevron-up-outline" : "chevron-down-outline"}
-                size={24}
-                color="#fff"
-              />
+              <Icon name={showAddress ? "chevron-up-outline" : "chevron-down-outline"} size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
           {/* Địa chỉ và đánh giá */}
           {showAddress && (
             <View style={{ marginTop: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Icon name="location-outline" size={20} color="#fff" />
-                <Text style={{ color: "#fff", fontSize: 16, marginLeft: 5 }}>
-                  {shipperInfo?.temporaryAddress || "Chưa có thông tin "}
-                </Text>
+                <Text style={{ color: "#fff", fontSize: 16, marginLeft: 5 }}>{shipperInfo?.temporaryAddress || "Chưa có thông tin "}</Text>
               </View>
               <Text style={{ color: "#fff", fontSize: 16, marginTop: 5 }}>4.5 ⭐ (25)</Text>
             </View>
           )}
         </View>
-
 
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity onPress={() => navigation.navigate("NotificationsScreenSP")}>
@@ -263,16 +282,8 @@ const fetchShipperInfo = useCallback(async () => {
       </View>
 
       {/* Modal Đăng xuất */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable
-          style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)" }}
-          onPress={() => setModalVisible(false)}
-        >
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <Pressable style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)" }} onPress={() => setModalVisible(false)}>
           <Pressable
             style={{
               width: "100%",
@@ -317,7 +328,6 @@ const fetchShipperInfo = useCallback(async () => {
           </Pressable>
         </Pressable>
       </Modal>
-
     </View>
   );
 }

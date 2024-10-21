@@ -1,19 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  Modal,
-  Pressable,
-  Alert,
-} from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, Modal, Pressable, Alert } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -57,7 +48,7 @@ export default function SellerProfileScreen() {
 
       // Xóa token khỏi AsyncStorage
       await AsyncStorage.removeItem("auth_token");
-      setModalVisible(false);  // Đóng modal trước khi chuyển màn hình
+      setModalVisible(false); // Đóng modal trước khi chuyển màn hình
 
       Alert.alert("Đăng xuất thành công!");
       navigation.navigate("WelcomeScreen");
@@ -103,9 +94,7 @@ export default function SellerProfileScreen() {
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: height * 0.025, fontWeight: "bold" }}>
-              {userData ? userData.fullName.charAt(0) : "N"}
-            </Text>
+            <Text style={{ fontSize: height * 0.025, fontWeight: "bold" }}>{userData ? userData.fullName.charAt(0) : "N"}</Text>
           </View>
           <Text
             style={{
@@ -126,13 +115,7 @@ export default function SellerProfileScreen() {
 
       {/* Body */}
       <ScrollView contentContainerStyle={{ padding: width * 0.05 }}>
-        {[
-          "Thông tin cá nhân",
-          "Chuyển đổi tài khoản",
-          "Ngân hàng liên kết",
-          "Ngôn ngữ",
-          "Nhận xét đánh giá",
-        ].map((item, index) => (
+        {["Thông tin cá nhân", "Chuyển đổi tài khoản", "Ngân hàng liên kết", "Ngôn ngữ", "Nhận xét đánh giá"].map((item, index) => (
           <TouchableOpacity
             key={index}
             style={{
@@ -172,22 +155,13 @@ export default function SellerProfileScreen() {
             }}
           >
             <Text style={{ fontSize: height * 0.02 }}>{item}</Text>
-            <Ionicons
-              name="chevron-forward-outline"
-              size={height * 0.03}
-              color="#000"
-            />
+            <Ionicons name="chevron-forward-outline" size={height * 0.03} color="#000" />
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {/* Modal Cài đặt */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <Pressable
           style={{
             flex: 1,
@@ -195,7 +169,7 @@ export default function SellerProfileScreen() {
             alignItems: "center",
             backgroundColor: "rgba(0, 0, 0, 0)",
           }}
-          onPress={() => setModalVisible(false)}  // Đóng modal khi nhấn ra ngoài
+          onPress={() => setModalVisible(false)} // Đóng modal khi nhấn ra ngoài
         >
           <Pressable
             style={{
@@ -205,7 +179,7 @@ export default function SellerProfileScreen() {
               borderTopRightRadius: 20,
               padding: height * 0.03,
             }}
-            onPress={(e) => e.stopPropagation()}  // Ngăn modal đóng khi nhấn vào nội dung bên trong
+            onPress={(e) => e.stopPropagation()} // Ngăn modal đóng khi nhấn vào nội dung bên trong
           >
             {/* Nút Logout */}
             <TouchableOpacity

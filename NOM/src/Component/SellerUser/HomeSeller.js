@@ -124,7 +124,6 @@ export default function HomeSeller() {
           globalHandler.setStoreData(storeData.data);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
       } finally {
         setLoading(false);
       }

@@ -153,7 +153,6 @@ export default function DeliveryODDetails() {
           marginHorizontal: 16,
           marginTop: 25,
           marginBottom: 8,
-         
         }}
       >
         Chi tiết đơn hàng
@@ -209,7 +208,6 @@ export default function DeliveryODDetails() {
         <Text style={{ color: "#E53935", fontSize: 16 }}>Liên hệ với Khách hàng</Text>
       </TouchableOpacity>
 
-      {/* Nút hành động */}
       {/* Nút hành động */}
       {orderDetails.orderStatus === "Received" &&
         (!isPickedUp ? (
