@@ -1,13 +1,17 @@
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api"; // Import hàm api của bạn
 import { useRoute } from "@react-navigation/native"; // Để lấy orderId từ params
+import { globalContext } from "../../context/globalContext";
 
-export default function DeliveryODDetails() {
+export default function DeliveryODDetails({ navigation }) {
   const [orderDetails, setOrderDetails] = useState(null); // Dữ liệu đơn hàng
   const [loading, setLoading] = useState(true); // Trạng thái loading
   const [isPickedUp, setIsPickedUp] = useState(false); // Trạng thái để theo dõi việc lấy món ăn
+  const { globalData } = useContext(globalContext);
+
+  const [userData, setUserData] = useState(null);
 
   const route = useRoute(); // Sử dụng useRoute để lấy orderId từ params
   const { orderId } = route.params; // Lấy orderId từ params được truyền từ màn hình trước
@@ -32,14 +36,47 @@ export default function DeliveryODDetails() {
     fetchOrderDetails();
   }, [orderId]);
 
+  const handleConfirmOrder = async (order) => {
+    // Thay đổi từ _id sang storeId
+    const storeId = orderDetails.store?.storeId; // Đảm bảo lấy đúng storeId từ orderDetails
+    const userId = globalData.user?.id;
+
+    // Log kiểm tra storeId và userId
+    console.log("storeId:", storeId);
+    console.log("userId:", userId);
+
+    if (!storeId || !userId) {
+      console.error("storeId hoặc userId không tồn tại.");
+      return;
+    }
+
+    try {
+      const response = await api({
+        method: typeHTTP.PUT,
+        url: `/storeOrder/update-status/${storeId}/${userId}`, // Sử dụng storeId từ orderDetails
+        sendToken: true,
+        body: {
+          orderId: orderId, // Sử dụng orderId từ route.params
+        },
+      });
+
+      alert(`Đơn hàng đã được cập nhật trạng thái: ${response.message}`);
+      navigation.navigate("HomeShiper");
+    } catch (error) {
+      console.error("Lỗi xảy ra:", error);
+    }
+  };
+
   // Hàm xử lý nút "Đã lấy món ăn"
   const handlePickedUp = () => {
+    handleConfirmOrder();
     setIsPickedUp(true);
     // Gọi API hoặc xử lý logic thêm tại đây nếu cần
   };
 
   // Hàm xử lý nút "Đã giao thành công"
   const handleDelivered = () => {
+    handleConfirmOrder();
     console.log("Giao hàng thành công");
     // Gọi API hoặc xử lý logic thêm tại đây nếu cần
   };
@@ -209,36 +246,53 @@ export default function DeliveryODDetails() {
       </TouchableOpacity>
 
       {/* Nút hành động */}
-      {orderDetails.orderStatus === "Received" &&
-        (!isPickedUp ? (
-          <TouchableOpacity
+      {orderDetails.orderStatus === "Completed" && !isPickedUp ? (
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#E53935",
+            paddingVertical: 16,
+            borderRadius: 8,
+            marginHorizontal: 16,
+            marginTop: 24,
+            marginBottom: 24,
+          }}
+          onPress={handlePickedUp}
+        >
+          <Text
             style={{
-              backgroundColor: "#E53935",
-              paddingVertical: 16,
-              borderRadius: 8,
-              marginHorizontal: 16,
-              marginTop: 24,
-              marginBottom: 24,
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: "bold",
+              textAlign: "center",
             }}
-            onPress={handlePickedUp}
           >
-            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Đã lấy món ăn</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
+            Đã lấy món ăn
+          </Text>
+        </TouchableOpacity>
+      ) : orderDetails.orderStatus === "Received" ? (
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#E53935",
+            paddingVertical: 16,
+            borderRadius: 8,
+            marginHorizontal: 16,
+            marginTop: 24,
+            marginBottom: 24,
+          }}
+          onPress={handleDelivered}
+        >
+          <Text
             style={{
-              backgroundColor: "#E53935",
-              paddingVertical: 16,
-              borderRadius: 8,
-              marginHorizontal: 16,
-              marginTop: 24,
-              marginBottom: 24,
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: "bold",
+              textAlign: "center",
             }}
-            onPress={handleDelivered}
           >
-            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Đã giao thành công</Text>
-          </TouchableOpacity>
-        ))}
+            Đã giao thành công
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </ScrollView>
   );
 }
