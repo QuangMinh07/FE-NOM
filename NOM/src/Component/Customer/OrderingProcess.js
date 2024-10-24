@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { View, Text, Image, Dimensions, ScrollView, TouchableOpacity, SafeAreaView, Modal, Pressable, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
-import { useNavigation, useRoute } from "@react-navigation/native"; // Import useNavigation
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native"; // Import useNavigation
 import { api, typeHTTP } from "../../utils/api"; // Import API
 import { globalContext } from "../../context/globalContext";
 
@@ -44,7 +44,7 @@ const OrderingProcess = () => {
   };
 
   // API call to get order details
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const response = await api({
         method: typeHTTP.GET,
@@ -55,11 +55,13 @@ const OrderingProcess = () => {
     } catch (error) {
       console.error("Error fetching order details:", error);
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchOrderDetails(); // Call fetchOrderDetails when screen opens
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrderDetails(); // Gọi kiểm tra ngay khi màn hình được focus
+    }, [fetchOrderDetails])
+  );
 
   const handleCancelOrder = async () => {
     if (!selectedReason) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, Modal, TextInput, Pressable } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
