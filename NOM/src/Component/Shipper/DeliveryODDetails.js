@@ -11,7 +11,7 @@ export default function DeliveryODDetails({ navigation }) {
   const [isPickedUp, setIsPickedUp] = useState(false); // Trạng thái để theo dõi việc lấy món ăn
   const { globalData } = useContext(globalContext);
 
-  const [userData, setUserData] = useState(null);
+  const userRole = globalData?.user?.roleId; // Lấy role từ dữ liệu global
 
   const route = useRoute(); // Sử dụng useRoute để lấy orderId từ params
   const { orderId } = route.params; // Lấy orderId từ params được truyền từ màn hình trước
@@ -238,7 +238,18 @@ export default function DeliveryODDetails({ navigation }) {
           marginTop: 16,
         }}
         onPress={() => {
-          // Thêm logic liên hệ khách hàng tại đây
+          // Điều hướng đến trang chat và truyền dữ liệu orderId, userId, shipperId
+          const currentRole = userRole; // Hoặc có thể thay đổi nếu cần lấy từ đâu đó
+          navigation.navigate("CustomerChat", {
+            orderId: orderDetails.orderId, // Truyền orderId
+            userId: orderDetails.user.userId, // Truyền userId của khách hàng
+            shipperId: orderDetails.shipper.shipperId, // Truyền shipperId
+            userRole: currentRole, // Truyền role hiện tại
+          });
+          console.log(orderDetails.orderId); // Đúng biến orderDetails để lấy orderId
+          console.log(orderDetails.shipper.shipperId); // Lấy shipperId từ orderDetails
+          console.log(orderDetails.user.userId); // Lấy userId từ orderDetails
+          console.log("UserRole:", currentRole); // Log role đã truyền
         }}
       >
         <Icon name="chatbubble-ellipses-outline" size={20} color="#E53935" style={{ marginRight: 8 }} />

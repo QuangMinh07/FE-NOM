@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, Image, Dimensions, ScrollView, TouchableOpacity, SafeAreaView, Modal, Pressable, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useNavigation, useRoute } from "@react-navigation/native"; // Import useNavigation
 import { api, typeHTTP } from "../../utils/api"; // Import API
+import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,6 +16,9 @@ const OrderingProcess = () => {
   const navigation = useNavigation();
   const route = useRoute(); // Retrieve orderId from params
   const [orderDetails, setOrderDetails] = useState(null); // Order details data
+  const { globalData } = useContext(globalContext);
+
+  const userRole = globalData?.user?.roleId; // Lấy role từ dữ liệu global
 
   const { orderId } = route.params; // Extract orderId from route params
   const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal for food list
@@ -488,7 +492,17 @@ const OrderingProcess = () => {
                 <Pressable
                   onPress={() => {
                     closeModal();
-                    navigation.navigate("CustomerChat");
+                    const currentRole = userRole; // Hoặc có thể thay đổi nếu cần lấy từ đâu đó
+                    navigation.navigate("CustomerChat", {
+                      orderId: orderDetails.orderId, // Truyền orderId
+                      userId: orderDetails.user.userId, // Truyền userId của khách hàng
+                      shipperId: orderDetails.shipper.shipperId, // Truyền shipperId
+                      userRole: currentRole, // Truyền role hiện tại
+                    });
+                    console.log(orderDetails.orderId); // Đúng biến orderDetails để lấy orderId
+                    console.log(orderDetails.shipper.shipperId); // Lấy shipperId từ orderDetails
+                    console.log(orderDetails.user.userId); // Lấy userId từ orderDetails
+                    console.log("UserRole:", currentRole); // Log role đã truyền
                   }}
                   style={{
                     flexDirection: "row",
