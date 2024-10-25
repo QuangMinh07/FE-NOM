@@ -20,9 +20,39 @@ export default function HomeSeller() {
   const navigation = useNavigation();
   const [foodList, setFoodList] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [deliveredOrdersDetails, setDeliveredOrdersDetails] = useState([]); // Thêm state cho chi tiết đơn hàng đã giao
+  const [totalRevenue, setTotalRevenue] = useState(0); // Thêm state cho tổng doanh thu
 
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext);
+
+  const fetchDeliveredOrdersAndRevenue = useCallback(async () => {
+    try {
+      const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      if (!storeId) {
+        console.log("Không tìm thấy storeId trong globalData");
+        return;
+      }
+
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/storeorder/delivered-revenue/${storeId}`, // Đường dẫn API mới
+        sendToken: true,
+      });
+
+      if (response && response.deliveredOrdersDetails) {
+        setDeliveredOrdersDetails(response.deliveredOrdersDetails);
+        setTotalRevenue(response.totalRevenue);
+      }
+    } catch (error) {}
+  }, [globalData.storeData?._id]);
+
+  // Dùng useFocusEffect để gọi fetchDeliveredOrdersAndRevenue khi màn hình focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDeliveredOrdersAndRevenue();
+    }, [fetchDeliveredOrdersAndRevenue])
+  );
 
   const checkStoreStatus = useCallback(async () => {
     try {
@@ -304,8 +334,8 @@ export default function HomeSeller() {
       {/* Doanh thu hôm nay */}
       <View style={styles.revenueContainer}>
         <View style={styles.revenueHeader}>
-          <Text style={styles.revenueTitle}>Doanh thu Hôm nay</Text>
-          <Text style={styles.revenueAmount}>100.000 VND</Text>
+          <Text style={styles.revenueTitle}>Tổng Doanh Thu</Text>
+          <Text style={styles.revenueAmount}>{totalRevenue > 0 ? `${totalRevenue.toLocaleString("vi-VN").replace(/\./g, ",")} VND` : "Không có doanh thu"}</Text>
         </View>
 
         <View style={styles.buttonRow}>
