@@ -95,7 +95,7 @@ export default function HomeShiper() {
         setAcceptedOrderId(savedOrderId);
       }
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      // console.error("Error fetching orders:", error);
     } finally {
       setLoading(false);
     }

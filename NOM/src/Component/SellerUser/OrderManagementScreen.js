@@ -44,7 +44,7 @@ export default function OrderManagementScreen({ navigation }) {
       setReceivedOrders(receivedOrdersData);
       setHistoryOrders(historyOrdersData);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      // console.error("Lỗi khi lấy danh sách đơn hàng:", error);
     }
   }, [storeId]);
 

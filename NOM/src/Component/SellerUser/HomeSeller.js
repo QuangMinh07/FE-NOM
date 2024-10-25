@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
@@ -22,6 +22,7 @@ export default function HomeSeller() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [deliveredOrdersDetails, setDeliveredOrdersDetails] = useState([]); // Thêm state cho chi tiết đơn hàng đã giao
   const [totalRevenue, setTotalRevenue] = useState(0); // Thêm state cho tổng doanh thu
+  const [isLoading, setIsLoading] = useState(false);
 
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext);
@@ -72,7 +73,7 @@ export default function HomeSeller() {
         setIsOpen(response.isOpen); // true nếu cửa hàng đang mở, false nếu đã đóng
       }
     } catch (error) {
-      console.error("Lỗi khi kiểm tra trạng thái cửa hàng:", error);
+      // console.error("Lỗi khi kiểm tra trạng thái cửa hàng:", error);
     }
   }, [globalData.storeData?._id]);
 
@@ -92,6 +93,7 @@ export default function HomeSeller() {
   }, [checkStoreStatus]);
 
   const fetchFoodsByStoreId = useCallback(async () => {
+    setIsLoading(true); // Bật loading khi bắt đầu gọi API
     try {
       const storeId = globalData.storeData?._id;
       if (!storeId) {
@@ -118,7 +120,9 @@ export default function HomeSeller() {
         console.log("Không tìm thấy món ăn nào");
       }
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu món ăn:", error);
+      // console.error("Lỗi khi lấy dữ liệu món ăn:", error);
+    } finally {
+      setIsLoading(false); // Tắt loading sau khi gọi API xong
     }
   }, [globalData.storeData?._id]); // Callback chỉ thay đổi khi storeId thay đổi
 
@@ -288,6 +292,23 @@ export default function HomeSeller() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
       {/* Bìa ảnh */}
       <View style={{ position: "relative" }}>
         <ImagePickerScreen selectedImage={selectedImage} setSelectedImage={setSelectedImage} />
@@ -351,39 +372,48 @@ export default function HomeSeller() {
         </View>
       </View>
 
-      {/* Món bán chạy */}
-      <View style={styles.bestSellerContainer}>
-        <Text style={styles.bestSellerTitle}>Món bán chạy</Text>
+      {/* Kiểm tra nếu không có món ăn */}
+      {foodList.length === 0 ? (
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>Không có món ăn nào</Text>
+        </View>
+      ) : (
+        <>
+          {/* Món bán chạy */}
+          <View style={styles.bestSellerContainer}>
+            <Text style={styles.bestSellerTitle}>Món bán chạy</Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {foodList.map((food) => (
-            <View key={food._id} style={styles.bestSellerCard}>
-              <View style={[styles.bestSellerImageContainer, { backgroundColor: placeholderImage ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.bestSellerImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
-              <Text style={styles.bestSellerFoodName}>{food.foodName}</Text>
-              <Text style={styles.bestSellerFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {foodList.map((food) => (
+                <View key={food._id} style={styles.bestSellerCard}>
+                  <View style={[styles.bestSellerImageContainer, { backgroundColor: placeholderImage ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.bestSellerImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
+                  <Text style={styles.bestSellerFoodName}>{food.foodName}</Text>
+                  <Text style={styles.bestSellerFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
 
-      {/* Các món khác */}
-      <View style={styles.otherFoodsContainer}>
-        <Text style={styles.otherFoodsTitle}>Các món khác</Text>
+          {/* Các món khác */}
+          <View style={styles.otherFoodsContainer}>
+            <Text style={styles.otherFoodsTitle}>Các món khác</Text>
 
-        <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
-          {foodList.map((food) => (
-            <View key={food._id} style={styles.otherFoodCard}>
-              <View style={[styles.otherFoodImageContainer, { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
+            <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+              {foodList.map((food) => (
+                <View key={food._id} style={styles.otherFoodCard}>
+                  <View style={[styles.otherFoodImageContainer, { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
 
-              <View style={styles.otherFoodDetails}>
-                <Text style={styles.otherFoodRating}>4.5 ⭐ (25+)</Text>
-                <Text style={styles.otherFoodName}>{food.foodName}</Text>
-                <Text style={styles.otherFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+                  <View style={styles.otherFoodDetails}>
+                    <Text style={styles.otherFoodRating}>4.5 ⭐ (25+)</Text>
+                    <Text style={styles.otherFoodName}>{food.foodName}</Text>
+                    <Text style={styles.otherFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }

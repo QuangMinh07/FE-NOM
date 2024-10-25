@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Modal, Pressable, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Modal, Pressable, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Alert, Image, ActivityIndicator } from "react-native";
 import * as ImagePicker from "expo-image-picker"; // Sử dụng expo-image-picker
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
@@ -38,6 +38,7 @@ export default function UpdateInformation() {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [image, setImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   useEffect(() => {
     if (isFocused) {
@@ -158,15 +159,14 @@ export default function UpdateInformation() {
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       let imageUrl = formData.profilePictureURL;
 
-      // Nếu có ảnh mới, tải ảnh lên trước
       if (image) {
         const uploadResult = await uploadProfilePicture(globalData.user.id, image);
-        imageUrl = uploadResult.profilePictureURL; // Update with the URL returned from Cloudinary
+        imageUrl = uploadResult.profilePictureURL;
       }
 
-      // Cập nhật thông tin người dùng
       await api({
         method: typeHTTP.PUT,
         url: "/user/update",
@@ -178,7 +178,6 @@ export default function UpdateInformation() {
         sendToken: true,
       });
 
-      // Cập nhật thông tin cá nhân
       await api({
         method: typeHTTP.PUT,
         url: "/userPersonal/update-personal-info",
@@ -186,7 +185,7 @@ export default function UpdateInformation() {
           dateOfBirth: parseDate(formData.dateOfBirth),
           gender: formData.gender,
           state: formData.state,
-          profilePictureURL: imageUrl, // Use the correct image URL here
+          profilePictureURL: imageUrl,
         },
         sendToken: true,
       });
@@ -194,8 +193,9 @@ export default function UpdateInformation() {
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
       navigation.navigate("InformationUser");
     } catch (error) {
-      console.error("Lỗi khi cập nhật:", error);
       Alert.alert("Lỗi", "Cập nhật thông tin thất bại.");
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
@@ -212,6 +212,24 @@ export default function UpdateInformation() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+          {/* Hiển thị vòng tròn loading khi isLoading là true */}
+          {isLoading && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+                zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+              }}
+            >
+              <ActivityIndicator size="large" color="#E53935" />
+            </View>
+          )}
           <View
             style={{
               backgroundColor: "#E53935",
@@ -418,6 +436,7 @@ export default function UpdateInformation() {
               onChangeText={(value) => handleInputChange("state", value)}
             />
 
+            {/* Nút xác nhận */}
             <TouchableOpacity
               style={{
                 backgroundColor: "#E53935",
@@ -427,6 +446,7 @@ export default function UpdateInformation() {
                 marginTop: 20,
               }}
               onPress={handleSubmit}
+              disabled={isLoading} // Vô hiệu hóa nút khi đang tải
             >
               <Text style={{ color: "#fff", fontSize: 18 }}>Xác nhận</Text>
             </TouchableOpacity>

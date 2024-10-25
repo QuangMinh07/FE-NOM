@@ -24,7 +24,7 @@ const Seach = () => {
         });
         setStoreList(data.data);
       } catch (error) {
-        console.error("Error fetching store data:", error);
+        // console.error("Error fetching store data:", error);
       } finally {
         setLoading(false);
       }
