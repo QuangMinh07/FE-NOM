@@ -37,7 +37,7 @@ export default function OrdersScreen() {
       // Cập nhật đơn hàng phân loại vào state
       setOrders({ ongoing, history, pendingPayment });
     } catch (error) {
-      console.error("Lỗi khi gọi API lấy tất cả đơn hàng:", error);
+      // console.error("Lỗi khi gọi API lấy tất cả đơn hàng:", error);
     }
   }, []); // `useCallback` chỉ gọi lại khi không có dependency hoặc khi có dependency thay đổi
 

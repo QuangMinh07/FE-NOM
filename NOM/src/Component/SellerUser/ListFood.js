@@ -93,9 +93,9 @@ export default function ListFood({ navigation }) {
     } catch (error) {
       // Kiểm tra xem error.response có tồn tại không
       if (error.response) {
-        console.error("Lỗi từ server:", error.response.data);
+        // console.error("Lỗi từ server:", error.response.data);
       } else {
-        console.error("Lỗi không xác định:", error.message);
+        // console.error("Lỗi không xác định:", error.message);
       }
     }
   };
@@ -156,7 +156,7 @@ export default function ListFood({ navigation }) {
         console.log("Không tìm thấy món ăn nào");
       }
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu món ăn:", error);
+      // console.error("Lỗi khi lấy dữ liệu món ăn:", error);
     }
   }, [globalData.storeData?._id]);
 

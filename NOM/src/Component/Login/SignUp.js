@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Dimensions, Image, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, Image, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import module API
@@ -12,6 +12,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
   const navigation = useNavigation();
 
   const handleSignUp = async () => {
@@ -19,6 +20,8 @@ export default function SignUp() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường!");
       return;
     }
+
+    setIsLoading(true); // Bật trạng thái tải trước khi gọi API
 
     try {
       const response = await api({
@@ -40,12 +43,13 @@ export default function SignUp() {
         Alert.alert("Lỗi", response.message);
       }
     } catch (error) {
-      // Kiểm tra và hiển thị chi tiết lỗi từ backend
       let errorMessage = "Đăng ký không thành công";
       if (error.response && error.response.data) {
         errorMessage = error.response.data.message || error.response.data.error || errorMessage;
       }
       Alert.alert("Lỗi", errorMessage);
+    } finally {
+      setIsLoading(false); // Tắt trạng thái tải sau khi xử lý xong
     }
   };
 
@@ -62,6 +66,25 @@ export default function SignUp() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
+        {/* Hiển thị vòng tròn tải khi isLoading là true */}
+        {isLoading && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền tối khi loading
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator size="large" color="#E53935" />
+          </View>
+        )}
+
         {/* Logo và Slogan */}
         <View style={{ alignItems: "center", marginBottom: height * 0.05 }}>
           <Image
@@ -191,6 +214,7 @@ export default function SignUp() {
             shadowRadius: 3.84,
             elevation: 5,
           }}
+          disabled={isLoading} // Vô hiệu hóa nút khi đang tải
         >
           <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Đăng ký</Text>
         </TouchableOpacity>

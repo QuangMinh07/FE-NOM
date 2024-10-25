@@ -117,7 +117,7 @@ export default function Orderfood() {
           <Text style={{ color: "#E53935", fontSize: 18, fontWeight: "bold", marginLeft: 5 }}>Giỏ hàng</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={{
             backgroundColor: "#E53935",
             paddingVertical: 15,
@@ -130,7 +130,7 @@ export default function Orderfood() {
           onPress={() => addToCart(userId)} // Thêm món ăn vào giỏ hàng
         >
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>Mua ngay</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

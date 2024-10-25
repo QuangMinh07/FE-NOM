@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Dimensions, SafeAreaView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, SafeAreaView, ActivityIndicator } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -23,6 +23,7 @@ export default function SignUpShiper() {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const navigation = useNavigation();
   const { globalData } = useContext(globalContext);
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   const handlePickAvatar = async () => {
     try {
@@ -106,6 +107,7 @@ export default function SignUpShiper() {
       alert("Vui lòng chấp nhận điều khoản trước khi tiếp tục.");
       return;
     }
+    setIsLoading(true); // Bật trạng thái tải trước khi gọi API
 
     try {
       let imageUrl = avatar; // Lưu URL ảnh từ state `avatar`
@@ -147,6 +149,8 @@ export default function SignUpShiper() {
       } else {
         alert("Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.");
       }
+    } finally {
+      setIsLoading(false); // Tắt trạng thái tải sau khi xử lý xong
     }
   };
 
@@ -287,6 +291,23 @@ export default function SignUpShiper() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           //   keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} // Điều chỉnh offset cho iOS
         >
+          {isLoading && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                zIndex: 999,
+              }}
+            >
+              <ActivityIndicator size="large" color="#E53935" />
+            </View>
+          )}
           {/* Sử dụng thêm KeyboardAwareScrollView để đảm bảo cuộn hợp lý */}
           <KeyboardAwareScrollView
             contentContainerStyle={{ flexGrow: 1 }}

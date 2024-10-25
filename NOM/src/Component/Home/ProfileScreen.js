@@ -158,10 +158,10 @@ export default function ProfileScreen() {
                   navigation.navigate("Route");
                   break;
                 case "Ngân hàng liên kết":
-                  navigation.navigate("OrderingProcess");
+                  // navigation.navigate("OrderingProcess");
                   break;
                 case "Ngôn ngữ":
-                  navigation.navigate("InvoiceDetails");
+                  // navigation.navigate("InvoiceDetails");
                   break;
                 case "Nhận xét đánh giá":
                   navigation.navigate("ReviewsScreen");

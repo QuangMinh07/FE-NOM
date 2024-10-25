@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView } from "react-native";
+import { View, Text, TextInput, Image, Switch, TouchableOpacity, Modal, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { AntDesign } from "@expo/vector-icons"; // Import icon library
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +18,7 @@ export default function AddEat() {
   const [selectedGroup, setSelectedGroup] = useState(""); // Lưu trữ nhóm món đã chọn
   const navigation = useNavigation();
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món
+  const [isLoading, setIsLoading] = useState(false);
 
   const { globalData, globalHandler } = useContext(globalContext); // Lấy dữ liệu từ GlobalContext
 
@@ -107,6 +108,7 @@ export default function AddEat() {
   const addFoodItem = async () => {
     console.log("Global Data:", globalData); // Kiểm tra toàn bộ dữ liệu từ context
     console.log("Store ID:", storeId); // Kiểm tra giá trị của storeId
+    setIsLoading(true); // Bật loading khi bắt đầu quá trình thêm món ăn
 
     if (!selectedGroup._id) {
       Alert.alert("Lỗi", "Vui lòng chọn nhóm món.");
@@ -166,6 +168,8 @@ export default function AddEat() {
     } catch (error) {
       console.error("Lỗi khi thêm món ăn:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
+    } finally {
+      setIsLoading(false); // Tắt loading sau khi xử lý xong
     }
   };
 
@@ -177,6 +181,24 @@ export default function AddEat() {
       enableOnAndroid={true} // Bật tính năng tự động điều chỉnh cho Android
       extraScrollHeight={150} // Đảm bảo có đủ khoảng trống khi bàn phím mở
     >
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={{ flexDirection: "row", alignItems: "center" }}>

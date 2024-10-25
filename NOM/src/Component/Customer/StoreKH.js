@@ -425,7 +425,7 @@ export default function StoreKH() {
         ))}
       </ScrollView>
 
-      <View
+      {/* <View
         style={{
           position: "absolute",
           bottom: 0,
@@ -448,7 +448,7 @@ export default function StoreKH() {
         >
           <Text style={{ color: "#E53935", fontSize: 16 }}>Mua ngay</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 }
