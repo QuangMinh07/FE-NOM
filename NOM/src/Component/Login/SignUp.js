@@ -38,7 +38,7 @@ export default function SignUp() {
 
       if (response.success) {
         Alert.alert("Thành công", response.message);
-        navigation.navigate("SignUpMailOrPhone", { email });
+        navigation.navigate("SignUpMailOrPhone", { email, phone });
       } else {
         Alert.alert("Lỗi", response.message);
       }
