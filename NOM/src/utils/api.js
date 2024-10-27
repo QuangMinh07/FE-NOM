@@ -1,6 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-export const baseURLOrigin = "http://192.168.1.5:5000";
+export const baseURLOrigin = "http://192.168.16.81:5000";
 
 const baseURL = "http://192.168.1.5:5000/v1";
 
