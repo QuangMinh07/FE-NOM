@@ -166,30 +166,39 @@ export default function ListFood({ navigation }) {
     }, [fetchFoodsByStoreId])
   );
 
-  const handleDeleteFood = async (foodId) => {
-    try {
-      await api({
-        method: typeHTTP.DELETE,
-        url: `/food/delete/${foodId}`,
-        sendToken: true,
-      });
+  const handleDeleteFood = useCallback(
+    async (foodId) => {
+      try {
+        await api({
+          method: typeHTTP.DELETE,
+          url: `/food/delete/${foodId}`,
+          sendToken: true,
+        });
 
-      const updatedFoods = foods.filter((food) => food._id !== foodId);
-      await AsyncStorage.setItem("foods", JSON.stringify(updatedFoods));
-      globalHandler.setFoods(updatedFoods);
+        // Lọc danh sách món ăn sau khi xóa thành công
+        const updatedFoods = foods.filter((food) => food._id !== foodId);
 
-      // Hiển thị thông báo thành công
-      Alert.alert(
-        "Xóa thành công",
-        "Món ăn đã được xóa khỏi danh sách.",
-        [{ text: "OK" }] // Nút xác nhận
-      );
+        // Cập nhật AsyncStorage và globalData
+        await AsyncStorage.setItem("foods", JSON.stringify(updatedFoods));
+        globalHandler.setFoods(updatedFoods);
 
-      console.log("Đã xóa món ăn và cập nhật dữ liệu.");
-    } catch (error) {
-      console.error("Lỗi khi xóa món ăn:", error);
-    }
-  };
+        // Cập nhật foodList để giao diện tự động cập nhật
+        setFoodList(updatedFoods);
+
+        // Hiển thị thông báo thành công
+        Alert.alert("Xóa thành công", "Món ăn đã được xóa khỏi danh sách.", [{ text: "OK" }]);
+
+        console.log("Đã xóa món ăn và cập nhật dữ liệu.");
+      } catch (error) {}
+    },
+    [foods, globalHandler]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      handleDeleteFood();
+    }, [handleDeleteFood])
+  );
 
   // Khi người dùng bấm vào món ăn
   const handleDishClick = (foodId) => {
