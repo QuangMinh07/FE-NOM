@@ -56,15 +56,15 @@ const HomeKH = () => {
     { id: 3, name: "TIMMON3", image: require("../../img/TIMMON3.png") },
   ];
 
-  
+
   const banners1 = [
     { id: 3, name: "banner3", image: require("../../img/03.png") },
     { id: 1, name: "banner1", image: require("../../img/01.png") },
     { id: 2, name: "banner6", image: require("../../img/06.png") },
-    { id: 2, name: "banner2", image: require("../../img/02.png") },
-    { id: 2, name: "banner4", image: require("../../img/04.png") },
-    { id: 2, name: "banner5", image: require("../../img/05.png") },
-   
+    { id: 4, name: "banner2", image: require("../../img/02.png") },
+    { id: 5, name: "banner4", image: require("../../img/04.png") },
+    { id: 6, name: "banner5", image: require("../../img/05.png") },
+
   ];
 
 
@@ -142,49 +142,49 @@ const HomeKH = () => {
           ))}
         </ScrollView>
 
- {/* Best Sellers */}
-<View style={{ marginTop: 25, paddingHorizontal: 15 }}>
-  <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 5 }}>Đề xuất</Text>
-  <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 10 }}>
-    {foodList.map((food) => (
-      <View key={food._id} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height:200 }}>
-        {/* Image and Heart Icon */}
-        <View style={{ position: "relative", backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderTopLeftRadius: 15, borderTopRightRadius: 15, overflow: "hidden" }}>
-          {food.imageUrl ? (
-            <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: 120 }} />
-          ) : (
-            <View style={{ width: "100%", height: 120, justifyContent: "center", alignItems: "center" }}>
-              <Text style={{ color: "#888" }}>Ảnh món ăn</Text>
-            </View>
-          )}
-          <TouchableOpacity style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}>
-            <Ionicons name="heart-outline" size={18} color="#E53935" />
-          </TouchableOpacity>
-        </View>
+        {/* Best Sellers */}
+        <View style={{ marginTop: 25, paddingHorizontal: 15 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 5 }}>Đề xuất</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 10 }}>
+            {foodList.map((food) => (
+              <View key={food._id} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height: 200 }}>
+                {/* Image and Heart Icon */}
+                <View style={{ position: "relative", backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderTopLeftRadius: 15, borderTopRightRadius: 15, overflow: "hidden" }}>
+                  {food.imageUrl ? (
+                    <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: 120 }} />
+                  ) : (
+                    <View style={{ width: "100%", height: 120, justifyContent: "center", alignItems: "center" }}>
+                      <Text style={{ color: "#888" }}>Ảnh món ăn</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}>
+                    <Ionicons name="heart-outline" size={18} color="#E53935" />
+                  </TouchableOpacity>
+                </View>
 
-        {/* Rating */}
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 10, marginTop: 5 }}>
-          <Text style={{ fontSize: 14, fontWeight: "bold" }}>4.5</Text>
-          <Ionicons name="star" size={14} color="#FFC107" style={{ marginHorizontal: 5 }} />
-          <Text style={{ fontSize: 12, color: "#888" }}>(25+)</Text>
-        </View>
+                {/* Rating */}
+                <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 10, marginTop: 5 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>4.5</Text>
+                  <Ionicons name="star" size={14} color="#FFC107" style={{ marginHorizontal: 5 }} />
+                  <Text style={{ fontSize: 12, color: "#888" }}>(25+)</Text>
+                </View>
 
-        {/* Food Name and Description */}
-        <View style={{ paddingHorizontal: 10, marginTop: 2 }}>
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
-          <Text style={{ fontSize: 14, color: "#888" }}>Mỳ ý sốt kem</Text>
-        </View>
+                {/* Food Name and Description */}
+                <View style={{ paddingHorizontal: 10, marginTop: 2 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
+                  <Text style={{ fontSize: 14, color: "#888" }}>Mỳ ý sốt kem</Text>
+                </View>
 
-        {/* Plus Icon */}
-        <TouchableOpacity 
-          onPress={() => {/* Function to increment count */}} 
-          style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}>
-          <Ionicons name="add" size={16} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    ))}
-  </View>
-</View>
+                {/* Plus Icon */}
+                <TouchableOpacity
+                  onPress={() => {/* Function to increment count */ }}
+                  style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}>
+                  <Ionicons name="add" size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </View>
         {/* Best Sellers */}
         <View style={{ marginTop: 25, backgroundColor: "#E53935", paddingVertical: 15 }}>
           <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15, color: "white" }}>Có thể bạn sẽ thích</Text>
@@ -233,8 +233,8 @@ const HomeKH = () => {
             ))}
           </ScrollView>
         </View>
- {/* Banner List */}
- <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14, }}>Tìm món ngon</Text>
+        {/* Banner List */}
+        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14, }}>Tìm món ngon</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15, }}>
           {banners1.map((banner) => (
             <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
