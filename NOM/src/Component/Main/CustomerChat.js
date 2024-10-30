@@ -105,7 +105,6 @@ export default function CustomerChat() {
 
   const handleSend = async () => {
     if (message.trim().length > 0) {
-      // Tạo tin nhắn mới dựa trên vai trò của người dùng
       let newMessage;
       if (userRole === "customer") {
         newMessage = {
@@ -124,7 +123,6 @@ export default function CustomerChat() {
       }
 
       try {
-        // Gọi API để gửi tin nhắn và lưu vào database
         const response = await api({
           method: typeHTTP.POST,
           url: `/chat/send-message`,
@@ -135,10 +133,8 @@ export default function CustomerChat() {
         // Gửi tin nhắn qua socket cho các thành viên khác trong phòng
         socket.emit("sendMessage", newMessage);
 
-        setMessages([...messages, newMessage]); // Cập nhật danh sách tin nhắn ngay lập tức
-        setMessage(""); // Xóa nội dung trong ô nhập sau khi gửi
-
-        scrollToEnd(); // Cuộn xuống cuối ngay khi gửi tin nhắn mới
+        // Xóa nội dung trong ô nhập sau khi gửi
+        setMessage("");
 
         // Đóng bàn phím sau khi gửi tin nhắn
         Keyboard.dismiss();

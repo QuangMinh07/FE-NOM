@@ -56,7 +56,6 @@ const HomeKH = () => {
     { id: 3, name: "TIMMON3", image: require("../../img/TIMMON3.png") },
   ];
 
-
   const banners1 = [
     { id: 3, name: "banner3", image: require("../../img/03.png") },
     { id: 1, name: "banner1", image: require("../../img/01.png") },
@@ -64,9 +63,7 @@ const HomeKH = () => {
     { id: 4, name: "banner2", image: require("../../img/02.png") },
     { id: 5, name: "banner4", image: require("../../img/04.png") },
     { id: 6, name: "banner5", image: require("../../img/05.png") },
-
   ];
-
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
@@ -75,23 +72,18 @@ const HomeKH = () => {
         {/* User Information */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View style={{ width: 50, height: 50, backgroundColor: "#fff", borderRadius: 25, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>{userData ? userData.fullName.charAt(0) : "N"}</Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>{userData ? (userData.fullName || userData.userName).charAt(0) : "N"}</Text>
           </View>
-          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>{userData ? userData.fullName : "Nguyễn Thị Kiều Nghi"}</Text>
+          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>{userData ? userData.fullName || userData.userName : ""}</Text>
         </View>
 
         {/* Icons */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={() => navigation.navigate("Shopping")}
-          >
+          <TouchableOpacity style={{ marginRight: 15 }} onPress={() => navigation.navigate("Shopping")}>
             <Ionicons name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate("CustomerNotice")}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate("CustomerNotice")}>
             <Ionicons name="notifications-outline" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -101,7 +93,7 @@ const HomeKH = () => {
       <View style={{ flexDirection: "row", paddingHorizontal: 15, marginTop: -30, alignItems: "center" }}>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, elevation: 5, height: 50 }}>
-            <Ionicons onPress={() => navigation.navigate("Search")} name="search-outline" size={25} color="#E53935" />
+            <Ionicons onPress={() => navigation.navigate("Seach")} name="search-outline" size={25} color="#E53935" />
             <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
           </View>
         </View>
@@ -125,8 +117,8 @@ const HomeKH = () => {
       </View>
       <ScrollView>
         {/* Banner List */}
-        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14, }}>Tìm món ngon</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15, }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
           {banners.map((banner) => (
             <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
               <Image
@@ -177,8 +169,11 @@ const HomeKH = () => {
 
                 {/* Plus Icon */}
                 <TouchableOpacity
-                  onPress={() => {/* Function to increment count */ }}
-                  style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}>
+                  onPress={() => {
+                    /* Function to increment count */
+                  }}
+                  style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}
+                >
                   <Ionicons name="add" size={16} color="#fff" />
                 </TouchableOpacity>
               </View>
@@ -191,9 +186,7 @@ const HomeKH = () => {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
             {foodList.map((food) => (
               <View key={food._id} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
-                <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>
-                  {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}
-                </View>
+                <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                 <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
               </View>
@@ -206,9 +199,7 @@ const HomeKH = () => {
           <ScrollView style={{ marginTop: 10 }}>
             {foodList.map((food) => (
               <View key={food._id} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
-                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>
-                  {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}
-                </View>
+                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                   <Text style={{ fontSize: 14, color: "#888" }}>4.5 ⭐ (25+)</Text>
                   <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
@@ -224,9 +215,7 @@ const HomeKH = () => {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
             {foodList.map((food) => (
               <View key={food._id} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
-                <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>
-                  {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}
-                </View>
+                <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                 <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
               </View>
@@ -234,8 +223,8 @@ const HomeKH = () => {
           </ScrollView>
         </View>
         {/* Banner List */}
-        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14, }}>Tìm món ngon</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15, }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
           {banners1.map((banner) => (
             <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
               <Image
@@ -256,9 +245,7 @@ const HomeKH = () => {
           <ScrollView style={{ marginTop: 10 }}>
             {foodList.map((food) => (
               <View key={food._id} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
-                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>
-                  {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}
-                </View>
+                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                   <Text style={{ fontSize: 14, color: "#888" }}>4.5 ⭐ (25+)</Text>
                   <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
