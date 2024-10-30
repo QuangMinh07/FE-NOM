@@ -6,6 +6,7 @@ import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
 
 const { width, height } = Dimensions.get("window");
+const statusOptions = ["Kết Hôn", "Chưa Kết Hôn", "Khác"]; // Các tùy chọn cho trạng thái
 
 // Hàm định dạng ngày theo DD/MM/YYYY
 const formatDate = (date) => {
@@ -39,6 +40,17 @@ export default function UpdateInformation() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
+  const [isStatusModalVisible, setStatusModalVisible] = useState(false); // State để kiểm soát modal trạng thái
+
+  // Hàm mở modal trạng thái
+  const toggleStatusModal = () => {
+    setStatusModalVisible((prev) => !prev);
+  };
+
+  const handleStatusSelect = (selectedStatus) => {
+    setFormData({ ...formData, state: selectedStatus });
+    toggleStatusModal(); // Đóng modal sau khi chọn
+  };
 
   useEffect(() => {
     if (isFocused) {
@@ -424,7 +436,7 @@ export default function UpdateInformation() {
             />
 
             <Text style={{ fontSize: 16, color: "#333", marginBottom: 5 }}>Trạng thái</Text>
-            <TextInput
+            <TouchableOpacity
               style={{
                 borderWidth: 1,
                 borderColor: "#E53935",
@@ -432,9 +444,50 @@ export default function UpdateInformation() {
                 borderRadius: 8,
                 marginBottom: 15,
               }}
-              value={formData.state}
-              onChangeText={(value) => handleInputChange("state", value)}
-            />
+              onPress={toggleStatusModal}
+            >
+              <Text>{formData.state || "Chọn trạng thái"}</Text>
+            </TouchableOpacity>
+
+            {/* Modal chọn trạng thái */}
+            <Modal visible={isStatusModalVisible} transparent animationType="slide" onRequestClose={toggleStatusModal}>
+              <Pressable
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                }}
+                onPress={toggleStatusModal}
+              >
+                <View
+                  style={{
+                    width: width * 0.8,
+                    backgroundColor: "#fff",
+                    borderRadius: 10,
+                    padding: 20,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 18, marginBottom: 20 }}>Chọn trạng thái</Text>
+                  {statusOptions.map((status) => (
+                    <TouchableOpacity
+                      key={status}
+                      style={{
+                        padding: 10,
+                        width: "100%",
+                        alignItems: "center",
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#ccc",
+                      }}
+                      onPress={() => handleStatusSelect(status)}
+                    >
+                      <Text style={{ fontSize: 16 }}>{status}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </Pressable>
+            </Modal>
 
             {/* Nút xác nhận */}
             <TouchableOpacity
