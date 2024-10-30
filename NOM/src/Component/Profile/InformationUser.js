@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import Ionicons from "@expo/vector-icons/Ionicons";  // For settings icon
+import React, { useState, useCallback } from "react";
+import { View, Text, TouchableOpacity, Dimensions } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons"; // For settings icon
 import { api, typeHTTP } from "../../utils/api"; // Import the API utility
 import { useNavigation } from "@react-navigation/native";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -60,9 +60,7 @@ export default function InformationUser() {
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: height * 0.025, fontWeight: "bold" }}>
-              {userData ? userData.fullName.charAt(0) : "N"}
-            </Text>
+            <Text style={{ fontSize: height * 0.025, fontWeight: "bold" }}>{userData ? (userData.fullName || userData.userName).charAt(0) : "N"} </Text>
           </View>
           <Text
             style={{
@@ -71,12 +69,11 @@ export default function InformationUser() {
               marginLeft: width * 0.03,
             }}
           >
-            {userData ? userData.fullName : "Nguyễn Thị Kiều Nghi"}
+            {userData ? userData.fullName || userData.userName : "Nguyễn Thị Kiều Nghi"}{" "}
           </Text>
         </View>
 
         {/* Settings Icon */}
-
       </View>
 
       {/* Body with Buttons */}
@@ -99,11 +96,7 @@ export default function InformationUser() {
           onPress={() => navigation.navigate("Information")} // Navigate to the Information screen
         >
           <Text style={{ fontSize: height * 0.02 }}>Xem chi tiết</Text>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={height * 0.03}
-            color="#000"
-          />
+          <Ionicons name="chevron-forward-outline" size={height * 0.03} color="#000" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -123,11 +116,7 @@ export default function InformationUser() {
           onPress={() => navigation.navigate("UpdateInformation")} // Navigate to the UpdateInformation screen
         >
           <Text style={{ fontSize: height * 0.02 }}>Cập nhật thông tin</Text>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={height * 0.03}
-            color="#000"
-          />
+          <Ionicons name="chevron-forward-outline" size={height * 0.03} color="#000" />
         </TouchableOpacity>
       </View>
     </View>

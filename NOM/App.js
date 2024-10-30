@@ -65,7 +65,7 @@ const App = () => {
           setInitialRoute("WelcomeScreen");
         }
       } catch (error) {
-        console.error("Error checking login state:", error);
+        // console.error("Error checking login state:", error);
         setInitialRoute("WelcomeScreen"); // Nếu có lỗi, điều hướng về màn hình Welcome/Login
       } finally {
         setIsLoading(false); // Dừng trạng thái loading sau khi hoàn thành kiểm tra
