@@ -36,7 +36,7 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage }) {
           console.log("Không tìm thấy `imageURL` trong dữ liệu cửa hàng");
         }
       } catch (error) {
-        console.error("Lỗi khi lấy ảnh cửa hàng:", error);
+        // console.error("Lỗi khi lấy ảnh cửa hàng:", error);
       } finally {
         setLoading(false);
       }

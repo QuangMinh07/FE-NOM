@@ -198,7 +198,7 @@ export default function HomeSeller() {
         checkStoreStatus(); // Kiểm tra trạng thái mở/đóng cửa
       }
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
+      // console.error("Lỗi khi lấy dữ liệu cửa hàng:", error);
     } finally {
       setLoading(false);
     }
