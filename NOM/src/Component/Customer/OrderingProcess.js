@@ -153,6 +153,9 @@ const OrderingProcess = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View contentContainerStyle={{ flex: 1, paddingHorizontal: width * 0.05, paddingTop: height * 0.02 }}>
+        <TouchableOpacity onPress={() => navigation.navigate("HomeKH")} style={{ marginLeft: 15 }}>
+          <MaterialIcons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
         {/* App Logo */}
         <View style={{ alignItems: "center", marginBottom: height * 0.02 }}>
           <Image source={require("../../img/LOGOBLACK.png")} style={{ width: width * 0.3, height: height * 0.15 }} />
