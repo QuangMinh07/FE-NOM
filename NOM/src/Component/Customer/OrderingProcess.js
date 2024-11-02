@@ -22,6 +22,7 @@ const OrderingProcess = () => {
 
   const { orderId } = route.params; // Extract orderId from route params
   const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal for food list
+  const [hasCheckedReview, setHasCheckedReview] = useState(false); // Cờ để ngăn việc kiểm tra lại review
 
   const steps = [
     { label: "Đang chờ duyệt", visible: true },
@@ -88,6 +89,32 @@ const OrderingProcess = () => {
       Alert.alert("Lỗi", "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
     }
   };
+
+  const checkOrderReview = async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/orderReview/check/${orderId}`,
+        sendToken: true,
+      });
+
+      if (!response.exists) {
+        console.log("Navigating to RatingScreen with orderId:", orderId, "and userId:", orderDetails.user.userId);
+        navigation.navigate("RatingScreen", { orderId, userId: orderDetails.user.userId });
+      } else {
+        console.log("OrderReview already exists for orderId:", orderId);
+      }
+      setHasCheckedReview(true); // Đánh dấu đã kiểm tra review
+    } catch (error) {
+      console.error("Error checking OrderReview:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (orderDetails?.orderStatus === "Delivered" && !hasCheckedReview) {
+      checkOrderReview();
+    }
+  }, [orderDetails?.orderStatus, hasCheckedReview]);
 
   useEffect(() => {
     // Handle activeStep based on order status

@@ -28,11 +28,11 @@ export default function OrdersScreen() {
       const { allOrdersDetails } = response;
 
       // Phân loại đơn hàng theo trạng thái
-      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending" || order.orderStatus === "Processing" || order.orderStatus === "Shipped" || order.orderStatus === "Completed" || order.orderStatus === "Received" || order.orderStatus === "Delivered");
-      const history = allOrdersDetails.filter((order) => order.paymentStatus === "Paid" || order.orderStatus === "Cancelled");
+      const ongoing = allOrdersDetails.filter((order) => order.orderStatus === "Pending" || order.orderStatus === "Processing" || order.orderStatus === "Shipped" || order.orderStatus === "Completed" || order.orderStatus === "Received");
+      const history = allOrdersDetails.filter((order) => order.paymentStatus === "Paid" || order.orderStatus === "Cancelled" || order.orderStatus === "Delivered");
 
       // Sửa lại điều kiện lọc cho tab "Chờ thanh toán"
-      const pendingPayment = allOrdersDetails.filter((order) => order.paymentStatus === "Pending" && order.orderStatus !== "Cancelled");
+      const pendingPayment = allOrdersDetails.filter((order) => order.paymentStatus === "Pending");
 
       // Cập nhật đơn hàng phân loại vào state
       setOrders({ ongoing, history, pendingPayment });

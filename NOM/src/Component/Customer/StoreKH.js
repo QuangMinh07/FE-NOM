@@ -18,6 +18,7 @@ export default function StoreKH() {
   const { storeId } = route.params; // Kiểm tra nếu storeId có tồn tại trong route params
   console.log("storeId:", storeId);
   const [storeIdState, setStoreIdState] = useState(storeId);
+  const [reviewCount, setReviewCount] = useState(0); // State để lưu số lượng đánh giá
 
   useEffect(() => {
     if (storeId) {
@@ -131,6 +132,27 @@ export default function StoreKH() {
     }
   }, [storeId]);
 
+  // Hàm lấy số lượng đánh giá của cửa hàng
+  const fetchReviewCount = async () => {
+    try {
+      const reviewResponse = await api({
+        method: typeHTTP.GET,
+        url: `/orderReview/store-reviews/${storeId}`,
+        sendToken: true,
+      });
+
+      setReviewCount(reviewResponse.reviews.length); // Cập nhật số lượng đánh giá
+    } catch (err) {
+      console.error("Error fetching review count:", err);
+      setReviewCount(0);
+    }
+  };
+
+  // Gọi hàm fetch dữ liệu khi component mount
+  useEffect(() => {
+    fetchReviewCount();
+  }, [storeId]);
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -156,7 +178,7 @@ export default function StoreKH() {
   }
 
   const groupedFoods = groupFoodsByCategory(foodList, foodGroups);
-  const { storeName, storeAddress, isOpen, sellingTime } = store;
+  const { storeName, storeAddress, isOpen, sellingTime, averageRating } = store;
 
   const firstGroup = Object.keys(groupedFoods)[0];
   const remainingGroups = Object.keys(groupedFoods).slice(1);
@@ -227,7 +249,9 @@ export default function StoreKH() {
               }}
             >
               <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000", width: 110 }}>{storeName}</Text>
-              <Text style={{ fontSize: 12, color: "#333", marginTop: 4 }}>4.5 ⭐ (25+)</Text>
+              <Text style={{ fontSize: 12, color: "#333", marginTop: 4 }}>
+                {averageRating} ⭐ ({reviewCount})
+              </Text>
               <View
                 style={{
                   backgroundColor: isOpen ? "#00a651" : "#E53935",
@@ -271,7 +295,7 @@ export default function StoreKH() {
                   } else {
                     console.error("storeIdState is undefined!");
                   }
-                }} 
+                }}
               >
                 {/* Placeholder cho ảnh */}
                 <View
@@ -302,9 +326,7 @@ export default function StoreKH() {
                 {/* Thông tin món ăn */}
                 <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                 <Text style={{ fontSize: 12, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
-                  {food.rating || 5} ⭐ ({food.price.toLocaleString()} VND)
-                </Text>
+                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price.toLocaleString()} VND</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
