@@ -1,10 +1,11 @@
 import React, { useState, useContext, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import { globalContext } from "../../context/globalContext";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable component
+import { Ionicons } from "@expo/vector-icons";
 
 // Import styles
 import { styles } from "./StyleShopping";
@@ -173,7 +174,36 @@ export default function Shopping({ route }) {
   if (orderItems.length === 0) {
     return (
       <View style={styles.containergiohang}>
-        <Text style={{ fontSize: 18, color: "#333" }}>Không có thức ăn trong giỏ hàng</Text>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <Image
+            source={require("../../img/LOGOBLACK.png")}
+            style={{
+              width: 180,
+              height: 180,
+              resizeMode: "contain",
+              marginBottom: 30,
+            }}
+          />
+
+          <Image
+            source={require("../../img/giohangtrong.png")}
+            style={{
+              width: 180,
+              height: 180,
+              resizeMode: "contain",
+              marginBottom: 30,
+            }}
+          />
+
+          <Text style={{ fontSize: 18, color: "#333" }}>Không có thức ăn trong giỏ hàng</Text>
+        </View>
       </View>
     );
   }
