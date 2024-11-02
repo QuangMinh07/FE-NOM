@@ -90,12 +90,17 @@ export default function HomeShiper() {
 
       // Khôi phục trạng thái `acceptedOrderId` từ AsyncStorage
       const savedOrderId = await AsyncStorage.getItem("acceptedOrderId");
-      if (savedOrderId) {
-        console.log("Saved Order ID:", savedOrderId); // Log để kiểm tra
+
+      // Kiểm tra nếu không có đơn hàng nào ở trạng thái "Shipped", xóa `acceptedOrderId`
+      const hasShippedOrder = filteredOrders.some((order) => order.orderStatus === "Shipped");
+      if (!hasShippedOrder && savedOrderId) {
+        await AsyncStorage.removeItem("acceptedOrderId");
+        setAcceptedOrderId(null);
+      } else if (savedOrderId) {
         setAcceptedOrderId(savedOrderId);
       }
     } catch (error) {
-      // console.error("Error fetching orders:", error);
+      console.error("Error fetching orders:", error);
     } finally {
       setLoading(false);
     }
@@ -112,6 +117,7 @@ export default function HomeShiper() {
 
   const handleAcceptOrder = async (orderId) => {
     if (acceptedOrderId === null) {
+      // Chỉ cho phép chấp nhận đơn hàng nếu chưa có đơn hàng nào đang ở trạng thái "Shipped"
       try {
         const order = orders.find((order) => order.orderId === orderId);
         const storeId = order.store?.storeId;
@@ -125,6 +131,7 @@ export default function HomeShiper() {
         });
 
         if (response.message) {
+          // Cập nhật đơn hàng đã chấp nhận và đặt trạng thái nút thành "Đã chấp nhận"
           const updatedOrders = orders.map((o) => (o.orderId === orderId ? { ...o, orderStatus: "Shipped" } : o));
 
           setOrders(updatedOrders);
@@ -241,43 +248,46 @@ export default function HomeShiper() {
         <FlatList
           data={orders}
           keyExtractor={(item) => item.orderId}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => (acceptedOrderId === item.orderId || item.orderStatus === "Shipped" ? handleSelectedOrderPress(item) : handleAcceptOrder(item.orderId))} disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId}>
-              <View style={{ backgroundColor: "#f9f9f9", padding: 15, marginBottom: 10, borderRadius: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
-                  <View style={{ flexDirection: "column" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.user.fullName}</Text>
-                    <Text style={{ color: "red", fontWeight: "bold" }}>{item.store.storeName}</Text>
-                    <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>{renderFoodNames(item.foods)}</Text>
+          renderItem={({ item }) => {
+            const isAcceptedStatus = ["Shipped", "Completed", "Received"].includes(item.orderStatus);
+            return (
+              <TouchableOpacity onPress={() => (acceptedOrderId === item.orderId || isAcceptedStatus ? handleSelectedOrderPress(item) : handleAcceptOrder(item.orderId))} disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId}>
+                <View style={{ backgroundColor: "#f9f9f9", padding: 15, marginBottom: 10, borderRadius: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
+                    <View style={{ flexDirection: "column" }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.user.fullName}</Text>
+                      <Text style={{ color: "red", fontWeight: "bold" }}>{item.store.storeName}</Text>
+                      <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>{renderFoodNames(item.foods)}</Text>
+                    </View>
+                    <View style={{ flexDirection: "column", alignItems: "flex-end" }}>
+                      <Text>{formatDateTime(item.orderDate)}</Text>
+                      <Text>{item.store.storeName}</Text>
+                      <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>{item.totalAmount} VND</Text>
+                    </View>
                   </View>
-                  <View style={{ flexDirection: "column", alignItems: "flex-end" }}>
-                    <Text>{formatDateTime(item.orderDate)}</Text>
-                    <Text>{item.store.storeName}</Text>
-                    <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>{item.totalAmount} VND</Text>
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      console.log("Button pressed!");
+                      if (acceptedOrderId === item.orderId || isAcceptedStatus) {
+                        handleSelectedOrderPress(item);
+                      } else {
+                        handleAcceptOrder(item.orderId);
+                      }
+                    }}
+                    style={{
+                      marginTop: 10,
+                      backgroundColor: acceptedOrderId === item.orderId || isAcceptedStatus ? "#ccc" : "#E53935",
+                      paddingVertical: 10,
+                      borderRadius: 5,
+                    }}
+                    disabled={(acceptedOrderId !== null && acceptedOrderId !== item.orderId) || isAcceptedStatus}
+                  >
+                    <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>{acceptedOrderId === item.orderId || isAcceptedStatus ? "Đã chấp nhận" : "Chấp nhận"}</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    console.log("Button pressed!"); // Log để kiểm tra nút được nhấn
-                    if (acceptedOrderId === item.orderId || item.orderStatus === "Shipped") {
-                      handleSelectedOrderPress(item);
-                    } else {
-                      handleAcceptOrder(item.orderId);
-                    }
-                  }}
-                  style={{
-                    marginTop: 10,
-                    backgroundColor: acceptedOrderId === item.orderId || item.orderStatus === "Shipped" ? "#ccc" : "#E53935",
-                    paddingVertical: 10,
-                    borderRadius: 5,
-                  }}
-                  disabled={(acceptedOrderId !== null && acceptedOrderId !== item.orderId) || item.orderStatus === "Shipped"}
-                >
-                  <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>{acceptedOrderId === item.orderId || item.orderStatus === "Shipped" ? "Đã chấp nhận" : "Chấp nhận"}</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
 

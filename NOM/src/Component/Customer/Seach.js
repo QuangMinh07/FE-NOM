@@ -86,27 +86,29 @@ const Seach = () => {
         <ActivityIndicator size="large" color="#E53935" />
       ) : (
         // Store List
-        <ScrollView style={{
-           paddingHorizontal: width * 0.05, 
-          paddingTop: height * 0.02,  
-          flexGrow: 1, 
-           }}>
+        <ScrollView
+          style={{
+            paddingHorizontal: width * 0.05,
+            paddingTop: height * 0.02,
+            flexGrow: 1,
+          }}
+        >
           {storeList.map((store) => (
             <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)}>
               <View
                 style={{
-               backgroundColor: "#fff",
-                padding: height * 0.02,
-                marginBottom: height * 0.02,
-                borderRadius: 10,
-                borderColor: "#f1f1f1",
-                borderWidth: 1,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 5,
-                elevation: 5,
-                flexDirection: "row",
+                  backgroundColor: "#fff",
+                  padding: height * 0.02,
+                  marginBottom: height * 0.02,
+                  borderRadius: 10,
+                  borderColor: "#f1f1f1",
+                  borderWidth: 1,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 5,
+                  elevation: 5,
+                  flexDirection: "row",
                 }}
               >
                 {/* Store Image Placeholder */}
@@ -117,7 +119,6 @@ const Seach = () => {
                     width: height * 0.12,
                     borderRadius: 10,
                     marginRight: width * 0.05,
-                   
                   }}
                 >
                   {store.imageURL ? (
@@ -135,10 +136,10 @@ const Seach = () => {
                 </View>
 
                 {/* Store Details */}
-                <View style={{ flex: 1 , }}>
+                <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: width * 0.04, color: "#333", marginTop: 5, fontWeight: "bold" }}>{store.storeName}</Text>
                   <Text style={{ fontSize: width * 0.04, color: "#E53935", marginTop: 5 }}>{store.storeAddress}</Text>
-                  <Text style={{ fontSize: width * 0.04, color: "#E53935", marginTop: 5 }}>4.5 ⭐ (30+)</Text>
+                  <Text style={{ fontSize: width * 0.04, color: "#E53935", marginTop: 5 }}>{store.averageRating}⭐</Text>
                 </View>
               </View>
             </TouchableOpacity>

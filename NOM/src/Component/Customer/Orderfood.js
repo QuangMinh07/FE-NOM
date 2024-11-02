@@ -41,12 +41,6 @@ export default function Orderfood() {
         >
           <View>
             <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff" }}>{foodData?.foodName}</Text>
-            <View style={{ flexDirection: "row", marginTop: 5 }}>
-              <Text style={{ fontSize: 16, color: "#ddd" }}>⭐ 4.5 (30+) • </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("ReviewFood")}>
-                <Text style={{ fontSize: 16, color: "#ddd", textDecorationLine: "underline" }}>Xem đánh giá</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -105,7 +99,7 @@ export default function Orderfood() {
             flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            width: "48%",
+            width: "98%",
           }}
           onPress={async () => {
             console.log("userId:", userId, "foodId:", foodId, "storeId:", storeId);
