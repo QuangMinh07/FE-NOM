@@ -10,6 +10,8 @@ import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Hom
 import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP,ProfileShipper} from "./src/Component/Shipper";
 
 import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Component/Main";
+import { RatingScreen} from "./src/Component/Rating";
+import { DashboardScreen} from "./src/Component/Dashboard";
 
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood,OrderingProcess } from "./src/Component/Customer";
 import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen,InvoiceDetails } from "./src/Component/SellerUser";
@@ -176,6 +178,10 @@ const App = () => {
             <Stack.Screen name="HistoryScreenSP" component={HistoryScreenSP} />
             <Stack.Screen name="NotificationsScreenSP" component={NotificationsScreenSP} />
             <Stack.Screen name="ProfileShipper" component={ProfileShipper} />
+
+
+            <Stack.Screen name="RatingScreen" component={RatingScreen} />
+            <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
 
           </Stack.Navigator>
         </NavigationContainer>

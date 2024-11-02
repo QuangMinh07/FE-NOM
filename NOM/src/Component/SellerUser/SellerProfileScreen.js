@@ -115,7 +115,7 @@ export default function SellerProfileScreen() {
 
       {/* Body */}
       <ScrollView contentContainerStyle={{ padding: width * 0.05 }}>
-        {["Thông tin cá nhân", "Chuyển đổi tài khoản", "Ngân hàng liên kết", "Ngôn ngữ", "Nhận xét đánh giá"].map((item, index) => (
+        {["Thông tin cá nhân", "Chuyển đổi tài khoản", "Quản lý doanh thu", "Ngôn ngữ", "Nhận xét đánh giá"].map((item, index) => (
           <TouchableOpacity
             key={index}
             style={{
@@ -140,8 +140,8 @@ export default function SellerProfileScreen() {
                 case "Chuyển đổi tài khoản":
                   navigation.navigate("Route"); // Navigate to seller login/sign-up screen
                   break;
-                case "Ngân hàng liên kết":
-                  navigation.navigate("HomeSeller"); // Navigate to linked bank screen
+                case "Quản lý doanh thu":
+                  navigation.navigate("DashboardScreen"); // Navigate to linked bank screen
                   break;
                 case "Ngôn ngữ":
                   navigation.navigate("LanguageSettingsScreen"); // Navigate to language settings screen
