@@ -23,6 +23,8 @@ const OrderingProcess = () => {
   const { orderId } = route.params; // Extract orderId from route params
   const [foodModalVisible, setFoodModalVisible] = useState(false); // Modal for food list
   const [hasCheckedReview, setHasCheckedReview] = useState(false); // Cờ để ngăn việc kiểm tra lại review
+  const [cancelledOrders, setCancelledOrders] = useState([]); // Trạng thái mới để lưu đơn hàng đã hủy
+  const [cancellationDate, setCancellationDate] = useState(null); // Thêm trạng thái cho cancellationDate
 
   const steps = [
     { label: "Đang chờ duyệt", visible: true },
@@ -57,6 +59,30 @@ const OrderingProcess = () => {
       console.error("Error fetching order details:", error);
     }
   });
+
+  useEffect(() => {
+    fetchCancelledOrders();
+  }, [fetchCancelledOrders]);
+
+  const fetchCancelledOrders = async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/OrderCancellation/cancelled-orders`,
+        sendToken: true,
+      });
+      setCancelledOrders(response.cancelledOrders); // Lưu đơn hàng đã hủy vào state
+    } catch (error) {
+      console.error("Error fetching cancelled orders:", error);
+    }
+  };
+
+  useEffect(() => {
+    const cancelledOrder = cancelledOrders.find((order) => order.order._id === orderId);
+    if (cancelledOrder && cancelledOrder.cancellationDate) {
+      setCancellationDate(cancelledOrder.cancellationDate);
+    }
+  }, [cancelledOrders, orderId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -148,6 +174,10 @@ const OrderingProcess = () => {
   };
 
   const openModal = () => {
+    if (orderDetails?.orderStatus === "Delivered") {
+      Alert.alert("Thông báo", "Bạn không thể xem chi tiết tài xế khi đơn hàng đã giao thành công.");
+      return;
+    }
     setModalVisible(true);
   };
 
@@ -188,44 +218,53 @@ const OrderingProcess = () => {
           <Image source={require("../../img/LOGOBLACK.png")} style={{ width: width * 0.3, height: height * 0.15 }} />
         </View>
         {/* Progress bar */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
-          {steps.map((step, index) => (
-            <View key={index} style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: 8,
-                  backgroundColor: activeStep >= index ? "#E53935" : "white",
-                  borderWidth: 2,
-                  borderColor: "#E53935",
-                }}
-              />
-              {index < steps.length - 1 && <View style={{ width: width * 0.18, height: 2, backgroundColor: activeStep > index ? "#E53935" : "#E53935" }} />}
+        {orderDetails?.orderStatus === "Cancelled" ? (
+          <View style={{ alignItems: "center", marginVertical: height * 0.03 }}>
+            <Text style={{ fontSize: width * 0.05, fontWeight: "bold", color: "#E53935" }}>Đơn hàng đã bị hủy</Text>
+          </View>
+        ) : (
+          <>
+            {/* Progress bar */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
+              {steps.map((step, index) => (
+                <View key={index} style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 8,
+                      backgroundColor: activeStep >= index ? "#E53935" : "white",
+                      borderWidth: 2,
+                      borderColor: "#E53935",
+                    }}
+                  />
+                  {index < steps.length - 1 && <View style={{ width: width * 0.18, height: 2, backgroundColor: activeStep > index ? "#E53935" : "#E53935" }} />}
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
-          {steps.map((step, index) => (
-            <Text
-              key={index}
-              style={{
-                fontSize: width * 0.035,
-                color: activeStep === index ? "#E53935" : "gray",
-                textAlign: "center",
-                flex: 1,
-                fontWeight: "bold",
-                display: activeStep === index ? "flex" : "none", // Only display the selected step
-              }}
-            >
-              {step.label}
-            </Text>
-          ))}
-        </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
+              {steps.map((step, index) => (
+                <Text
+                  key={index}
+                  style={{
+                    fontSize: width * 0.035,
+                    color: activeStep === index ? "#E53935" : "gray",
+                    textAlign: "center",
+                    flex: 1,
+                    fontWeight: "bold",
+                    display: activeStep === index ? "flex" : "none",
+                  }}
+                >
+                  {step.label}
+                </Text>
+              ))}
+            </View>
+          </>
+        )}
         {/* Order time info */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.03, paddingHorizontal: width * 0.05 }}>
-          <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>Thời gian đặt hàng:</Text>
-          <Text style={{ fontSize: width * 0.04 }}>{orderDetails ? formatDateTime(orderDetails.orderDate) : "Đang tải..."}</Text>
+          <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>{orderDetails?.orderStatus === "Cancelled" ? "Thời gian hủy:" : "Thời gian đặt hàng:"}</Text>
+          <Text style={{ fontSize: width * 0.04 }}>{orderDetails?.orderStatus === "Cancelled" && cancellationDate ? formatDateTime(cancellationDate) : orderDetails?.orderDate ? formatDateTime(orderDetails.orderDate) : "Đang tải..."}</Text>
         </View>
         {/* Store address */}
         <View
@@ -335,7 +374,7 @@ const OrderingProcess = () => {
           <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>{orderDetails ? (orderDetails.paymentMethod === "Cash" ? "Tiền mặt" : orderDetails.paymentMethod) : "Đang tải..."}</Text>
         </View>
         {/* Conditional rendering based on the active step */}
-        {activeStep === 0 ? (
+        {activeStep === 0 && orderDetails?.orderStatus !== "Cancelled" ? (
           // Display 'Hủy đơn hàng' button only for step 1 (tap 1)
           <TouchableOpacity onPress={openCancelModal}>
             <View style={{ backgroundColor: "#E53935", paddingVertical: height * 0.02, borderRadius: 1, alignItems: "center", marginTop: height * 0.03 }}>
