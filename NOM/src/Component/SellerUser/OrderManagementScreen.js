@@ -38,7 +38,7 @@ export default function OrderManagementScreen({ navigation }) {
       // Lọc đơn hàng theo trạng thái: Mới, Đã nhận và Đã hủy
       const newOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Pending");
       const receivedOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Shipped");
-      const historyOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Cancelled");
+      const historyOrdersData = storeOrdersDetails.filter((order) => order.orderStatus === "Cancelled" || order.orderStatus === "Delivered");
 
       setNewOrders(newOrdersData);
       setReceivedOrders(receivedOrdersData);
@@ -131,7 +131,7 @@ export default function OrderManagementScreen({ navigation }) {
           <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
           <View style={styles.row}>
             <View style={styles.itemCountContainer}>
-              <Text style={styles.itemCountText}>{order.foods.length}</Text>
+              <Text style={styles.itemCountText}>{index + 1}</Text>
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{order.user.fullName}</Text>
@@ -191,7 +191,7 @@ export default function OrderManagementScreen({ navigation }) {
             <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
             <View style={styles.row}>
               <View style={styles.itemCountContainer}>
-                <Text style={styles.itemCountText}>{order.foods.length}</Text>
+                <Text style={styles.itemCountText}>{index + 1}</Text>
               </View>
               <View style={styles.userInfo}>
                 <Text style={styles.userName}>{order.user.fullName}</Text>
@@ -240,7 +240,7 @@ export default function OrderManagementScreen({ navigation }) {
           <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
           <View style={styles.row}>
             <View style={styles.itemCountContainer}>
-              <Text style={styles.itemCountText}>{order.foods.length}</Text>
+              <Text style={styles.itemCountText}>{index + 1}</Text>
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{order.user.fullName}</Text>
@@ -264,7 +264,14 @@ export default function OrderManagementScreen({ navigation }) {
           {/* Hiển thị trạng thái "Đã hủy" */}
           <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
             <View style={styles.completedButton}>
-              <Text style={[styles.buttonText, { color: "#E53935" }]}>Đã hủy</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: order.orderStatus === "Cancelled" ? "#E53935" : "#E53935" }, // Màu đỏ cho "Đã hủy", màu xanh cho "Đã giao"
+                ]}
+              >
+                {order.orderStatus === "Cancelled" ? "Đã hủy" : "Đã giao"}
+              </Text>
             </View>
           </View>
         </View>

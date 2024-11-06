@@ -40,7 +40,7 @@ export default function Orderfood() {
           }}
         >
           <View>
-            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff" }}>{foodData?.foodName}</Text>
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff", width: 230 }}>{foodData?.foodName}</Text>
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center" }}>

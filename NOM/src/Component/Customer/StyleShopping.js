@@ -92,6 +92,7 @@ export const styles = StyleSheet.create({
   orderItemText: {
     fontSize: 14,
     color: "#333",
+    width: 150,
   },
   quantityContainer: {
     flexDirection: "row",
@@ -155,6 +156,7 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "center",
   },
   swipeableDeleteButton: {
     backgroundColor: "#E53935",
