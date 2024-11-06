@@ -168,6 +168,12 @@ export default function ListFood({ navigation }) {
 
   const handleDeleteFood = useCallback(
     async (foodId) => {
+      if (!foodId) {
+        console.error("Invalid foodId:", foodId);
+        Alert.alert("Lỗi", "ID món ăn không hợp lệ.");
+        return;
+      }
+
       try {
         await api({
           method: typeHTTP.DELETE,
@@ -175,29 +181,19 @@ export default function ListFood({ navigation }) {
           sendToken: true,
         });
 
-        // Lọc danh sách món ăn sau khi xóa thành công
         const updatedFoods = foods.filter((food) => food._id !== foodId);
-
-        // Cập nhật AsyncStorage và globalData
         await AsyncStorage.setItem("foods", JSON.stringify(updatedFoods));
         globalHandler.setFoods(updatedFoods);
-
-        // Cập nhật foodList để giao diện tự động cập nhật
         setFoodList(updatedFoods);
 
-        // Hiển thị thông báo thành công
         Alert.alert("Xóa thành công", "Món ăn đã được xóa khỏi danh sách.", [{ text: "OK" }]);
-
         console.log("Đã xóa món ăn và cập nhật dữ liệu.");
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error deleting food:", error);
+        Alert.alert("Lỗi", "Không thể xóa món ăn. Vui lòng thử lại sau.");
+      }
     },
     [foods, globalHandler]
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      handleDeleteFood();
-    }, [handleDeleteFood])
   );
 
   // Khi người dùng bấm vào món ăn

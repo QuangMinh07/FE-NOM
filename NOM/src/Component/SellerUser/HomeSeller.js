@@ -404,7 +404,6 @@ export default function HomeSeller() {
                   <View style={[styles.otherFoodImageContainer, { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
 
                   <View style={styles.otherFoodDetails}>
-                    <Text style={styles.otherFoodRating}>4.5 ⭐ (25+)</Text>
                     <Text style={styles.otherFoodName}>{food.foodName}</Text>
                     <Text style={styles.otherFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                   </View>
