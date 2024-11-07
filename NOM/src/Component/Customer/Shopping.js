@@ -5,7 +5,6 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import { globalContext } from "../../context/globalContext";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable component
-import { Ionicons } from "@expo/vector-icons";
 
 // Import styles
 import { styles } from "./StyleShopping";
@@ -18,6 +17,7 @@ export default function Shopping({ route }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [orderItems, setOrderItems] = useState(cart);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
   const [error, setError] = useState(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const storeId = route.params?.storeId;
@@ -134,6 +134,7 @@ export default function Shopping({ route }) {
 
   const handlePayment = async () => {
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const cartId = globalData.cart?._id; // Make sure you retrieve the cartId from global state
 
       if (!cartId) {
@@ -160,6 +161,8 @@ export default function Shopping({ route }) {
     } catch (error) {
       console.error("Lỗi khi thanh toán:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thanh toán.");
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
@@ -210,6 +213,23 @@ export default function Shopping({ route }) {
 
   return (
     <View style={styles.container}>
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>Chi tiết HÓA ĐƠN</Text>

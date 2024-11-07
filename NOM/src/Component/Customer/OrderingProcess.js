@@ -78,7 +78,7 @@ const OrderingProcess = () => {
   };
 
   useEffect(() => {
-    const cancelledOrder = cancelledOrders.find((order) => order.order._id === orderId);
+    const cancelledOrder = cancelledOrders.find((order) => order.order?._id === orderId);
     if (cancelledOrder && cancelledOrder.cancellationDate) {
       setCancellationDate(cancelledOrder.cancellationDate);
     }
@@ -167,11 +167,6 @@ const OrderingProcess = () => {
       }
     }
   }, [orderDetails]);
-
-  // Handle selecting a step and hiding others
-  const handleStepSelect = (index) => {
-    setActiveStep(index);
-  };
 
   const openModal = () => {
     if (orderDetails?.orderStatus === "Delivered") {
@@ -349,7 +344,7 @@ const OrderingProcess = () => {
                   orderDetails.cartSnapshot.items.map((item, index) => (
                     <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.01 }}>
                       {/* Display quantity and food name */}
-                      <Text style={{ fontSize: width * 0.04 }}>
+                      <Text style={{ fontSize: width * 0.04, width:200 }}>
                         {item.quantity}x {item.foodName}
                       </Text>
                       {/* Display food price */}

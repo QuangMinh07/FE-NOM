@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useContext } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Dimensions } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons"; // Import icons
 import { api, typeHTTP } from "../../utils/api"; // Import the reusable API function
 import { useFocusEffect } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
+import { globalContext } from "../../context/globalContext"; // Import globalContext
 
 const { width } = Dimensions.get("window"); // Get screen width
 
@@ -14,6 +15,25 @@ const HomeKH = () => {
   const [foodList1, setFoodList1] = useState([]);
   const [topRatedStores, setTopRatedStores] = useState([]); // State for top-rated stores
   const [popularStores, setPopularStores] = useState([]); // State cho danh sách cửa hàng phổ biến
+  const { globalData } = useContext(globalContext);
+  const userId = globalData.user?.id;
+
+  const addToCart = async (userId, foodId, quantity, storeId) => {
+    try {
+      console.log("Adding to cart:", { foodId, storeId, quantity });
+
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/cart/add-to-cart/${userId}`,
+        body: { foodId, quantity, storeId },
+        sendToken: true,
+      });
+
+      console.log("Added to cart:", response.message);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
+  };
 
   // Fetch user profile from API
   const getUserProfile = async () => {
@@ -101,15 +121,38 @@ const HomeKH = () => {
 
         // Duyệt qua tất cả đơn hàng và thêm từng món ăn vào danh sách allFoods
         response.allOrdersDetails.forEach((order) => {
+          console.log("cartSnapshotItems:", order.cartSnapshotItems);
+
           order.foods.forEach((food) => {
-            allFoods.push({ ...food, storeId: order.store.storeId });
+            // Tìm item từ cartSnapshotItems dựa trên foodName thay vì foodId
+            const cartSnapshotItem = order.cartSnapshotItems.find(
+              (item) => item.foodName === food.foodName
+            );
+
+            // Nếu không có quantity trong food, lấy từ cartSnapshotItem nếu có
+            const quantity = food.quantity !== undefined && food.quantity !== 0
+              ? food.quantity
+              : (cartSnapshotItem ? cartSnapshotItem.quantity : 0);
+
+            // Nhật ký để kiểm tra quantity cuối cùng
+            console.log(`Food: ${food.foodName}, Quantity: ${quantity}`);
+
+            allFoods.push({
+              ...food,
+              foodId: food.foodId,
+              storeId: order.store.storeId,
+              quantity, // Sử dụng quantity đã kiểm tra từ foods hoặc cartSnapshotItems
+            });
           });
         });
 
         console.log("Danh sách tất cả món ăn trước khi lọc:", allFoods);
 
         // Loại bỏ các món ăn trùng lặp theo `foodName` và `storeId`
-        const uniqueFoods = allFoods.filter((food, index, self) => index === self.findIndex((f) => f.foodName === food.foodName && f.storeId === food.storeId));
+        const uniqueFoods = allFoods.filter(
+          (food, index, self) =>
+            index === self.findIndex((f) => f.foodName === food.foodName && f.storeId === food.storeId)
+        );
 
         console.log("Danh sách món ăn sau khi lọc trùng:", uniqueFoods);
 
@@ -132,7 +175,13 @@ const HomeKH = () => {
       });
 
       if (response && response.foods) {
-        setFoodList(response.foods.slice(0, 15)); // Giới hạn danh sách món ăn chỉ còn 15 món
+        const foods = response.foods.slice(0, 15).map(food => ({
+          ...food,
+          foodId: food._id, // Đảm bảo foodId được lấy từ _id
+          storeId: food.storeId,
+        }));
+        console.log("Danh sách món ăn từ API:", foods); // Kiểm tra dữ liệu trả về từ API
+        setFoodList(foods);
       } else {
         console.log("Không có dữ liệu món ăn.");
       }
@@ -140,6 +189,8 @@ const HomeKH = () => {
       console.error("Lỗi khi lấy danh sách món ăn:", error);
     }
   };
+
+
 
   useFocusEffect(
     useCallback(() => {
@@ -152,9 +203,22 @@ const HomeKH = () => {
   );
 
   // Navigate to StoreKH screen when a store is selected
-  const handleStorePress = (storeId) => {
-    navigation.navigate("StoreKH", { storeId });
+  const handleStorePress = (storeId, foodId) => {
+    console.log("Navigating to StoreKH with storeId:", storeId, "and foodId:", foodId);
+    navigation.navigate("StoreKH", { storeId, foodId });
   };
+
+  const handleFoodPress = async (storeId, foodId, quantity) => {
+    console.log("Adding food to cart with storeId:", storeId, "userId:", userId, "foodId:", foodId, "quantity:", quantity);
+
+    // Call the `addToCart` function with the necessary parameters
+    await addToCart(userId, foodId, quantity, storeId);
+
+    // Navigate to the Shopping screen after adding to cart
+    navigation.navigate("Shopping", { storeId, userId });
+  };
+
+
 
   useEffect(() => {
     console.log("popularStores data:", popularStores); // Kiểm tra dữ liệu trả về
@@ -306,16 +370,14 @@ const HomeKH = () => {
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món ăn nổi bật</Text>
           <ScrollView style={{ marginTop: 10 }}>
             {foodList1.map((food) => (
-              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
                 <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                   <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
                   <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    /* Function to increment count */
-                  }}
+                  onPress={() => handleFoodPress(food.storeId, food.foodId, food.quantity)}
                   style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}
                 >
                   <Ionicons name="add" size={16} color="#fff" />
@@ -329,19 +391,11 @@ const HomeKH = () => {
           <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15 }}>Khám phá ngay</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
             {foodList.map((food) => (
-              <View key={food._id} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
                 <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                 <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    /* Function to increment count */
-                  }}
-                  style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}
-                >
-                  <Ionicons name="add" size={16} color="#fff" />
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -367,21 +421,13 @@ const HomeKH = () => {
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món khác</Text>
           <ScrollView style={{ marginTop: 10 }}>
             {foodList.map((food) => (
-              <View key={food._id} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
                 <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                 <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                   <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
                   <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      /* Function to increment count */
-                    }}
-                    style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}
-                  >
-                    <Ionicons name="add" size={16} color="#fff" />
-                  </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
