@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
@@ -15,10 +15,54 @@ export default function StoreKH() {
   const [error, setError] = useState(null); // Error state
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const route = useRoute();
-  const { storeId } = route.params; // Kiểm tra nếu storeId có tồn tại trong route params
-  console.log("storeId:", storeId);
+  const { storeId, foodId: selectedFoodId } = route.params; // Kiểm tra nếu storeId có tồn tại trong route params
+  const scrollViewRef = useRef(null); // Khai báo ref cho ScrollView
+
   const [storeIdState, setStoreIdState] = useState(storeId);
   const [reviewCount, setReviewCount] = useState(0); // State để lưu số lượng đánh giá
+  const [highlightedFoodId, setHighlightedFoodId] = useState(selectedFoodId || null);
+  const [isScrollViewReady, setIsScrollViewReady] = useState(false); // Thêm state để kiểm tra khi scrollView sẵn sàng
+  const [isHighlightedInFirstGroup, setIsHighlightedInFirstGroup] = useState(false);
+  const [groupedFoods, setGroupedFoods] = useState({});
+  const [firstGroup, setFirstGroup] = useState(null);
+  const [remainingGroups, setRemainingGroups] = useState([]);
+
+  // Cập nhật groupedFoods và phân chia các nhóm
+  useEffect(() => {
+    const groupedFoodsData = groupFoodsByCategory(foodList, foodGroups) || {};
+    setGroupedFoods(groupedFoodsData);
+
+    const firstGroupData = Object.keys(groupedFoodsData)[0] || null;
+    const remainingGroupsData = Object.keys(groupedFoodsData).slice(1);
+
+    setFirstGroup(firstGroupData);
+    setRemainingGroups(remainingGroupsData);
+  }, [foodList, foodGroups]);
+
+  // Kiểm tra xem highlightedFoodId có thuộc firstGroup hay không và cập nhật state
+  useEffect(() => {
+    if (highlightedFoodId && groupedFoods && firstGroup) {
+      const isFirstGroupItem = groupedFoods[firstGroup]?.some(food => food._id === highlightedFoodId);
+      setIsHighlightedInFirstGroup(isFirstGroupItem);
+    }
+  }, [highlightedFoodId, groupedFoods, firstGroup]);
+
+  // Cuộn firstGroup nếu highlightedFoodId thuộc firstGroup
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!loading && highlightedFoodId && firstGroup && isScrollViewReady && isHighlightedInFirstGroup) {
+        const foodIndex = groupedFoods[firstGroup].findIndex(food => food._id === highlightedFoodId);
+        if (foodIndex !== -1) {
+          const scrollPosition = foodIndex * (width * 0.55 + 15);
+          setTimeout(() => {
+            if (scrollViewRef.current) {
+              scrollViewRef.current.scrollTo({ x: scrollPosition, animated: true });
+            }
+          }, 100);
+        }
+      }
+    }, [loading, highlightedFoodId, firstGroup, isScrollViewReady, isHighlightedInFirstGroup])
+  );
 
   useEffect(() => {
     if (storeId) {
@@ -177,11 +221,7 @@ export default function StoreKH() {
     );
   }
 
-  const groupedFoods = groupFoodsByCategory(foodList, foodGroups);
   const { storeName, storeAddress, isOpen, sellingTime, averageRating } = store;
-
-  const firstGroup = Object.keys(groupedFoods)[0];
-  const remainingGroups = Object.keys(groupedFoods).slice(1);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -198,8 +238,24 @@ export default function StoreKH() {
               height: height * 0.25,
               borderRadius: 10,
               marginBottom: 10,
+              overflow: "hidden", // Đảm bảo ảnh không vượt ra ngoài góc bo tròn
             }}
-          />
+          >
+            {store.imageURL ? (
+              <Image
+                source={{ uri: store.imageURL }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  resizeMode: "cover", // Đảm bảo ảnh bao phủ toàn bộ khung
+                }}
+              />
+            ) : (
+              <View style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center" }}>
+                <Text style={{ color: "#fff", fontSize: 16 }}>Không có ảnh</Text>
+              </View>
+            )}
+          </View>
 
           {/* Cart Icon */}
           <TouchableOpacity
@@ -279,7 +335,7 @@ export default function StoreKH() {
               <TouchableOpacity
                 key={food._id} // Sử dụng id chính xác cho key
                 style={{
-                  backgroundColor: "#fff",
+                  backgroundColor: "#fff", // Tô màu nổi bật
                   padding: 10,
                   borderRadius: 10,
                   borderWidth: 1,
@@ -325,8 +381,7 @@ export default function StoreKH() {
 
                 {/* Thông tin món ăn */}
                 <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 12, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price.toLocaleString()} VND</Text>
+                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 10 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -335,12 +390,17 @@ export default function StoreKH() {
         {firstGroup && (
           <View style={{ paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} ref={(ref) => {
+              scrollViewRef.current = ref;
+              if (ref && !isScrollViewReady) {
+                setIsScrollViewReady(true); // Đánh dấu rằng ScrollView đã sẵn sàng
+              }
+            }}>
               {groupedFoods[firstGroup].map((food) => (
                 <TouchableOpacity
                   key={food._id}
                   style={{
-                    backgroundColor: "#fff",
+                    backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
                     padding: 10,
                     borderRadius: 10,
                     borderWidth: 1,
@@ -389,61 +449,66 @@ export default function StoreKH() {
         )}
 
         {remainingGroups.map((group) => (
-          <View key={group} style={{ marginTop: 20, paddingHorizontal: 15 }}>
+          <ScrollView key={group} style={{ marginTop: 20, paddingHorizontal: 15 }} >
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
-            {groupedFoods[group].map((food) => (
-              <TouchableOpacity
-                key={food._id} // Sử dụng id chính xác cho key
-                style={{
-                  backgroundColor: "#fff",
-                  padding: 10,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: "#eee",
-                  marginRight: 15,
-                  width: width * 0.4, // Chiều rộng của khung chứa
-                }}
-                onPress={() => {
-                  console.log("Navigating to Orderfood with foodId:", food._id);
-                  console.log("Navigating to Orderfood with storeId:", storeIdState);
-                  if (storeIdState) {
-                    navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
-                  } else {
-                    console.error("storeIdState is undefined!");
-                  }
-                }}
-              >
-                <View
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+            >
+              {groupedFoods[group].map((food) => (
+                <TouchableOpacity
+                  key={food._id} // Sử dụng id chính xác cho key
                   style={{
-                    height: 80,
-                    width: 80,
-                    backgroundColor: "#f0f0f0",
+                    backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
+                    padding: 10,
                     borderRadius: 10,
-                    overflow: "hidden",
-                    marginRight: 10,
+                    borderWidth: 1,
+                    borderColor: "#eee",
+                    marginBottom: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                  onPress={() => {
+                    console.log("Navigating to Orderfood with foodId:", food._id);
+                    console.log("Navigating to Orderfood with storeId:", storeIdState);
+                    if (storeIdState) {
+                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                    } else {
+                      console.error("storeIdState is undefined!");
+                    }
                   }}
                 >
-                  {food.imageUrl ? (
-                    <Image
-                      source={{ uri: food.imageUrl }}
-                      style={{
-                        height: "100%",
-                        width: "100%",
-                      }}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
-                  )}
-                </View>
-                <View>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
-                  <Text style={{ fontSize: 14 }}>{food.description}</Text>
-                  <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <View
+                    style={{
+                      height: 80,
+                      width: 80,
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      marginRight: 15,
+                    }}
+                  >
+                    {food.imageUrl ? (
+                      <Image
+                        source={{ uri: food.imageUrl }}
+                        style={{
+                          height: "100%",
+                          width: "100%",
+                        }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                    )}
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
+                    <Text style={{ fontSize: 14 }}>{food.description}</Text>
+                    <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </ScrollView>
         ))}
       </ScrollView>
 
