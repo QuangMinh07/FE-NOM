@@ -237,6 +237,9 @@ const HomeKH = () => {
     { id: 1, name: "TIMMON1", image: require("../../img/TIMMON1.png") },
     { id: 2, name: "TIMMON2", image: require("../../img/TIMMON2.png") },
     { id: 3, name: "TIMMON3", image: require("../../img/TIMMON3.png") },
+    { id: 4, name: "TIMMON4", image: require("../../img/TIMMON4.png") },
+    { id: 5, name: "TIMMON5", image: require("../../img/TIMMON5.png") },
+    { id: 6, name: "TIMMON6", image: require("../../img/TIMMON6.png") },
   ];
 
   const banners1 = [
@@ -266,7 +269,7 @@ const HomeKH = () => {
             <Ionicons name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("CustomerNotice")}>
+          <TouchableOpacity>
             <Ionicons name="notifications-outline" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
