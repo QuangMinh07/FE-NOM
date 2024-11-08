@@ -15,6 +15,7 @@ export default function CustomerChat() {
   const route = useRoute();
   const { orderId, userId, shipperId, userRole } = route.params; // Nhận tham số từ route
   const flatListRef = useRef(); // Tạo ref cho FlatList
+  const [displayName, setDisplayName] = useState(""); // State để lưu tên hiển thị
 
   // Lắng nghe sự kiện mở/đóng bàn phím
   useEffect(() => {
@@ -49,6 +50,43 @@ export default function CustomerChat() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const getProfileName = async () => {
+      try {
+        console.log("UserRole:", userRole);
+        console.log("UserId:", userId, "ShipperId:", shipperId);
+  
+        // Xác định ID cần lấy dựa trên vai trò
+        const idToFetch = userRole === "shipper" ? userId : shipperId;
+        console.log("Fetching profile for ID:", idToFetch);
+  
+        console.log("Calling API...");
+        const response = await api({
+          method: typeHTTP.GET,
+          url: `/user/profile/${idToFetch}`, // Truyền ID cụ thể vào endpoint
+          sendToken: true,
+        });
+        console.log("API called successfully");
+  
+        console.log("API Response:", response);
+  
+        if (response && response.user) {
+          const name = response.user.fullName;
+          setDisplayName(name); // Gán fullName vào displayName
+          console.log(`Fetched name for ${userRole === "shipper" ? "customer" : "shipper"}:`, name);
+        } else {
+          console.error("User not found or API response is incorrect:", response);
+        }
+      } catch (error) {
+        console.error("Error during API call:", error);
+      }
+    };
+  
+    getProfileName();
+  }, [userRole, userId, shipperId]);
+  
+  
+  
   useEffect(() => {
     // Gọi API để tạo phòng chat trước khi tham gia phòng
     const createChatRoom = async () => {
@@ -183,8 +221,8 @@ export default function CustomerChat() {
             </TouchableOpacity>
             <Image source={{ uri: "https://example.com/jhon-abraham.jpg" }} style={styles.headerImage} />
             <View style={styles.headerTitle}>
-              <Text style={styles.headerName}>Jhon Abraham</Text>
-              <Text style={styles.headerStatus}>Active now</Text>
+              <Text style={styles.headerName}>{displayName}</Text>
+              {/* <Text style={styles.headerStatus}>Active now</Text> */}
             </View>
             <TouchableOpacity style={styles.headerIcon}>
               <Icon name="call" size={24} color="#fff" />
