@@ -12,26 +12,34 @@ const Seach = () => {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  // Fetch stores from API
   useEffect(() => {
     const fetchStores = async () => {
       try {
         setLoading(true);
+  
+        // Kiểm tra xem `searchQuery` có trống không
+        const endpoint = searchQuery
+          ? `/store/search?storeName=${searchQuery}`
+          : "/store/get-all-store";
+  
         const data = await api({
           method: typeHTTP.GET,
-          url: "/store/get-all-store",
+          url: endpoint,
           sendToken: true,
         });
+  
         setStoreList(data.data);
       } catch (error) {
-        // console.error("Error fetching store data:", error);
+        console.error("Error fetching store data:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
+    // Gọi API khi searchQuery thay đổi
     fetchStores();
-  }, []);
+  }, [searchQuery]);
+  
 
   // Navigate to StoreKH screen when a store is selected
   const handleStorePress = (storeId) => {

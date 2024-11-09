@@ -17,6 +17,8 @@ const HomeKH = () => {
   const [popularStores, setPopularStores] = useState([]); // State cho danh sách cửa hàng phổ biến
   const { globalData } = useContext(globalContext);
   const userId = globalData.user?.id;
+  const [searchResults, setSearchResults] = useState({ stores: [], foods: [] }); // Khởi tạo mảng rỗng mặc định
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   const addToCart = async (userId, foodId, quantity, storeId) => {
     try {
@@ -125,14 +127,10 @@ const HomeKH = () => {
 
           order.foods.forEach((food) => {
             // Tìm item từ cartSnapshotItems dựa trên foodName thay vì foodId
-            const cartSnapshotItem = order.cartSnapshotItems.find(
-              (item) => item.foodName === food.foodName
-            );
+            const cartSnapshotItem = order.cartSnapshotItems.find((item) => item.foodName === food.foodName);
 
             // Nếu không có quantity trong food, lấy từ cartSnapshotItem nếu có
-            const quantity = food.quantity !== undefined && food.quantity !== 0
-              ? food.quantity
-              : (cartSnapshotItem ? cartSnapshotItem.quantity : 0);
+            const quantity = food.quantity !== undefined && food.quantity !== 0 ? food.quantity : cartSnapshotItem ? cartSnapshotItem.quantity : 0;
 
             // Nhật ký để kiểm tra quantity cuối cùng
             console.log(`Food: ${food.foodName}, Quantity: ${quantity}`);
@@ -149,10 +147,7 @@ const HomeKH = () => {
         console.log("Danh sách tất cả món ăn trước khi lọc:", allFoods);
 
         // Loại bỏ các món ăn trùng lặp theo `foodName` và `storeId`
-        const uniqueFoods = allFoods.filter(
-          (food, index, self) =>
-            index === self.findIndex((f) => f.foodName === food.foodName && f.storeId === food.storeId)
-        );
+        const uniqueFoods = allFoods.filter((food, index, self) => index === self.findIndex((f) => f.foodName === food.foodName && f.storeId === food.storeId));
 
         console.log("Danh sách món ăn sau khi lọc trùng:", uniqueFoods);
 
@@ -175,7 +170,7 @@ const HomeKH = () => {
       });
 
       if (response && response.foods) {
-        const foods = response.foods.slice(0, 15).map(food => ({
+        const foods = response.foods.slice(0, 15).map((food) => ({
           ...food,
           foodId: food._id, // Đảm bảo foodId được lấy từ _id
           storeId: food.storeId,
@@ -190,7 +185,33 @@ const HomeKH = () => {
     }
   };
 
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (!query) {
+      // Không thực hiện tìm kiếm nếu query rỗng
+      setSearchResults({ stores: [], foods: [] });
+      return;
+    }
 
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/store/search-all?searchTerm=${query}`, // API với searchTerm
+        sendToken: true,
+      });
+      if (response.success) {
+        setSearchResults({
+          stores: response.data.stores || [], // Nếu không có stores thì sử dụng mảng rỗng
+          foods: response.data.foods || [], // Nếu không có foods thì sử dụng mảng rỗng
+        });
+      } else {
+        setSearchResults({ stores: [], foods: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching search results:", error.response?.data?.msg || error.message);
+      setSearchResults({ stores: [], foods: [] });
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -199,6 +220,7 @@ const HomeKH = () => {
       getPopularStores();
       getAllFoods();
       getOrderedFoods();
+      setSearchResults([]);
     }, [])
   );
 
@@ -217,8 +239,6 @@ const HomeKH = () => {
     // Navigate to the Shopping screen after adding to cart
     navigation.navigate("Shopping", { storeId, userId });
   };
-
-
 
   useEffect(() => {
     console.log("popularStores data:", popularStores); // Kiểm tra dữ liệu trả về
@@ -280,7 +300,7 @@ const HomeKH = () => {
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, elevation: 5, height: 50 }}>
             <Ionicons onPress={() => navigation.navigate("Seach")} name="search-outline" size={25} color="#E53935" />
-            <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} />
+            <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} value={searchQuery} onChangeText={handleSearch} />
           </View>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate("FavoriteFood")} style={{ marginLeft: 10 }}>
@@ -302,138 +322,173 @@ const HomeKH = () => {
         </ScrollView>
       </View>
       <ScrollView>
-        {/* Banner List */}
-        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
-          {banners.map((banner) => (
-            <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
-              <Image
-                source={banner.image}
-                style={{
-                  width: width * 0.8,
-                  height: undefined,
-                  aspectRatio: 4.8 / 2,
-                  borderRadius: 10,
-                }}
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Best Sellers */}
-        <View style={{ marginTop: 25, paddingHorizontal: 15 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 5 }}>Đề xuất</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 10 }}>
-            {topRatedStores.map((store) => (
-              <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height: 200 }}>
-                {/* Image and Heart Icon */}
-                <View style={{ position: "relative", backgroundColor: store.imageUrl ? "transparent" : "#D3D3D3", borderTopLeftRadius: 15, borderTopRightRadius: 15, overflow: "hidden" }}>
-                  {store.imageURL ? (
-                    <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: 120 }} />
-                  ) : (
-                    <View style={{ width: "100%", height: 120, justifyContent: "center", alignItems: "center" }}>
-                      <Text style={{ color: "#888" }}>Ảnh cửa hàng</Text>
+        {searchQuery ? (
+          <View style={{ paddingHorizontal: 15 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, marginTop: 10 }}>Kết quả tìm kiếm</Text>
+            {searchResults?.stores?.length > 0 || searchResults?.foods?.length > 0 ? (
+              <>
+                {searchResults.stores.map((store) => (
+                  <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                    <View style={{ flexDirection: "row" }}>
+                      <View style={{ width: 80, height: 80, backgroundColor: store.imageURL ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{store.imageURL ? <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#888" }}>No Image</Text>}</View>
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "bold" }}>{store.storeName}</Text>
+                        <Text style={{ fontSize: 14, color: "#888" }}>{store.storeAddress}</Text>
+                        <Text style={{ fontSize: 14, color: "#E53935" }}>{store.averageRating}⭐</Text>
+                      </View>
                     </View>
-                  )}
-                  <TouchableOpacity style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}>
-                    <Ionicons name="heart-outline" size={18} color="#E53935" />
                   </TouchableOpacity>
-                </View>
-
-                {/* Rating */}
-                <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 10, marginTop: 5 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>{store.averageRating}</Text>
-                  <Ionicons name="star" size={14} color="#FFC107" style={{ marginHorizontal: 5 }} />
-                </View>
-
-                {/* Store Name */}
-                <View style={{ paddingHorizontal: 10, marginTop: 2 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{store.storeName}</Text>
-                </View>
-
-                {/* Plus Icon */}
-              </TouchableOpacity>
-            ))}
+                ))}
+                {searchResults.foods.map((food) => (
+                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.store._id, food._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                    <View style={{ flexDirection: "row" }}>
+                      <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#888" }}>No Image</Text>}</View>
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
+                        <Text style={{ fontSize: 14, color: "#888" }}>{food.store.storeName}</Text>
+                        <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            ) : (
+              <Text style={{ fontSize: 16, color: "#888" }}>Không tìm thấy kết quả phù hợp</Text>
+            )}
           </View>
-        </View>
-        {/* Best Sellers */}
-        <View style={{ marginTop: 25, backgroundColor: "#E53935", paddingVertical: 15 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15, color: "white" }}>Có thể bạn sẽ thích</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-            {popularStores.map((store) => (
-              <View key={store.storeId} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
-                <View style={{ width: "100%", height: 100, backgroundColor: store.imageURL ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{store.imageURL ? <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh cửa hàng</Text>}</View>
-                <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{store.storeName}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-        {/* Other Foods */}
-        <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món ăn nổi bật</Text>
-          <ScrollView style={{ marginTop: 10 }}>
-            {foodList1.map((food) => (
-              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
-                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
-                <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
-                  <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => handleFoodPress(food.storeId, food.foodId, food.quantity)}
-                  style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}
-                >
-                  <Ionicons name="add" size={16} color="#fff" />
+        ) : (
+          <>
+            {/* Banner List */}
+            <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
+              {banners.map((banner) => (
+                <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
+                  <Image
+                    source={banner.image}
+                    style={{
+                      width: width * 0.8,
+                      height: undefined,
+                      aspectRatio: 4.8 / 2,
+                      borderRadius: 10,
+                    }}
+                  />
                 </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        {/* Best Sellers */}
-        <View style={{ marginTop: 25 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15 }}>Khám phá ngay</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-            {foodList.map((food) => (
-              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
-                <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
-                <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        {/* Banner List */}
-        <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
-          {banners1.map((banner) => (
-            <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
-              <Image
-                source={banner.image}
-                style={{
-                  width: width * 0.8,
-                  height: undefined,
-                  aspectRatio: 4.8 / 2,
-                  borderRadius: 10,
-                }}
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {/* Other Foods */}
-        <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món khác</Text>
-          <ScrollView style={{ marginTop: 10 }}>
-            {foodList.map((food) => (
-              <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
-                <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
-                <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
-                  <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+              ))}
+            </ScrollView>
+
+            {/* Best Sellers */}
+            <View style={{ marginTop: 25, paddingHorizontal: 15 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 5 }}>Đề xuất</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 10 }}>
+                {topRatedStores.map((store) => (
+                  <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height: 200 }}>
+                    {/* Image and Heart Icon */}
+                    <View style={{ position: "relative", backgroundColor: store.imageUrl ? "transparent" : "#D3D3D3", borderTopLeftRadius: 15, borderTopRightRadius: 15, overflow: "hidden" }}>
+                      {store.imageURL ? (
+                        <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: 120 }} />
+                      ) : (
+                        <View style={{ width: "100%", height: 120, justifyContent: "center", alignItems: "center" }}>
+                          <Text style={{ color: "#888" }}>Ảnh cửa hàng</Text>
+                        </View>
+                      )}
+                      <TouchableOpacity style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}>
+                        <Ionicons name="heart-outline" size={18} color="#E53935" />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Rating */}
+                    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 10, marginTop: 5 }}>
+                      <Text style={{ fontSize: 14, fontWeight: "bold" }}>{store.averageRating}</Text>
+                      <Ionicons name="star" size={14} color="#FFC107" style={{ marginHorizontal: 5 }} />
+                    </View>
+
+                    {/* Store Name */}
+                    <View style={{ paddingHorizontal: 10, marginTop: 2 }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{store.storeName}</Text>
+                    </View>
+
+                    {/* Plus Icon */}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            {/* Best Sellers */}
+            <View style={{ marginTop: 25, backgroundColor: "#E53935", paddingVertical: 15 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15, color: "white" }}>Có thể bạn sẽ thích</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
+                {popularStores.map((store) => (
+                  <View key={store.storeId} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                    <View style={{ width: "100%", height: 100, backgroundColor: store.imageURL ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{store.imageURL ? <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh cửa hàng</Text>}</View>
+                    <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{store.storeName}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+            {/* Other Foods */}
+            <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món ăn nổi bật</Text>
+              <ScrollView style={{ marginTop: 10 }}>
+                {foodList1.map((food) => (
+                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+                    <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
+                    <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
+                      <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleFoodPress(food.storeId, food.foodId, food.quantity)} style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "#E53935", width: 24, height: 24, borderRadius: 12, justifyContent: "center", alignItems: "center" }}>
+                      <Ionicons name="add" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+            {/* Best Sellers */}
+            <View style={{ marginTop: 25 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15 }}>Khám phá ngay</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
+                {foodList.map((food) => (
+                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                    <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
+                    <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
+                    <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+            {/* Banner List */}
+            <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
+              {banners1.map((banner) => (
+                <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
+                  <Image
+                    source={banner.image}
+                    style={{
+                      width: width * 0.8,
+                      height: undefined,
+                      aspectRatio: 4.8 / 2,
+                      borderRadius: 10,
+                    }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            {/* Other Foods */}
+            <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món khác</Text>
+              <ScrollView style={{ marginTop: 10 }}>
+                {foodList.map((food) => (
+                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+                    <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
+                    <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
+                      <Text style={{ fontSize: 14, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
