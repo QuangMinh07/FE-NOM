@@ -103,8 +103,8 @@ export default function SellerProfileScreen() {
               marginLeft: width * 0.03,
             }}
           >
-            {userData ? userData.fullName : "Nguyễn Thị Kiều Nghi"}
-          </Text>
+            {userData ? userData.fullName || userData.userName : ""}
+            </Text>
         </View>
 
         {/* Icon Cài đặt */}

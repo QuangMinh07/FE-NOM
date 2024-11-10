@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
@@ -9,6 +9,7 @@ import { styles } from "./StyleHomeSeller"; // Import styles từ file mới
 
 export default function HomeSeller() {
   const [storeName, setStoreName] = useState("");
+  const [averageRating,setAverageRating] = useState("");
   const [storeAddress, setStoreAddress] = useState("");
   const [sellingTime, setSellingTime] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,13 +24,81 @@ export default function HomeSeller() {
   const [deliveredOrdersDetails, setDeliveredOrdersDetails] = useState([]); // Thêm state cho chi tiết đơn hàng đã giao
   const [totalRevenue, setTotalRevenue] = useState(0); // Thêm state cho tổng doanh thu
   const [isLoading, setIsLoading] = useState(false);
+  const [reviewCount, setReviewCount] = useState(0); // State để lưu số lượng đánh giá
 
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext);
 
+  const userRole = globalData.user?.role || "";
+  const canManageStaff = userRole === "seller"; // chỉ người bán mới có thể quản lý nhân viên
+
+  const fetchReviewCount = useCallback(async () => {
+    const storeId = globalData.storeData?._id;
+    if (!storeId) return;
+
+    try {
+      const reviewResponse = await api({
+        method: typeHTTP.GET,
+        url: `/orderReview/store-reviews/${storeId}`,
+        sendToken: true,
+      });
+
+      setReviewCount(reviewResponse.reviews.length);
+    } catch (error) {
+      console.error("Error fetching review count:", error);
+      setReviewCount(0);
+    }
+  }, [globalData.storeData?._id]);
+
+  useEffect(() => {
+    fetchReviewCount();
+  }, [fetchReviewCount]);
+
+  const fetchStoreData = async () => {
+    try {
+      const userId = globalData.user?.id;
+      if (!userId) {
+        console.log("Không tìm thấy userId trong globalData");
+        return;
+      }
+
+      const storeData = await api({
+        method: typeHTTP.GET,
+        url: `/store/getStore/${userId}`,
+        sendToken: true,
+      });
+
+      if (storeData && storeData.data) {
+        setStoreName(storeData.data.storeName || "Tên cửa hàng");
+        setStoreAddress(storeData.data.storeAddress || "Địa chỉ cửa hàng");
+        setAverageRating(storeData.data.averageRating || "Sao cửa hàng");
+        // Đảm bảo cập nhật `storeData` hoàn tất trước khi các API khác được gọi
+        await globalHandler.setStoreData(storeData.data);
+        console.log("Store data đã lưu vào globalData:", storeData.data);
+      }
+    } catch (error) {
+      // console.error("Lỗi khi gọi API để lấy store data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (globalData.user?.id) {
+      fetchStoreData(); // Gọi API để lấy thông tin cửa hàng khi userId thay đổi
+    } else {
+      setStoreName("");
+      setStoreAddress("");
+      globalHandler.setStoreData(null); // Xóa storeData nếu không có userId
+      setLoading(false);
+    }
+  }, [globalData.user?.id]);
+
   const fetchDeliveredOrdersAndRevenue = useCallback(async () => {
     try {
       const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+      console.log(storeId);
+
       if (!storeId) {
         console.log("Không tìm thấy storeId trong globalData");
         return;
@@ -132,50 +201,6 @@ export default function HomeSeller() {
       fetchFoodsByStoreId();
     }, [fetchFoodsByStoreId])
   );
-
-  // Gọi API để lấy thông tin cửa hàng và lưu vào GlobalContext
-  useEffect(() => {
-    const fetchStoreData = async () => {
-      try {
-        const userId = globalData.user?.id; // Lấy userId từ globalData
-        if (!userId) {
-          console.log("Không tìm thấy userId trong globalData");
-          return;
-        }
-
-        // Gọi API với userId để lấy thông tin cửa hàng
-        const storeData = await api({
-          method: typeHTTP.GET,
-          url: `/store/getStore/${userId}`,
-          sendToken: true,
-        });
-
-        if (storeData && storeData.data) {
-          setStoreName(storeData.data.storeName || "Tên cửa hàng");
-          setStoreAddress(storeData.data.storeAddress || "Địa chỉ cửa hàng");
-
-          // Lưu toàn bộ thông tin cửa hàng vào GlobalContext
-          globalHandler.setStoreData(storeData.data);
-        }
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const userId = globalData.user?.id;
-
-    // Khi userId thay đổi hoặc khi không có storeData, gọi API
-    if (userId) {
-      fetchStoreData(); // Gọi API để lấy thông tin cửa hàng khi userId thay đổi
-    } else {
-      // Nếu không có userId (đăng xuất), reset lại thông tin
-      setStoreName("");
-      setStoreAddress("");
-      globalHandler.setStoreData(null); // Reset lại dữ liệu storeData
-      setLoading(false);
-    }
-  }, [globalData.user?.id]); // Theo dõi userId để gọi lại API khi thay đổi
 
   const fetchStoreData1 = useCallback(async () => {
     try {
@@ -286,7 +311,13 @@ export default function HomeSeller() {
         console.log("Cập nhật thất bại:", response?.message);
       }
     } catch (error) {
-      console.error("Lỗi khi gọi API:", error.message);
+      if (error.response && error.response.status === 403) {
+        // Lấy thông báo từ phản hồi API nếu có
+        const errorMessage = error.response.data?.message;
+        Alert.alert("Lỗi khi gọi API", errorMessage);
+      } else {
+        Alert.alert("Lỗi khi gọi API", error.message || "Đã xảy ra lỗi khi gọi API");
+      }
     }
   };
 
@@ -317,7 +348,9 @@ export default function HomeSeller() {
         <View style={styles.storeInfoContainer}>
           <View style={styles.storeInfoHeader}>
             <Text style={styles.storeNameText}>{storeName}</Text>
-            <Text style={styles.storeRatingText}>4.5 ⭐ (25+)</Text>
+            <Text style={styles.storeRatingText}>
+              {averageRating} ⭐ ({reviewCount})
+            </Text>
             <View style={[styles.storeStatusContainer, { backgroundColor: isOpen ? "#00a651" : "#E53935" }]}>
               <Text style={styles.storeStatusText}>{isOpen ? "Đang mở cửa" : "Đã đóng cửa"}</Text>
             </View>
@@ -366,7 +399,7 @@ export default function HomeSeller() {
           <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
             <Text style={styles.actionButtonText}>Phản hồi</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Staff")} style={styles.actionButton}>
+          <TouchableOpacity onPress={() => (canManageStaff ? navigation.navigate("Staff") : null)} style={[styles.actionButton, !canManageStaff && { backgroundColor: "#d3d3d3" }]} disabled={!canManageStaff}>
             <Text style={styles.actionButtonText}>Nhân viên</Text>
           </TouchableOpacity>
         </View>
