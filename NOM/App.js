@@ -4,17 +4,18 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+// import * as Notifications from "expo-notifications";
 
 import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
-import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP,ProfileShipper} from "./src/Component/Shipper";
+import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP, ProfileShipper } from "./src/Component/Shipper";
 
 import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Component/Main";
-import { RatingScreen} from "./src/Component/Rating";
-import { DashboardScreen} from "./src/Component/Dashboard";
+import { RatingScreen } from "./src/Component/Rating";
+import { DashboardScreen } from "./src/Component/Dashboard";
 
-import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood,OrderingProcess } from "./src/Component/Customer";
-import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen,InvoiceDetails } from "./src/Component/SellerUser";
+import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess } from "./src/Component/Customer";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
 import { api, typeHTTP } from "./src/utils/api";
@@ -27,6 +28,72 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState("");
   const [appState, setAppState] = useState(AppState.currentState);
+
+  // async function registerForPushNotificationsAsync() {
+  //   let token;
+
+  //   if (Platform.OS === "android" || Platform.OS === "ios") {
+  //     try {
+  //       // Thiết lập kênh thông báo cho Android
+  //       if (Platform.OS === "android") {
+  //         await Notifications.setNotificationChannelAsync("default", {
+  //           name: "default",
+  //           importance: Notifications.AndroidImportance.MAX,
+  //           vibrationPattern: [0, 250, 250, 250],
+  //           lightColor: "#FF231F7C",
+  //         });
+  //       }
+
+  //       // Kiểm tra quyền thông báo
+  //       const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  //       console.log("Existing notification permission status:", existingStatus);
+  //       let finalStatus = existingStatus;
+
+  //       // Nếu chưa có quyền, yêu cầu quyền
+  //       if (existingStatus !== "granted") {
+  //         const { status } = await Notifications.requestPermissionsAsync();
+  //         finalStatus = status;
+  //         console.log("Notification permission after request:", finalStatus);
+  //       }
+
+  //       // Nếu quyền không được cấp, log lỗi và return
+  //       if (finalStatus !== "granted") {
+  //         alert("Failed to get push token for push notification!");
+  //         console.log("Permission not granted");
+  //         return;
+  //       }
+
+  //       // Lấy expoPushToken với projectId (cho cả Android và iOS)
+  //       token = (await Notifications.getExpoPushTokenAsync({ projectId: "9e43321d-37b0-4cb5-8c99-0ca0009ba83d" })).data;
+  //       console.log("Successfully obtained push token:", token);
+
+  //       // Lưu token vào AsyncStorage nếu có
+  //       if (token) {
+  //         await AsyncStorage.setItem("expoPushToken", token);
+  //         console.log("Token saved to AsyncStorage:", token);
+  //       } else {
+  //         console.log("Push token is undefined");
+  //       }
+  //     } catch (error) {
+  //       console.log("Error while getting push token:", error);
+  //     }
+  //   } else {
+  //     console.log("Push notifications are not supported on this platform.");
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   const getToken = async () => {
+  //     const token = await AsyncStorage.getItem("expoPushToken");
+  //     console.log("Token retrieved from AsyncStorage after registration:", token);
+  //   };
+
+  //   getToken();
+  // }, []);
+
+  // useEffect(() => {
+  //   registerForPushNotificationsAsync();
+  // }, []);
 
   useEffect(() => {
     const checkLoginState = async () => {
@@ -179,10 +246,8 @@ const App = () => {
             <Stack.Screen name="NotificationsScreenSP" component={NotificationsScreenSP} />
             <Stack.Screen name="ProfileShipper" component={ProfileShipper} />
 
-
             <Stack.Screen name="RatingScreen" component={RatingScreen} />
             <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
-
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>

@@ -4,7 +4,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { globalContext } from "../../context/globalContext";
-import { api, typeHTTP } from "../../utils/api"; // Import API module
+import { api, typeHTTP } from "../../utils/api"; 
 
 const { width, height } = Dimensions.get("window");
 
@@ -16,6 +16,21 @@ export default function Login() {
   const { globalHandler } = useContext(globalContext);
   const navigation = useNavigation();
   const [appState, setAppState] = useState(AppState.currentState); // Theo dõi trạng thái ứng dụng
+  // const [expoPushToken, setExpoPushToken] = useState("");
+
+  // useEffect(() => {
+  //   const loadExpoPushToken = async () => {
+  //     const token = await AsyncStorage.getItem("expoPushToken");
+  //     if (token) {
+  //       setExpoPushToken(token);
+  //     } else {
+  //       await registerForPushNotificationsAsync();
+  //       const newToken = await AsyncStorage.getItem("expoPushToken");
+  //       setExpoPushToken(newToken);
+  //     }
+  //   };
+  //   loadExpoPushToken();
+  // }, []);
 
   // Tải thông tin tài khoản và mật khẩu từ AsyncStorage khi vào trang login
   useEffect(() => {
@@ -139,7 +154,6 @@ export default function Login() {
       Alert.alert("Lỗi", errorMessage);
     }
   };
-
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
