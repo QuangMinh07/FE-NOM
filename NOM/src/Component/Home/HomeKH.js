@@ -285,7 +285,7 @@ const HomeKH = () => {
 
         {/* Icons */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity style={{ marginRight: 15 }} onPress={() => navigation.navigate("Shopping")}>
+          <TouchableOpacity style={{ marginRight: 15 }} onPress={() => navigation.navigate("ShoppingAll")}>
             <Ionicons name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
 
