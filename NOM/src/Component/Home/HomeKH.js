@@ -314,7 +314,9 @@ const HomeKH = () => {
       <View style={{ marginTop: 20 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10 }}>
           {categories.map((category) => (
-            <TouchableOpacity key={category.id} style={{ alignItems: "center", marginHorizontal: 15 }}>
+            <TouchableOpacity
+            onPress={()=>{navigation.navigate("SearchByGroup")}}
+            key={category.id} style={{ alignItems: "center", marginHorizontal: 15 }}>
               <Image source={category.image} style={{ width: 50, height: 50, borderRadius: 25 }} />
               <Text style={{ marginTop: 10, fontWeight: "bold" }}>{category.name}</Text>
             </TouchableOpacity>

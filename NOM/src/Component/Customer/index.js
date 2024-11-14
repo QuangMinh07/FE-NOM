@@ -6,6 +6,8 @@ import Select from "./Select";
 import Orderfood from "./Orderfood";
 import ReviewFood from "./ReviewFood";
 import OrderingProcess from "./OrderingProcess";
+import SearchByGroup from "./SearchByGroup";
+import ShoppingAll from "./ShoppingAll";
 
 
-export { Seach, StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood,OrderingProcess}
+export { Seach, StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood,OrderingProcess,SearchByGroup,ShoppingAll}
