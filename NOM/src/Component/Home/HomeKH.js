@@ -315,8 +315,13 @@ const HomeKH = () => {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10 }}>
           {categories.map((category) => (
             <TouchableOpacity
-            onPress={()=>{navigation.navigate("SearchByGroup")}}
-            key={category.id} style={{ alignItems: "center", marginHorizontal: 15 }}>
+              onPress={() => {
+                console.log("Navigating to SearchByGroup with foodType:", category.name); // Log `foodType`
+                navigation.navigate("SearchByGroup", { foodType: category.name }); // Truyền `foodType`
+              }}
+              key={category.id}
+              style={{ alignItems: "center", marginHorizontal: 15 }}
+            >
               <Image source={category.image} style={{ width: 50, height: 50, borderRadius: 25 }} />
               <Text style={{ marginTop: 10, fontWeight: "bold" }}>{category.name}</Text>
             </TouchableOpacity>
