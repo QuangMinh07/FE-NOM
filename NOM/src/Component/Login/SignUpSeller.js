@@ -47,9 +47,7 @@ export default function SignUpSeller() {
     { id: "3", label: "Đồ uống" },
     { id: "4", label: "Tráng miệng" },
     { id: "5", label: "Món chay" },
-    { id: "6", label: "Ăn vặt" },
-    { id: "7", label: "Combo" },
-    { id: "8", label: "Khác" },
+    { id: "6", label: "Combo" },
   ];
 
   // Hàm chọn loại hình kinh doanh và đóng Modal

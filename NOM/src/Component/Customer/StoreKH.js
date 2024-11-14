@@ -26,13 +26,7 @@ export default function StoreKH() {
   const [groupedFoods, setGroupedFoods] = useState({});
   const [firstGroup, setFirstGroup] = useState(null);
   const [remainingGroups, setRemainingGroups] = useState([]);
-  const reviews = [
-    { id: 1, name: "Mỹ Duyên", rating: 5, comment: "Lần sau đừng bỏ tỏi phi, nó đắng..." },
-    { id: 2, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
-    { id: 3, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
-    { id: 4, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
-    // Add more reviews as needed
-  ];
+  const [reviews, setReviews] = useState([]); // State to store reviews
 
   // Cập nhật groupedFoods và phân chia các nhóm
   useEffect(() => {
@@ -49,7 +43,7 @@ export default function StoreKH() {
   // Kiểm tra xem highlightedFoodId có thuộc firstGroup hay không và cập nhật state
   useEffect(() => {
     if (highlightedFoodId && groupedFoods && firstGroup) {
-      const isFirstGroupItem = groupedFoods[firstGroup]?.some(food => food._id === highlightedFoodId);
+      const isFirstGroupItem = groupedFoods[firstGroup]?.some((food) => food._id === highlightedFoodId);
       setIsHighlightedInFirstGroup(isFirstGroupItem);
     }
   }, [highlightedFoodId, groupedFoods, firstGroup]);
@@ -58,7 +52,7 @@ export default function StoreKH() {
   useFocusEffect(
     React.useCallback(() => {
       if (!loading && highlightedFoodId && firstGroup && isScrollViewReady && isHighlightedInFirstGroup) {
-        const foodIndex = groupedFoods[firstGroup].findIndex(food => food._id === highlightedFoodId);
+        const foodIndex = groupedFoods[firstGroup].findIndex((food) => food._id === highlightedFoodId);
         if (foodIndex !== -1) {
           const scrollPosition = foodIndex * (width * 0.55 + 15);
           setTimeout(() => {
@@ -183,8 +177,8 @@ export default function StoreKH() {
     }
   }, [storeId]);
 
-  // Hàm lấy số lượng đánh giá của cửa hàng
-  const fetchReviewCount = async () => {
+  // Hàm lấy số lượng và danh sách đánh giá của cửa hàng
+  const fetchReviewsAndCount = async () => {
     try {
       const reviewResponse = await api({
         method: typeHTTP.GET,
@@ -192,16 +186,19 @@ export default function StoreKH() {
         sendToken: true,
       });
 
-      setReviewCount(reviewResponse.reviews.length); // Cập nhật số lượng đánh giá
+      // Cập nhật số lượng đánh giá và danh sách đánh giá
+      setReviewCount(reviewResponse.reviews.length); // Lấy tổng số đánh giá
+      setReviews(reviewResponse.reviews); // Lưu danh sách đánh giá để hiển thị
     } catch (err) {
-      console.error("Error fetching review count:", err);
+      console.error("Error fetching reviews:", err);
       setReviewCount(0);
+      setReviews([]); // Nếu lỗi, đặt danh sách đánh giá rỗng
     }
   };
 
   // Gọi hàm fetch dữ liệu khi component mount
   useEffect(() => {
-    fetchReviewCount();
+    fetchReviewsAndCount();
   }, [storeId]);
 
   if (loading) {
@@ -397,12 +394,16 @@ export default function StoreKH() {
         {firstGroup && (
           <View style={{ paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} ref={(ref) => {
-              scrollViewRef.current = ref;
-              if (ref && !isScrollViewReady) {
-                setIsScrollViewReady(true); // Đánh dấu rằng ScrollView đã sẵn sàng
-              }
-            }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              ref={(ref) => {
+                scrollViewRef.current = ref;
+                if (ref && !isScrollViewReady) {
+                  setIsScrollViewReady(true); // Đánh dấu rằng ScrollView đã sẵn sàng
+                }
+              }}
+            >
               {groupedFoods[firstGroup].map((food) => (
                 <TouchableOpacity
                   key={food._id}
@@ -462,7 +463,6 @@ export default function StoreKH() {
             paddingHorizontal: 15,
             marginTop: 20,
             paddingVertical: 20,
-           
           }}
         >
           {/* Title and "See More" Arrow Button */}
@@ -495,26 +495,19 @@ export default function StoreKH() {
                 <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
                   <Icon name="star" size={14} color="#FFD700" />
                   <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>{review.rating}</Text>
-                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>• {review.name}</Text>
+                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>• {review.user?.fullName}</Text>
                 </View>
 
                 {/* Decorative Chat Icon in the Bottom-Right Corner */}
-                <Icon
-                  name="chat-bubble-outline"
-                  size={40}
-                  color="rgba(229, 57, 53, 0.2)"
-                  style={{ position: "absolute", bottom: 10, right: 10 }}
-                />
+                <Icon name="chat-bubble-outline" size={40} color="rgba(229, 57, 53, 0.2)" style={{ position: "absolute", bottom: 10, right: 10 }} />
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
         {remainingGroups.map((group) => (
-          <ScrollView key={group} style={{ marginTop: 20, paddingHorizontal: 15 }} >
+          <ScrollView key={group} style={{ marginTop: 20, paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView showsVerticalScrollIndicator={false}>
               {groupedFoods[group].map((food) => (
                 <TouchableOpacity
                   key={food._id} // Sử dụng id chính xác cho key
