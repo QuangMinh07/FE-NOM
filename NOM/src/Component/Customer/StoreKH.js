@@ -26,6 +26,13 @@ export default function StoreKH() {
   const [groupedFoods, setGroupedFoods] = useState({});
   const [firstGroup, setFirstGroup] = useState(null);
   const [remainingGroups, setRemainingGroups] = useState([]);
+  const reviews = [
+    { id: 1, name: "Mỹ Duyên", rating: 5, comment: "Lần sau đừng bỏ tỏi phi, nó đắng..." },
+    { id: 2, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
+    { id: 3, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
+    { id: 4, name: "Huyền Trang", rating: 4, comment: "Hủ tiếu ngon, nhân viên nhiệt tình" },
+    // Add more reviews as needed
+  ];
 
   // Cập nhật groupedFoods và phân chia các nhóm
   useEffect(() => {
@@ -448,6 +455,60 @@ export default function StoreKH() {
           </View>
         )}
 
+        {/* Tất cả đánh giá (User Reviews) Section */}
+        <View
+          style={{
+            backgroundColor: "#E53935",
+            paddingHorizontal: 15,
+            marginTop: 20,
+            paddingVertical: 20,
+           
+          }}
+        >
+          {/* Title and "See More" Arrow Button */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff" }}>Tất cả đánh giá</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("CommentDetails")}>
+              <Icon name="arrow-forward" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {reviews.map((review) => (
+              <TouchableOpacity
+                key={review.id}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 10,
+                  padding: 15,
+                  marginRight: 15,
+                  width: 200,
+                  elevation: 3,
+                  shadowColor: "#000",
+                  shadowOpacity: 0.1,
+                  shadowRadius: 5,
+                  position: "relative",
+                }}
+                onPress={() => navigation.navigate("CommentDetails", { reviewId: review.id })} // Navigate to CommentDetails with reviewId
+              >
+                <Text style={{ fontSize: 14, color: "#333", marginBottom: 10 }}>{review.comment}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+                  <Icon name="star" size={14} color="#FFD700" />
+                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>{review.rating}</Text>
+                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>• {review.name}</Text>
+                </View>
+
+                {/* Decorative Chat Icon in the Bottom-Right Corner */}
+                <Icon
+                  name="chat-bubble-outline"
+                  size={40}
+                  color="rgba(229, 57, 53, 0.2)"
+                  style={{ position: "absolute", bottom: 10, right: 10 }}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
         {remainingGroups.map((group) => (
           <ScrollView key={group} style={{ marginTop: 20, paddingHorizontal: 15 }} >
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
