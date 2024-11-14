@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, Text, Dimensions, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { LineChart, BarChart } from "react-native-chart-kit";
+import { Picker } from '@react-native-picker/picker';
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
 
@@ -18,10 +19,12 @@ const DashboardScreen = () => {
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
+  
+  // Year filter state
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const { globalData } = useContext(globalContext);
 
-  // Hàm lấy dữ liệu từ API và xử lý dữ liệu
   const fetchOrdersData = async () => {
     const storeId = globalData.storeData?._id;
 
@@ -32,9 +35,8 @@ const DashboardScreen = () => {
         sendToken: true,
       });
 
-      // Kiểm tra nếu không có dữ liệu đơn hàng
       if (!response || !response.storeOrdersDetails) {
-        console.error("Không có dữ liệu đơn hàng.");
+        console.error("No order data found.");
         setLoading(false);
         return;
       }
@@ -43,19 +45,20 @@ const DashboardScreen = () => {
       const revenueByMonth = Array(12).fill(0);
       const ordersCountByMonth = Array(12).fill(0);
 
-      // Xử lý dữ liệu để tính tổng doanh thu và số đơn hàng theo tháng
       let totalRevenueSum = 0;
       let totalOrderCount = 0;
 
       orders.forEach((order) => {
-        const month = new Date(order.orderDate).getMonth(); // Lấy tháng từ ngày tạo đơn hàng
-        revenueByMonth[month] += order.totalAmount;
-        ordersCountByMonth[month] += 1;
-        totalRevenueSum += order.totalAmount;
-        totalOrderCount += 1;
+        const orderDate = new Date(order.orderDate);
+        if (orderDate.getFullYear() === selectedYear) {
+          const month = orderDate.getMonth();
+          revenueByMonth[month] += order.totalAmount;
+          ordersCountByMonth[month] += 1;
+          totalRevenueSum += order.totalAmount;
+          totalOrderCount += 1;
+        }
       });
 
-      // Cập nhật dữ liệu biểu đồ và tổng số
       setRevenueData({
         labels: ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"],
         datasets: [{ data: revenueByMonth }],
@@ -68,27 +71,24 @@ const DashboardScreen = () => {
       setTotalOrders(totalOrderCount);
       setLoading(false);
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu đơn hàng:", error);
+      console.error("Error fetching order data:", error);
       setLoading(false);
     }
   };
 
-  // Gọi API khi component mount
   useEffect(() => {
     fetchOrdersData();
-  }, []);
+  }, [selectedYear]);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#E53935" style={{ flex: 1, justifyContent: "center", alignItems: "center" }} />;
+    return <ActivityIndicator size="large" color="#E53935" style={styles.loadingIndicator} />;
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
       <Text style={styles.title}>Dashboard</Text>
       <Text style={styles.subtitle}>Bảng Điều Khiển Doanh Thu</Text>
 
-      {/* Summary Cards */}
       <View style={styles.summaryContainer}>
         <View style={[styles.summaryCard, { backgroundColor: "#E53935" }]}>
           <Text style={styles.cardTitle}>Tổng Doanh Thu</Text>
@@ -100,46 +100,74 @@ const DashboardScreen = () => {
         </View>
       </View>
 
-      {/* Line Chart for Monthly Revenue */}
+
+      import { Picker } from '@react-native-picker/picker';
+
+{/* Year Filter */}
+<View style={styles.filterContainer}>
+  <Text style={styles.filterLabel}>Chọn Năm:</Text>
+  <View style={styles.pickerWrapper}>
+    <Picker
+      selectedValue={selectedYear}
+      style={styles.picker}
+      onValueChange={(itemValue) => setSelectedYear(itemValue)}
+    >
+      {[2024, 2025, 2026].map((year) => (
+        <Picker.Item key={year} label={`${year}`} value={year} />
+      ))}
+    </Picker>
+  </View>
+</View>
+
+
+
+
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Doanh Thu Hàng Tháng</Text>
-        <LineChart
-          data={revenueData}
-          width={screenWidth - 40}
-          height={220}
-          chartConfig={{
-            backgroundColor: "#FFFFFF",
-            backgroundGradientFrom: "#FFF",
-            backgroundGradientTo: "#FFF",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(229, 57, 53, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          style={styles.chart}
-          onDataPointClick={(data) => {
-            // Hiển thị Alert với giá trị cụ thể của điểm nhấn
-            Alert.alert("Doanh Thu Tháng " + (data.index + 1), `${data.value.toLocaleString("vi-VN")} VND`);
-          }}
-        />
+        <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
+          <LineChart
+            data={revenueData}
+            width={Math.max(screenWidth, revenueData.labels.length * 50)}
+            height={220}
+            chartConfig={{
+              backgroundColor: "#FFFFFF",
+              backgroundGradientFrom: "#FFF",
+              backgroundGradientTo: "#FFF",
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(229, 57, 53, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              formatYLabel: (yValue) => Math.round(yValue / 100) * 100,
+            }}
+            style={styles.chart}
+            onDataPointClick={(data) => {
+              Alert.alert(
+                "Doanh Thu Tháng " + (data.index + 1),
+                `${data.value.toLocaleString("vi-VN")} VND`
+              );
+            }}
+          />
+        </ScrollView>
       </View>
 
-      {/* Bar Chart for Monthly Orders */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Số Đơn Hàng Hàng Tháng</Text>
-        <BarChart
-          data={ordersData}
-          width={screenWidth - 40}
-          height={220}
-          chartConfig={{
-            backgroundColor: "#FFFFFF",
-            backgroundGradientFrom: "#FFF",
-            backgroundGradientTo: "#FFF",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(67, 160, 71, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          style={styles.chart}
-        />
+        <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
+          <BarChart
+            data={ordersData}
+            width={Math.max(screenWidth, ordersData.labels.length * 50)}
+            height={220}
+            chartConfig={{
+              backgroundColor: "#FFFFFF",
+              backgroundGradientFrom: "#FFF",
+              backgroundGradientTo: "#FFF",
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(67, 160, 71, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              formatYLabel: (yValue) => Math.round(yValue / 10) * 10,
+            }}
+            style={styles.chart}
+          />
+        </ScrollView>
       </View>
     </ScrollView>
   );
@@ -150,6 +178,11 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F5F5F5",
     flexGrow: 1,
+  },
+  loadingIndicator: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 28,
@@ -195,6 +228,36 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+  filterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    padding: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+    marginBottom: 20,
+  },
+  filterLabel: {
+    fontSize: 16,
+    color: "#333",
+    marginRight: 10,
+    fontWeight: "bold",
+  },
+  pickerWrapper: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  picker: {
+    height: 40,
+    color: "#333",
+  },
+
   chartContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
