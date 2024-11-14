@@ -98,7 +98,7 @@ const Seach = () => {
           style={{
             paddingHorizontal: width * 0.05,
             paddingTop: height * 0.02,
-            flexGrow: 1,
+            flexGrow: 12,
           }}
         >
           {storeList.map((store) => (

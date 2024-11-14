@@ -141,7 +141,7 @@ export default function ProfileScreen() {
                   navigation.navigate("Route");
                   break;
                 case "Ngân hàng liên kết":
-                  navigation.navigate("RatingScreen");
+                  navigation.navigate("SearchByGroup");
                   break;
                 case "Ngôn ngữ":
                   // navigation.navigate("InvoiceDetails");
