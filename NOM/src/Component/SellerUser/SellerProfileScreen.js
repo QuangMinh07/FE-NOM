@@ -104,7 +104,7 @@ export default function SellerProfileScreen() {
             }}
           >
             {userData ? userData.fullName || userData.userName : ""}
-            </Text>
+          </Text>
         </View>
 
         {/* Icon Cài đặt */}
@@ -114,50 +114,54 @@ export default function SellerProfileScreen() {
       </View>
 
       {/* Body */}
+      {/* Body */}
       <ScrollView contentContainerStyle={{ padding: width * 0.05 }}>
-        {["Thông tin cá nhân", "Chuyển đổi tài khoản", "Quản lý doanh thu", "Ngôn ngữ", "Nhận xét đánh giá"].map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={{
-              backgroundColor: "#fff",
-              padding: height * 0.02,
-              borderRadius: 15,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: height * 0.015,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onPress={() => {
-              switch (item) {
-                case "Thông tin cá nhân":
-                  navigation.navigate("InformationUser"); // Navigate to personal info screen
-                  break;
-                case "Chuyển đổi tài khoản":
-                  navigation.navigate("Route"); // Navigate to seller login/sign-up screen
-                  break;
-                case "Quản lý doanh thu":
-                  navigation.navigate("DashboardScreen"); // Navigate to linked bank screen
-                  break;
-                case "Ngôn ngữ":
-                  navigation.navigate("LanguageSettingsScreen"); // Navigate to language settings screen
-                  break;
-                case "Nhận xét đánh giá":
-                  navigation.navigate("ReviewsScreen"); // Navigate to reviews screen
-                  break;
-                default:
-                  console.log("No action assigned for this item");
-              }
-            }}
-          >
-            <Text style={{ fontSize: height * 0.02 }}>{item}</Text>
-            <Ionicons name="chevron-forward-outline" size={height * 0.03} color="#000" />
-          </TouchableOpacity>
-        ))}
+        {userData &&
+          ["Thông tin cá nhân", "Chuyển đổi tài khoản", "Quản lý doanh thu", "Ngôn ngữ", "Nhận xét đánh giá"].map((item, index) =>
+            item === "Chuyển đổi tài khoản" && (userData.roleId === "seller" || userData.roleId === "staff") ? null : (
+              <TouchableOpacity
+                key={index}
+                style={{
+                  backgroundColor: "#fff",
+                  padding: height * 0.02,
+                  borderRadius: 15,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: height * 0.015,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+                onPress={() => {
+                  switch (item) {
+                    case "Thông tin cá nhân":
+                      navigation.navigate("InformationUser");
+                      break;
+                    case "Chuyển đổi tài khoản":
+                      navigation.navigate("Route");
+                      break;
+                    case "Quản lý doanh thu":
+                      navigation.navigate("DashboardScreen");
+                      break;
+                    case "Ngôn ngữ":
+                      navigation.navigate("LanguageSettingsScreen");
+                      break;
+                    case "Nhận xét đánh giá":
+                      navigation.navigate("ReviewsScreen");
+                      break;
+                    default:
+                      console.log("No action assigned for this item");
+                  }
+                }}
+              >
+                <Text style={{ fontSize: height * 0.02 }}>{item}</Text>
+                <Ionicons name="chevron-forward-outline" size={height * 0.03} color="#000" />
+              </TouchableOpacity>
+            )
+          )}
       </ScrollView>
 
       {/* Modal Cài đặt */}

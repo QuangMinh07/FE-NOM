@@ -9,7 +9,7 @@ import { styles } from "./StyleHomeSeller"; // Import styles từ file mới
 
 export default function HomeSeller() {
   const [storeName, setStoreName] = useState("");
-  const [averageRating,setAverageRating] = useState("");
+  const [averageRating, setAverageRating] = useState("");
   const [storeAddress, setStoreAddress] = useState("");
   const [sellingTime, setSellingTime] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -358,7 +358,7 @@ export default function HomeSeller() {
               <Icon name="edit" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
-          <Pressable onPress={() => navigation.navigate("TimeClose")}>
+          <Pressable onPress={() => (canManageStaff ? navigation.navigate("TimeClose") : null)}>
             <Text style={styles.timeSectionText}>Thời gian mở cửa:</Text>
             <Text style={styles.timeSectionText}>{formatSellingTime()}</Text>
           </Pressable>

@@ -181,10 +181,9 @@ export default function ListFood({ navigation }) {
           sendToken: true,
         });
 
-        const updatedFoods = foods.filter((food) => food._id !== foodId);
-        await AsyncStorage.setItem("foods", JSON.stringify(updatedFoods));
-        globalHandler.setFoods(updatedFoods);
-        setFoodList(updatedFoods);
+        // Cập nhật foodList và loại bỏ món ăn vừa xóa
+        const updatedFoodList = foodList.filter((food) => food._id !== foodId);
+        setFoodList(updatedFoodList); // Cập nhật danh sách món ăn hiển thị
 
         Alert.alert("Xóa thành công", "Món ăn đã được xóa khỏi danh sách.", [{ text: "OK" }]);
         console.log("Đã xóa món ăn và cập nhật dữ liệu.");
@@ -193,7 +192,7 @@ export default function ListFood({ navigation }) {
         Alert.alert("Lỗi", "Không thể xóa món ăn. Vui lòng thử lại sau.");
       }
     },
-    [foods, globalHandler]
+    [foodList] // Theo dõi sự thay đổi của foodList
   );
 
   // Khi người dùng bấm vào món ăn

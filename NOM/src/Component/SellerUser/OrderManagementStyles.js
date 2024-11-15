@@ -65,7 +65,6 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   completedButton: {
-    backgroundColor: "#4CAF50", // Màu xanh để hiển thị hoàn thành
     borderRadius: 5,
     paddingVertical: 8,
     paddingHorizontal: 12,

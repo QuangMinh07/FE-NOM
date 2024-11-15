@@ -237,7 +237,18 @@ export default function OrderManagementScreen({ navigation }) {
     return historyOrders.map((order, index) => (
       <Swipeable key={index}>
         <View style={styles.container}>
-          <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+          {/* Hiển thị trạng thái "Đã hủy" */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: order.orderStatus === "Cancelled" ? "#E53935" : "#E53935" }, // Màu đỏ cho "Đã hủy", màu xanh cho "Đã giao"
+              ]}
+            >
+              {order.orderStatus === "Cancelled" ? "Đã hủy" : "Đã giao"}
+            </Text>
+          </View>
           <View style={styles.row}>
             <View style={styles.itemCountContainer}>
               <Text style={styles.itemCountText}>{index + 1}</Text>
@@ -258,20 +269,6 @@ export default function OrderManagementScreen({ navigation }) {
                   <Text style={styles.boldText}>{order.totalAmount.toLocaleString()} VND</Text>
                 </View>
               </View>
-            </View>
-          </View>
-
-          {/* Hiển thị trạng thái "Đã hủy" */}
-          <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
-            <View style={styles.completedButton}>
-              <Text
-                style={[
-                  styles.buttonText,
-                  { color: order.orderStatus === "Cancelled" ? "#E53935" : "#E53935" }, // Màu đỏ cho "Đã hủy", màu xanh cho "Đã giao"
-                ]}
-              >
-                {order.orderStatus === "Cancelled" ? "Đã hủy" : "Đã giao"}
-              </Text>
             </View>
           </View>
         </View>
