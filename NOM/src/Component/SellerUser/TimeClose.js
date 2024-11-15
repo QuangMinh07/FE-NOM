@@ -173,7 +173,13 @@ const TimeClose = () => {
         Alert.alert("Thất bại", response?.message || "Không thể thêm thời gian bán hàng.");
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Đã xảy ra lỗi khi thêm thời gian bán hàng.");
+      if (error.response && error.response.status === 403) {
+        // Lấy thông báo từ phản hồi API nếu có
+        const errorMessage = error.response.data?.message;
+        Alert.alert("Lỗi khi gọi API", errorMessage);
+      } else {
+        Alert.alert("Lỗi khi gọi API", error.message || "Đã xảy ra lỗi khi gọi API");
+      }
     }
   };
 

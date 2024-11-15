@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, Text, Dimensions, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { LineChart, BarChart } from "react-native-chart-kit";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
 
@@ -19,7 +19,7 @@ const DashboardScreen = () => {
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
-  
+
   // Year filter state
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -88,7 +88,6 @@ const DashboardScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Dashboard</Text>
       <Text style={styles.subtitle}>Bảng Điều Khiển Doanh Thu</Text>
-
       <View style={styles.summaryContainer}>
         <View style={[styles.summaryCard, { backgroundColor: "#E53935" }]}>
           <Text style={styles.cardTitle}>Tổng Doanh Thu</Text>
@@ -99,29 +98,17 @@ const DashboardScreen = () => {
           <Text style={styles.cardValue}>{totalOrders}</Text>
         </View>
       </View>
-
-
-      import { Picker } from '@react-native-picker/picker';
-
-{/* Year Filter */}
-<View style={styles.filterContainer}>
-  <Text style={styles.filterLabel}>Chọn Năm:</Text>
-  <View style={styles.pickerWrapper}>
-    <Picker
-      selectedValue={selectedYear}
-      style={styles.picker}
-      onValueChange={(itemValue) => setSelectedYear(itemValue)}
-    >
-      {[2024, 2025, 2026].map((year) => (
-        <Picker.Item key={year} label={`${year}`} value={year} />
-      ))}
-    </Picker>
-  </View>
-</View>
-
-
-
-
+      {/* Year Filter */}
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterLabel}>Chọn Năm:</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker selectedValue={selectedYear} style={styles.picker} onValueChange={(itemValue) => setSelectedYear(itemValue)}>
+            {[2024, 2025, 2026].map((year) => (
+              <Picker.Item key={year} label={`${year}`} value={year} />
+            ))}
+          </Picker>
+        </View>
+      </View>
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Doanh Thu Hàng Tháng</Text>
         <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
@@ -140,15 +127,11 @@ const DashboardScreen = () => {
             }}
             style={styles.chart}
             onDataPointClick={(data) => {
-              Alert.alert(
-                "Doanh Thu Tháng " + (data.index + 1),
-                `${data.value.toLocaleString("vi-VN")} VND`
-              );
+              Alert.alert("Doanh Thu Tháng " + (data.index + 1), `${data.value.toLocaleString("vi-VN")} VND`);
             }}
           />
         </ScrollView>
       </View>
-
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Số Đơn Hàng Hàng Tháng</Text>
         <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
