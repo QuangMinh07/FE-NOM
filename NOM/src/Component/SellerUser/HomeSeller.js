@@ -30,7 +30,8 @@ export default function HomeSeller() {
   // Lấy thông tin từ GlobalContext
   const { globalData, globalHandler } = useContext(globalContext);
 
-  const userRole = globalData.user?.role || "";
+  const userRole = globalData.user?.roleId || "";
+  
   const canManageStaff = userRole === "seller"; // chỉ người bán mới có thể quản lý nhân viên
 
   const fetchReviewCount = useCallback(async () => {
