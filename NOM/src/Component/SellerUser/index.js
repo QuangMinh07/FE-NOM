@@ -15,5 +15,6 @@ import SellerProfileScreen from "../SellerUser/SellerProfileScreen";
 import OrderManagementScreen from "../SellerUser/OrderManagementScreen";
 import ImagePickerScreen from "../SellerUser/ImagePickerScreen";
 import InvoiceDetails from "../SellerUser/InvoiceDetails";
+import Offers from "../SellerUser/Offers";
 
-export { OrderManagementScreen, SellerProfileScreen, ChatSellerScreen, LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell, DishDetails, ImagePickerScreen,InvoiceDetails };
+export { OrderManagementScreen,Offers, SellerProfileScreen, ChatSellerScreen, LoginSeller, TermsDetails, HomeSeller, Comment, UpdateHome, ListFood, TimeClose, Staff, AddDishGroup, AddEat, TimeScheduleSell, DishDetails, ImagePickerScreen,InvoiceDetails };

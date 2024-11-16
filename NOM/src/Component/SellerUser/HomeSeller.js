@@ -6,6 +6,7 @@ import { api, typeHTTP } from "../../utils/api"; // Import API module
 import { globalContext } from "../../context/globalContext";
 import ImagePickerScreen from "../SellerUser/ImagePickerScreen"; // Import ImageUploader
 import { styles } from "./StyleHomeSeller"; // Import styles từ file mới
+import Ionicons from "react-native-vector-icons/Ionicons"; // Đảm bảo bạn đã nhập chính xác
 
 export default function HomeSeller() {
   const [storeName, setStoreName] = useState("");
@@ -114,7 +115,7 @@ export default function HomeSeller() {
         setDeliveredOrdersDetails(response.deliveredOrdersDetails);
         setTotalRevenue(response.totalRevenue);
       }
-    } catch (error) {}
+    } catch (error) { }
   }, [globalData.storeData?._id]);
 
   // Dùng useFocusEffect để gọi fetchDeliveredOrdersAndRevenue khi màn hình focus
@@ -391,18 +392,49 @@ export default function HomeSeller() {
           <Text style={styles.revenueTitle}>Tổng Doanh Thu</Text>
           <Text style={styles.revenueAmount}>{totalRevenue > 0 ? `${totalRevenue.toLocaleString("vi-VN").replace(/\./g, ",")} VND` : "Không có doanh thu"}</Text>
         </View>
+        <ScrollView
+  horizontal={true}
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={{
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    paddingHorizontal: 10,
+  }}
+  style={{
+    marginTop: 10,
+  }}
+>
+  {/* Nút Thực đơn */}
+  <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={styles.actionButton}>
+    <Ionicons name="restaurant" size={24} color="#fff" style={{ marginRight: 8 }} />
+    <Text style={styles.actionButtonText}>Thực đơn</Text>
+  </TouchableOpacity>
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>Thực đơn</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>Phản hồi</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => (canManageStaff ? navigation.navigate("Staff") : null)} style={[styles.actionButton, !canManageStaff && { backgroundColor: "#d3d3d3" }]} disabled={!canManageStaff}>
-            <Text style={styles.actionButtonText}>Nhân viên</Text>
-          </TouchableOpacity>
-        </View>
+  {/* Nút Phản hồi */}
+  <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
+    <Ionicons name="chatbubbles" size={24} color="#fff" style={{ marginRight: 8 }} />
+    <Text style={styles.actionButtonText}>Phản hồi</Text>
+  </TouchableOpacity>
+
+  {/* Nút Nhân viên */}
+  <TouchableOpacity
+    onPress={() => (canManageStaff ? navigation.navigate("Staff") : null)}
+    style={[styles.actionButton, !canManageStaff && { backgroundColor: "#d3d3d3" }]}
+    disabled={!canManageStaff}
+  >
+    <Ionicons name="people" size={24} color="#fff" style={{ marginRight: 8 }} />
+    <Text style={styles.actionButtonText}>Nhân viên</Text>
+  </TouchableOpacity>
+
+  {/* Nút Ưu đãi */}
+  <TouchableOpacity onPress={() => navigation.navigate("Offers")} style={styles.actionButton}>
+    <Ionicons name="pricetags" size={24} color="#fff" style={{ marginRight: 8 }} />
+    <Text style={styles.actionButtonText}>Giảm giá</Text>
+  </TouchableOpacity>
+</ScrollView>
+
+
+
       </View>
 
       {/* Kiểm tra nếu không có món ăn */}
