@@ -15,7 +15,7 @@ import { RatingScreen } from "./src/Component/Rating";
 import { DashboardScreen } from "./src/Component/Dashboard";
 
 import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails} from "./src/Component/Customer";
-import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails } from "./src/Component/SellerUser";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails,Offers } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
 import { api, typeHTTP } from "./src/utils/api";
@@ -199,6 +199,8 @@ const App = () => {
             <Stack.Screen name="HomeKH" component={CustomerTabs} />
             {/* Điều hướng cho SellerTabs */}
             <Stack.Screen name="HomeSeller" component={SellerTabs} />
+            <Stack.Screen name="Offers" component={Offers} />
+
             <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
             <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
             <Stack.Screen name="UpdateAccount" component={UpdateAccount} />

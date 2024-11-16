@@ -7,12 +7,15 @@ import { globalContext } from "../../context/globalContext"; // Đảm bảo imp
 import { api, typeHTTP } from "../../utils/api"; // Đảm bảo import đúng API
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import Icon from 'react-native-vector-icons/MaterialIcons'; // or any other icon set
 
 export default function ListFood({ navigation }) {
   const { globalData, globalHandler } = useContext(globalContext); // Truy cập globalData từ GlobalContext
   const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const [foodList, setFoodList] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]); // Track selected items for combo
+
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
@@ -22,6 +25,98 @@ export default function ListFood({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("Món");
   const [modalVisible, setModalVisible] = useState(false); // State cho modal thêm nhóm món
   const [groupName, setGroupName] = useState(""); // State cho nhóm món mới
+  const [selectedDishes, setSelectedDishes] = useState([]);
+  const [isSelectingGroups, setIsSelectingGroups] = useState(false); // Trạng thái đang chọn nhóm
+  const [currentGroup, setCurrentGroup] = useState(null); // Nhóm món được nhấn `link`
+  const [selectedGroups, setSelectedGroups] = useState([]); // Danh sách nhóm đã chọn
+  const [groupedNames, setGroupedNames] = useState([]); // Danh sách nhóm đã gộp
+
+  // Khi nhấn vào `link` của một nhóm
+  const handleLinkClick = (groupId) => {
+    if (isSelectingGroups && currentGroup === groupId) {
+      // Nếu đang trong chế độ chọn và nhấn lại vào nhóm hiện tại
+      setIsSelectingGroups(false); // Tắt chế độ chọn
+      setCurrentGroup(null);
+      setSelectedGroups([]);
+    } else {
+      // Bật chế độ chọn cho nhóm
+      setIsSelectingGroups(true);
+      setCurrentGroup(groupId);
+
+      // Nếu nhóm đã gộp trước đó, tự động thêm các nhóm đã gộp vào checkbox
+      const preSelectedGroups = groupedNames[groupId]?.combined
+        ? foodGroups
+          .filter((group) => groupedNames[groupId].combined.split(" + ").includes(group.groupName))
+          .map((group) => group._id)
+        : [];
+      setSelectedGroups([groupId, ...preSelectedGroups]);
+    }
+  };
+
+  // Khi chọn/deselect checkbox
+  const handleGroupSelection = (groupId) => {
+    if (selectedGroups.includes(groupId)) {
+      setSelectedGroups(selectedGroups.filter((id) => id !== groupId));
+    } else {
+      setSelectedGroups([...selectedGroups, groupId]);
+    }
+  };
+  const handleConfirmGroups = () => {
+    if (selectedGroups.length === 1) {
+      // Nếu chỉ còn lại nhóm gốc, xóa gộp
+      setGroupedNames((prev) => {
+        const newGroupedNames = { ...prev };
+        delete newGroupedNames[currentGroup];
+        return newGroupedNames;
+      });
+    } else {
+      // Cập nhật nhóm gộp
+      const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
+      const selectedNames = foodGroups
+        .filter((group) => selectedGroups.includes(group._id))
+        .map((group) => group.groupName);
+
+      // Lưu lại tên gốc + các nhóm được chọn
+      setGroupedNames((prev) => ({
+        ...prev,
+        [currentGroup]: {
+          original: currentGroupName,
+          combined: selectedNames.filter((name) => name !== currentGroupName).join(" + "),
+        },
+      }));
+
+
+      // Reset trạng thái chọn
+      setIsSelectingGroups(false);
+      setCurrentGroup(null);
+      setSelectedGroups([]);
+    }
+
+    // Lấy nhóm hiện tại và các nhóm đã chọn
+    const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
+    const selectedNames = foodGroups
+      .filter((group) => selectedGroups.includes(group._id))
+      .map((group) => group.groupName);
+
+    // Tạo chuỗi tên gốc + nhóm mới (chỉ các nhóm được chọn, trừ nhóm hiện tại)
+    const newGroupName = `${currentGroupName} + ${selectedNames
+      .filter((name) => name !== currentGroupName)
+      .join(" + ")}`;
+
+    // Cập nhật tên nhóm đã gộp
+    setGroupedNames((prev) => ({
+      ...prev,
+      [currentGroup]: {
+        original: currentGroupName,
+        combined: selectedNames.filter((name) => name !== currentGroupName).join(" + "),
+      },
+    }));
+
+    // Reset trạng thái chọn nhóm
+    setIsSelectingGroups(false);
+    setCurrentGroup(null);
+    setSelectedGroups([]);
+  };
 
   const handleAddFoodGroup = async () => {
     const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
@@ -274,53 +369,120 @@ export default function ListFood({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
-      {/* Kiểm tra nếu không có món ăn */}
-      {selectedTab === "Món" &&
-        (foodList.length === 0 ? (
-          <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
-            <Text style={{ fontSize: 18, color: "#999" }}>Không có món ăn nào</Text>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={{ padding: 15 }}>
-            {Object.keys(groupedFoods).map((groupName) => (
-              <View key={groupName} style={{ marginBottom: 20 }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
-                </View>
-                {groupedFoods[groupName].map((item, index) => (
-                  <Swipeable key={index} renderLeftActions={() => renderLeftActions(item._id)}>
-                    <TouchableOpacity
-                      onPress={() => handleDishClick(item._id)} // Gọi hàm khi nhấn vào món ăn
-                      style={styles.foodItem}
-                    >
-                      <View>
-                        <Text style={styles.foodName}>{item.foodName}</Text>
-                        <Text style={styles.foodPrice}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </Swipeable>
+
+      <View style={{ flex: 1 }}>
+        {/* Nội dung tab "Món" */}
+        {selectedTab === "Món" && (
+          <View style={{ flex: 1 }}>
+            {foodList.length === 0 ? (
+              <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+                <Text style={{ fontSize: 18, color: "#999" }}>Không có món ăn nào</Text>
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={{ padding: 15 }}>
+                {Object.keys(groupedFoods).map((groupName) => (
+                  <View key={groupName} style={{ marginBottom: 20 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+                      <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupName}</Text>
+                    </View>
+                    {groupedFoods[groupName].map((item, index) => (
+                      <Swipeable key={index} renderLeftActions={() => renderLeftActions(item._id)}>
+                        <TouchableOpacity
+                          onPress={() => handleDishClick(item._id)}
+                          style={styles.foodItem}
+                        >
+                          <View>
+                            <Text style={styles.foodName}>{item.foodName}</Text>
+                            <Text style={styles.foodPrice}>
+                              {item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      </Swipeable>
+                    ))}
+                  </View>
                 ))}
-              </View>
-            ))}
-          </ScrollView>
-        ))}
-      {/* Tab nhóm món */}
-      {selectedTab === "Nhóm món" &&
-        (foodGroups.length === 0 ? (
-          <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
-            <Text style={{ fontSize: 18, color: "#999" }}>Không có nhóm món nào</Text>
+              </ScrollView>
+            )}
           </View>
-        ) : (
-          <ScrollView contentContainerStyle={{ padding: 15 }}>
-            {foodGroups.map((group, index) => (
-              <View key={index} style={{ marginBottom: 20 }}>
-                <View style={styles.foodItem}>
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{group.groupName}</Text>
+        )}
+
+        {/* Nội dung tab "Nhóm món" */}
+        {selectedTab === "Nhóm món" && (
+          <View style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ padding: 15 }}>
+              {foodGroups.map((group, index) => (
+                <View key={index} style={{ marginBottom: 20 }}>
+                  <View style={styles.foodItem}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      {isSelectingGroups && currentGroup !== group._id && (
+                        <TouchableOpacity
+                          onPress={() => handleGroupSelection(group._id)}
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: 3,
+                            borderWidth: 1,
+                            borderColor: "#E53935",
+                            backgroundColor: selectedGroups.includes(group._id) ? "#E53935" : "#fff",
+                            marginRight: 10,
+                          }}
+                        />
+                      )}
+                      <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>
+                        {groupedNames[group._id]?.original || group.groupName}
+                      </Text>
+                      {groupedNames[group._id]?.combined && (
+                        <Text style={{ fontSize: 16, color: "#6B7280", marginLeft: 5 }}>
+                          + {groupedNames[group._id].combined}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity onPress={() => handleLinkClick(group._id)}>
+                      <Icon name="link" size={24} color="#E53935" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </ScrollView>
-        ))}
+              ))}
+
+              {isSelectingGroups && (
+                <View style={{ marginTop: 20, flexDirection: "row", justifyContent: "space-around" }}>
+                  <TouchableOpacity
+                    onPress={handleConfirmGroups}
+                    style={{
+                      backgroundColor: "#E53935",
+                      padding: 10,
+                      borderRadius: 10,
+                      width: "40%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "bold" }}>Xác nhận</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsSelectingGroups(false);
+                      setCurrentGroup(null);
+                      setSelectedGroups([]);
+                    }}
+                    style={{
+                      backgroundColor: "#ccc",
+                      padding: 10,
+                      borderRadius: 10,
+                      width: "40%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: "#333", fontWeight: "bold" }}>Hủy</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
+
 
       {/* Modal for adding new group */}
       <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>

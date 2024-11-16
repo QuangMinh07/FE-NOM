@@ -107,20 +107,27 @@ export const styles = StyleSheet.create({
     color: "#999999",
   },
   buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
+    marginTop: 10, // Khoảng cách phía trên
   },
   actionButton: {
-    backgroundColor: "#E53935",
-    padding: 20,
-    borderRadius: 10,
-    flex: 1,
-    alignItems: "center",
-    marginRight: 10,
+    backgroundColor: "#E53935", // Màu nền nút
+    flexDirection: "row", // Căn ngang icon và text
+    alignItems: "center", // Căn giữa nội dung theo chiều dọc
+    justifyContent: "center", // Căn giữa theo chiều ngang
+    paddingVertical: 15, // Tăng kích thước chiều cao nút
+    paddingHorizontal: 20, // Tăng kích thước chiều rộng nút
+    borderRadius: 10, // Bo góc nút mềm mại
+    marginHorizontal: 8, // Khoảng cách giữa các nút
+    elevation: 3, // Bóng cho Android
+    shadowColor: "#000", // Bóng cho iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   actionButtonText: {
-    color: "#fff",
+    color: "#fff", // Màu chữ
+    fontWeight: "bold", // Đậm chữ
+    fontSize: 16, // Kích thước chữ
   },
   // Styles cho "Món bán chạy"
   bestSellerContainer: {
