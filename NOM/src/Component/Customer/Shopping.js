@@ -1,10 +1,11 @@
 import React, { useState, useContext, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Switch } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import { globalContext } from "../../context/globalContext";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable component
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 // Import styles
 import { styles } from "./StyleShopping";
@@ -20,7 +21,65 @@ export default function Shopping({ route }) {
   const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
   const [error, setError] = useState(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [userProfile, setUserProfile] = useState(null); // State lưu thông tin người dùng
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false); // State quản lý trạng thái bật/tắt
+  const [totalAmount, setTotalAmount] = useState(0);
   const storeId = route.params?.storeId;
+  const foodId = route.params?.foodId;
+
+  const updateCartItemOnServer = async (userId, foodId, quantity) => {
+    if (!userId || !foodId || quantity <= 0) {
+      console.error("Invalid parameters for updateCartItemOnServer:", { userId, foodId, quantity });
+      return;
+    }
+
+    try {
+      console.log("Updating cart item on server:", { userId, foodId, quantity });
+
+      const response = await api({
+        method: typeHTTP.PUT,
+        url: `/cart/update-item/${userId}/${foodId}`,
+        body: { quantity },
+        sendToken: true,
+      });
+
+      console.log("API Response:", response);
+
+      if (response.message) {
+        console.log("Cập nhật món ăn thành công:", response.message);
+      } else {
+        console.error("Không thể cập nhật món ăn:", response.error);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật món ăn trên server:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setTotalAmount(calculateTotal()); // Gọi calculateTotal để tính lại
+    }, [orderItems, useLoyaltyPoints, userProfile])
+  );
+
+  // Hàm lấy thông tin người dùng từ API `getProfile`
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/user/profile`, // Gọi API getProfile
+        sendToken: true,
+      });
+
+      if (response.success) {
+        setUserProfile(response.user); // Lưu thông tin người dùng vào state
+        console.log("Thông tin người dùng:", response.user);
+      } else {
+        console.error("Không thể lấy thông tin người dùng.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin người dùng:", error);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -30,6 +89,7 @@ export default function Shopping({ route }) {
 
       if (userId && storeId) {
         // Kiểm tra xem storeId có tồn tại
+        fetchUserProfile();
         fetchStoreCartItems();
       } else {
         setError("Không tìm thấy người dùng hoặc cửa hàng.");
@@ -116,20 +176,69 @@ export default function Shopping({ route }) {
     }
   };
 
-  const increaseQuantity = (index) => {
-    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index ? { ...item, quantity: item.quantity + 1 } : item)));
+  const increaseQuantity = async (index) => {
+    setOrderItems((prevItems) => {
+      const updatedItems = [...prevItems];
+      const item = updatedItems[index];
+
+      console.log("Item being updated:", item); // Log dữ liệu của item
+
+      if (item.food && item.food._id) {
+        item.quantity += 1;
+        item.price = item.food.price * item.quantity; // Tính lại giá
+
+        // Gọi API cập nhật số lượng trên server
+        updateCartItemOnServer(userId, item.food._id, item.quantity); // Truyền đúng tham số
+
+        setTotalAmount(calculateTotal(updatedItems)); // Tính lại tổng tiền
+      } else {
+        console.error("Item does not have a valid food ID:", item);
+      }
+      return updatedItems;
+    });
   };
 
-  const decreaseQuantity = (index) => {
-    setOrderItems((prevItems) => prevItems.map((item, i) => (i === index && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item)));
+  const decreaseQuantity = async (index) => {
+    setOrderItems((prevItems) => {
+      const updatedItems = [...prevItems];
+      const item = updatedItems[index];
+
+      console.log("Item being updated:", item); // Log dữ liệu của item
+
+      if (item.food && item.food._id && item.quantity > 1) {
+        item.quantity -= 1;
+        item.price = item.food.price * item.quantity; // Tính lại giá
+
+        // Gọi API cập nhật số lượng trên server
+        updateCartItemOnServer(userId, item.food._id, item.quantity); // Truyền đúng tham số
+
+        setTotalAmount(calculateTotal(updatedItems)); // Tính lại tổng tiền
+      } else {
+        console.error("Item does not have a valid food ID or quantity <= 1:", item);
+      }
+      return updatedItems;
+    });
   };
 
-  const calculateTotal = () => {
-    const total = orderItems.reduce((accumulator, item) => {
-      return accumulator + item.price; // Không nhân với item.quantity vì item.price đã bao gồm giá trị này
-    }, 0);
-    console.log("Total calculated:", total); // Log để kiểm tra
-    return total;
+  const calculateTotal = useCallback(() => {
+    const total = Array.isArray(orderItems) ? orderItems.reduce((accumulator, item) => accumulator + item.price, 0) : 0;
+
+    let discount = 0;
+    if (useLoyaltyPoints && userProfile?.loyaltyPoints > 0) {
+      discount = Math.min(userProfile.loyaltyPoints, total);
+      console.log("Discount applied:", discount);
+    }
+
+    console.log("Total calculated:", total - discount);
+    return total - discount;
+  }, [orderItems, useLoyaltyPoints, userProfile]);
+
+  const toggleUseLoyaltyPoints = () => {
+    if (!useLoyaltyPoints && userProfile?.loyaltyPoints < 200) {
+      Alert.alert("Thông báo", "Bạn không đủ điểm để sử dụng tích lũy.");
+      return;
+    }
+    setUseLoyaltyPoints((prev) => !prev);
   };
 
   const handlePayment = async () => {
@@ -141,10 +250,12 @@ export default function Shopping({ route }) {
         Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
         return;
       }
+      console.log("Sending useLoyaltyPoints:", useLoyaltyPoints); // Log giá trị gửi đi
 
       const response = await api({
         method: typeHTTP.POST,
         url: `/storeOrder/create/${cartId}`, // Pass the correct cartId
+        body: { useLoyaltyPoints }, // Gửi trạng thái sử dụng điểm tích lũy
         sendToken: true,
       });
 
@@ -302,8 +413,22 @@ export default function Shopping({ route }) {
 
           <View style={styles.totalContainer}>
             <Text style={styles.totalAmountText}>Thành tiền</Text>
-            <Text style={styles.totalAmountText}>{calculateTotal().toLocaleString()} VND</Text>
+            <Text style={styles.totalAmountText}>{totalAmount.toLocaleString()} VND</Text>
           </View>
+          {userProfile && (
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 10 }}>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.totalBreakdownText}>Tích điểm:</Text>
+                <View style={{ paddingLeft: 5 }}>
+                  <FontAwesome6 name="coins" size={15} color="#FFC529" />
+                </View>
+                <Text style={{ fontSize: 14, color: "#666", paddingLeft: 5 }}>{userProfile.loyaltyPoints || "Không có tích điểm"}</Text>
+              </View>
+              <View style={{ flexDirection: "row" }}>
+                <Switch trackColor={{ false: "#ccc", true: "#E53935" }} thumbColor={useLoyaltyPoints ? "#fff" : "#fff"} value={useLoyaltyPoints} onValueChange={toggleUseLoyaltyPoints} />
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Payment Method Selection */}
@@ -322,7 +447,7 @@ export default function Shopping({ route }) {
               if (data.cart && data.cart.cartId) {
                 console.log("Navigating to Select screen with cartId:", data.cart.cartId, "and storeId:", storeId);
                 // Điều hướng tới trang Select với cartId và storeId
-                navigation.navigate("Select", { cartId: data.cart.cartId, storeId });
+                navigation.navigate("Select", { cartId: data.cart.cartId, storeId, useLoyaltyPoints });
               } else {
                 Alert.alert("Lỗi", "Giỏ hàng không tồn tại.");
               }

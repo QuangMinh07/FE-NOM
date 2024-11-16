@@ -313,13 +313,13 @@ const HomeKH = () => {
       {/* Categories */}
       <View style={{ marginTop: 20 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10 }}>
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <TouchableOpacity
               onPress={() => {
                 console.log("Navigating to SearchByGroup with foodType:", category.name); // Log `foodType`
                 navigation.navigate("SearchByGroup", { foodType: category.name }); // Truyền `foodType`
               }}
-              key={category.id}
+              key={category.id || index}
               style={{ alignItems: "center", marginHorizontal: 15 }}
             >
               <Image source={category.image} style={{ width: 50, height: 50, borderRadius: 25 }} />
@@ -334,8 +334,8 @@ const HomeKH = () => {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, marginTop: 10 }}>Kết quả tìm kiếm</Text>
             {searchResults?.stores?.length > 0 || searchResults?.foods?.length > 0 ? (
               <>
-                {searchResults.stores.map((store) => (
-                  <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                {searchResults.stores.map((store, index) => (
+                  <TouchableOpacity key={store._id || index} onPress={() => handleStorePress(store._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
                     <View style={{ flexDirection: "row" }}>
                       <View style={{ width: 80, height: 80, backgroundColor: store.imageURL ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{store.imageURL ? <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#888" }}>No Image</Text>}</View>
                       <View style={{ flex: 1, marginLeft: 10 }}>
@@ -346,8 +346,8 @@ const HomeKH = () => {
                     </View>
                   </TouchableOpacity>
                 ))}
-                {searchResults.foods.map((food) => (
-                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.store._id, food._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                {searchResults.foods.map((food, index) => (
+                  <TouchableOpacity key={food._id || index} onPress={() => handleStorePress(food.store._id, food._id)} style={{ marginBottom: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
                     <View style={{ flexDirection: "row" }}>
                       <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#888" }}>No Image</Text>}</View>
                       <View style={{ flex: 1, marginLeft: 10 }}>
@@ -368,8 +368,8 @@ const HomeKH = () => {
             {/* Banner List */}
             <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
-              {banners.map((banner) => (
-                <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
+              {banners.map((banner, index) => (
+                <TouchableOpacity key={banner.id || index} style={{ marginRight: 10 }}>
                   <Image
                     source={banner.image}
                     style={{
@@ -387,8 +387,8 @@ const HomeKH = () => {
             <View style={{ marginTop: 25, paddingHorizontal: 15 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 5 }}>Đề xuất</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 10 }}>
-                {topRatedStores.map((store) => (
-                  <TouchableOpacity key={store._id} onPress={() => handleStorePress(store._id)} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height: 200 }}>
+                {topRatedStores.map((store, index) => (
+                  <TouchableOpacity key={store._id || index} onPress={() => handleStorePress(store._id)} style={{ width: (width - 60) / 2, marginBottom: 15, backgroundColor: "#fff", borderRadius: 15, overflow: "hidden", elevation: 3, height: 200 }}>
                     {/* Image and Heart Icon */}
                     <View style={{ position: "relative", backgroundColor: store.imageUrl ? "transparent" : "#D3D3D3", borderTopLeftRadius: 15, borderTopRightRadius: 15, overflow: "hidden" }}>
                       {store.imageURL ? (
@@ -423,8 +423,8 @@ const HomeKH = () => {
             <View style={{ marginTop: 25, backgroundColor: "#E53935", paddingVertical: 15 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15, color: "white" }}>Có thể bạn sẽ thích</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-                {popularStores.map((store) => (
-                  <View key={store.storeId} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                {popularStores.map((store, index) => (
+                  <View key={store.storeId || index} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
                     <View style={{ width: "100%", height: 100, backgroundColor: store.imageURL ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{store.imageURL ? <Image source={{ uri: store.imageURL }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh cửa hàng</Text>}</View>
                     <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{store.storeName}</Text>
                   </View>
@@ -435,8 +435,8 @@ const HomeKH = () => {
             <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món ăn nổi bật</Text>
               <ScrollView style={{ marginTop: 10 }}>
-                {foodList1.map((food) => (
-                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+                {foodList1.map((food, index) => (
+                  <TouchableOpacity key={food._id || index} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
                     <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                     <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                       <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
@@ -453,8 +453,8 @@ const HomeKH = () => {
             <View style={{ marginTop: 25 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold", paddingLeft: 15 }}>Khám phá ngay</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-                {foodList.map((food) => (
-                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
+                {foodList.map((food, index) => (
+                  <TouchableOpacity key={food._id || index} onPress={() => handleStorePress(food.storeId, food._id)} style={{ width: width * 0.4, marginRight: 15, backgroundColor: "#fff", borderRadius: 10, padding: 10, elevation: 3 }}>
                     <View style={{ width: "100%", height: 100, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                     <Text style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
                     <Text style={{ fontSize: 14, color: "#888" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
@@ -465,8 +465,8 @@ const HomeKH = () => {
             {/* Banner List */}
             <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
-              {banners1.map((banner) => (
-                <TouchableOpacity key={banner.id} style={{ marginRight: 10 }}>
+              {banners1.map((banner, index) => (
+                <TouchableOpacity key={banner.id || index} style={{ marginRight: 10 }}>
                   <Image
                     source={banner.image}
                     style={{
@@ -483,8 +483,8 @@ const HomeKH = () => {
             <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
               <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món khác</Text>
               <ScrollView style={{ marginTop: 10 }}>
-                {foodList.map((food) => (
-                  <TouchableOpacity key={food._id} onPress={() => handleStorePress(food.storeId, food._id)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
+                {foodList.map((food, index) => (
+                  <TouchableOpacity key={food._id || index} onPress={() => handleStorePress(food.storeId, food._id)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
                     <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
                     <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                       <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
