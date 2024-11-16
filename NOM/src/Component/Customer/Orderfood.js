@@ -104,7 +104,7 @@ export default function Orderfood() {
           onPress={async () => {
             console.log("userId:", userId, "foodId:", foodId, "storeId:", storeId);
             await addToCart(userId, storeId);
-            navigation.navigate("Shopping", { storeId, userId });
+            navigation.navigate("Shopping", { storeId, userId, foodId });
           }}
         >
           <Ionicons name="cart-outline" size={24} color="#E53935" />

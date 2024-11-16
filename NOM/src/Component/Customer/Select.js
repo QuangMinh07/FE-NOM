@@ -14,10 +14,10 @@ export default function Select() {
   const route = useRoute(); // Lấy route để truy cập params
   const cartId = route.params?.cartId; // Lấy cartId từ params
   const storeId = route.params?.storeId;
+  const useLoyaltyPoints = route.params?.useLoyaltyPoints; // Nhận useLoyaltyPoints từ params
 
   console.log(cartId); // Kiểm tra giá trị cartId
   console.log(storeId); // Kiểm tra giá trị cartId
-  const { globalData } = useContext(globalContext); // Lấy globalData từ context
 
   // State để lưu thông tin thẻ và phương thức thanh toán
   const [cardNumber, setCardNumber] = useState("");
@@ -41,13 +41,12 @@ export default function Select() {
     if (!validatePaymentDetails()) return;
 
     try {
-      const transactionAmount = globalData.cart.totalPrice; // Lấy số tiền từ giỏ hàng
       const response = await api({
         method: typeHTTP.POST,
         url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`, // Sử dụng cartId từ params
         body: {
           paymentMethod: selectedPaymentMethod,
-          transactionAmount,
+          useLoyaltyPoints,
         },
         sendToken: true, // Gửi token xác thực
       });

@@ -335,9 +335,9 @@ export default function StoreKH() {
 
         <View style={{ paddingHorizontal: 15, marginBottom: 20, marginTop: 50 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {foodList.map((food) => (
+            {foodList.map((food, index) => (
               <TouchableOpacity
-                key={food._id} // Sử dụng id chính xác cho key
+                key={food._id || index} // Sử dụng id chính xác cho key
                 style={{
                   backgroundColor: "#fff", // Tô màu nổi bật
                   padding: 10,
@@ -404,9 +404,9 @@ export default function StoreKH() {
                 }
               }}
             >
-              {groupedFoods[firstGroup].map((food) => (
+              {groupedFoods[firstGroup].map((food, index) => (
                 <TouchableOpacity
-                  key={food._id}
+                  key={food._id || index}
                   style={{
                     backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
                     padding: 10,
@@ -474,9 +474,9 @@ export default function StoreKH() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {reviews.map((review) => (
+            {reviews.map((review, index) => (
               <TouchableOpacity
-                key={review.id}
+                key={review.id || index}
                 style={{
                   backgroundColor: "#fff",
                   borderRadius: 10,
@@ -504,13 +504,13 @@ export default function StoreKH() {
             ))}
           </ScrollView>
         </View>
-        {remainingGroups.map((group) => (
-          <ScrollView key={group} style={{ marginTop: 20, paddingHorizontal: 15 }}>
+        {remainingGroups.map((group, index) => (
+          <ScrollView key={group || index} style={{ marginTop: 20, paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {groupedFoods[group].map((food) => (
+              {groupedFoods[group].map((food, index) => (
                 <TouchableOpacity
-                  key={food._id} // Sử dụng id chính xác cho key
+                  key={food._id || index} // Sử dụng id chính xác cho key
                   style={{
                     backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
                     padding: 10,

@@ -128,7 +128,13 @@ export default function OrderManagementScreen({ navigation }) {
     return newOrders.map((order, index) => (
       <Swipeable key={index}>
         <View style={styles.container}>
-          <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+          {/* Nút hủy */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={styles.orderDateText}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+            <TouchableOpacity onPress={() => openCancelModal(order)} style={styles.button}>
+              <Text style={styles.buttonText}>Hủy đơn hàng</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.row}>
             <View style={styles.itemCountContainer}>
               <Text style={styles.itemCountText}>{index + 1}</Text>
@@ -156,12 +162,6 @@ export default function OrderManagementScreen({ navigation }) {
           <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
             <TouchableOpacity onPress={() => handleConfirmOrder(order.orderId)} style={styles.button}>
               <Text style={styles.buttonText}>Xác nhận</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Nút hủy */}
-          <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
-            <TouchableOpacity onPress={() => openCancelModal(order)} style={styles.button}>
-              <Text style={styles.buttonText}>Hủy đơn hàng</Text>
             </TouchableOpacity>
           </View>
         </View>
