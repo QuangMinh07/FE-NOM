@@ -1,11 +1,11 @@
-import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Alert } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MomoIcon from "react-native-vector-icons/FontAwesome";
-import VnpayIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation, useRoute } from "@react-navigation/native"; // Thêm useRoute để lấy params
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
-import { globalContext } from "../../context/globalContext"; // Import globalContext
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
 
@@ -24,41 +24,94 @@ export default function Select() {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null); // Lưu phương thức thanh toán đã chọn
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(""); // Lưu dữ liệu QR code
+  const [isLoading, setIsLoading] = useState(false);
+  const qrCodeRef = useRef(null); // Tham chiếu mã QR
 
   // Hàm kiểm tra dữ liệu hợp lệ
-  const validatePaymentDetails = () => {
-    if (selectedPaymentMethod === "BankCard") {
-      if (!cardNumber || !expiryDate || !cvv) {
-        alert("Vui lòng nhập đầy đủ thông tin thẻ");
-        return false;
-      }
+  // const validatePaymentDetails = () => {
+  //   if (selectedPaymentMethod === "BankCard") {
+  //     if (!cardNumber || !expiryDate || !cvv) {
+  //       alert("Vui lòng nhập đầy đủ thông tin thẻ");
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // };
+
+  // Hàm xử lý tải mã QR
+  const handleDownloadQRCode = async () => {
+    if (!qrCodeRef.current) {
+      Alert.alert("Lỗi", "Không tìm thấy mã QR để tải.");
+      return;
     }
-    return true;
+
+    // Yêu cầu quyền truy cập thư viện ảnh
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Lỗi", "Ứng dụng cần quyền truy cập thư viện ảnh để lưu tệp.");
+      return;
+    }
+
+    qrCodeRef.current.toDataURL(async (data) => {
+      try {
+        // Lưu tệp QR code tạm thời trong thư mục nội bộ
+        const fileUri = `${FileSystem.cacheDirectory}qrcode.png`;
+        await FileSystem.writeAsStringAsync(fileUri, data, { encoding: FileSystem.EncodingType.Base64 });
+
+        // Di chuyển tệp từ thư mục tạm thời vào thư viện ảnh
+        const asset = await MediaLibrary.createAssetAsync(fileUri);
+        await MediaLibrary.createAlbumAsync("Download", asset, false);
+
+        Alert.alert("Thành công", "Mã QR đã được lưu vào thư viện ảnh.");
+      } catch (error) {
+        console.error("Lỗi khi lưu mã QR:", error);
+        Alert.alert("Lỗi", "Không thể tải mã QR. Vui lòng thử lại.");
+      }
+    });
   };
 
   // Hàm xử lý xác nhận thanh toán và gọi API
   const handleConfirmPayment = async () => {
-    if (!validatePaymentDetails()) return;
+    if (!selectedPaymentMethod) {
+      Alert.alert("Lỗi", "Vui lòng chọn phương thức thanh toán");
+      return;
+    }
 
-    try {
-      const response = await api({
-        method: typeHTTP.POST,
-        url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`, // Sử dụng cartId từ params
-        body: {
-          paymentMethod: selectedPaymentMethod,
-          useLoyaltyPoints,
-        },
-        sendToken: true, // Gửi token xác thực
-      });
+    if (selectedPaymentMethod === "Cash") {
+      // Tạo đơn hàng ngay khi chọn thanh toán tiền mặt
+      handleCreateOrder();
+      return;
+    }
 
-      if (response && response.transaction) {
-        // Điều hướng về màn hình Shopping với phương thức thanh toán đã chọn
-        navigation.navigate("Shopping", { paymentMethod: selectedPaymentMethod });
-        Alert.alert("Thành công", "Phương thức thanh toán đã được xác nhận!");
+    if (selectedPaymentMethod === "PayOS") {
+      try {
+        setIsLoading(true);
+
+        // Tạo giao dịch thanh toán và hiển thị QR code
+        const response = await api({
+          method: typeHTTP.POST,
+          url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`,
+          body: {
+            paymentMethod: "PayOS",
+            useLoyaltyPoints,
+          },
+          sendToken: true,
+        });
+
+        if (response?.transaction) {
+          setQrCodeDataUrl(response.qrCode);
+          console.log("QR Code Value:", response.qrCode); // Thêm log ở đây
+          Alert.alert("Thông báo", "Quét mã QR để hoàn tất thanh toán. Đơn hàng sẽ được xử lý tự động sau khi thanh toán thành công.");
+        } else {
+          Alert.alert("Lỗi", "Không thể xử lý thanh toán qua PayOS.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi xử lý thanh toán:", error);
+        Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình xử lý.");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Lỗi khi tạo giao dịch thanh toán:", error);
-      Alert.alert("Lỗi", "Không thể xử lý thanh toán.");
     }
   };
 
@@ -79,6 +132,8 @@ export default function Select() {
       >
         <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>Chọn Phương Thức Thanh Toán</Text>
       </View>
+
+      {isLoading && <ActivityIndicator size="large" color="#E53935" style={{ position: "absolute", top: "50%", left: "50%", transform: [{ translateX: -20 }, { translateY: -20 }] }} />}
 
       {/* Payment Methods and Bank Card Input */}
       <ScrollView
@@ -177,18 +232,48 @@ export default function Select() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: selectedPaymentMethod === "VNPay" ? "#E53935" : "#fff",
+            backgroundColor: selectedPaymentMethod === "PayOS" ? "#E53935" : "#fff",
             borderColor: "#eee",
             borderWidth: 1,
             borderRadius: 10,
             padding: 15,
             marginVertical: 10,
           }}
-          onPress={() => setSelectedPaymentMethod("VNPay")}
+          onPress={() => setSelectedPaymentMethod("PayOS")}
         >
-          <VnpayIcon name="credit-card" size={30} color={selectedPaymentMethod === "VNPay" ? "#fff" : "#E53935"} />
-          <Text style={{ marginLeft: 10, fontSize: 16, color: selectedPaymentMethod === "VNPay" ? "#fff" : "#333" }}>VNPay</Text>
+          <Icon name="credit-card" size={30} color={selectedPaymentMethod === "PayOS" ? "#fff" : "#E53935"} />
+          <Text style={{ marginLeft: 10, fontSize: 16, color: selectedPaymentMethod === "PayOS" ? "#fff" : "#333" }}>PayOS</Text>
         </TouchableOpacity>
+
+        {selectedPaymentMethod === "PayOS" && qrCodeDataUrl && (
+          <View style={{ alignItems: "center", marginTop: 20 }}>
+            <Text style={{ marginBottom: 10, fontSize: 16, color: "#333" }}>Quét mã QR để thanh toán:</Text>
+            <Image
+              source={{ uri: qrCodeDataUrl }}
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: "#ccc",
+                backgroundColor: "#FFFFFF",
+              }}
+              getRef={(ref) => (qrCodeRef.current = ref)} // Gán ref
+              resizeMode="contain"
+            />
+            <TouchableOpacity
+              style={{
+                marginTop: 20,
+                padding: 10,
+                backgroundColor: "#E53935",
+                borderRadius: 5,
+              }}
+              onPress={handleDownloadQRCode}
+            >
+              <Text style={{ color: "#fff", fontSize: 16 }}>Lưu vào Thư Viện Ảnh</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Cash Payment Option */}
         <TouchableOpacity
