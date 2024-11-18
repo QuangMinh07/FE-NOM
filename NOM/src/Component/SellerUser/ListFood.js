@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, StyleSheet, Alert, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable
 import { AntDesign } from "@expo/vector-icons"; // Import AntDesign
@@ -356,6 +356,31 @@ export default function ListFood({ navigation }) {
     }
   };
 
+  const handleToggleAvailability = async (foodId, currentStatus) => {
+    try {
+      const updatedStatus = !currentStatus; // Đảo trạng thái hiện tại
+
+      // Gọi API để cập nhật trạng thái
+      const response = await api({
+        method: typeHTTP.PUT,
+        url: `/food/update-availability/${foodId}`,
+        body: { isAvailable: updatedStatus }, // Truyền trạng thái mới
+        sendToken: true, // Gửi token xác thực
+      });
+
+      if (response && response.message === "Cập nhật trạng thái thành công.") {
+        // Cập nhật trạng thái trong foodList
+        setFoodList((prevList) => prevList.map((food) => (food._id === foodId ? { ...food, isAvailable: updatedStatus } : food)));
+        Alert.alert("Thành công", `Món ăn đã được ${updatedStatus ? "bật" : "tắt"} thành công.`);
+      } else {
+        throw new Error("Không thể cập nhật trạng thái món ăn.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái món ăn.");
+    }
+  };
+
   // Khi người dùng bấm vào món ăn
   const handleDishClick = (foodId) => {
     globalHandler.setSelectedFoodId(foodId); // Lưu foodId vào globalData
@@ -458,6 +483,14 @@ export default function ListFood({ navigation }) {
                             <Text style={styles.foodName}>{item.foodName}</Text>
                             <Text style={styles.foodPrice}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                           </View>
+
+                          {/* Switch bật/tắt trạng thái */}
+                          <Switch
+                            value={item.isAvailable} // Trạng thái hiện tại của món ăn
+                            onValueChange={() => handleToggleAvailability(item._id, item.isAvailable)} // Gọi hàm xử lý
+                            thumbColor={item.isAvailable ? "#fff" : "#fff"}
+                            trackColor={{ false: "#ccc", true: "#E53935" }}
+                          />
                         </TouchableOpacity>
                       </Swipeable>
                     ))}
