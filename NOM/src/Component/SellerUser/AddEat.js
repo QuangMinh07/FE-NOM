@@ -234,7 +234,6 @@ export default function AddEat() {
       </View>
 
       {/* Group and Availability */}
-      {/* Group and Availability */}
       <View style={styles.switchContainer}>
         <Text style={styles.label}>Nhóm món</Text>
         <TouchableOpacity
@@ -297,7 +296,6 @@ export default function AddEat() {
         </Pressable>
       </Modal>
 
-      {/* Modal for Group Selection */}
       {/* Modal for Group Selection */}
       <Modal
         transparent={true}

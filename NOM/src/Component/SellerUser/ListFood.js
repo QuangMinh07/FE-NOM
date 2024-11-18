@@ -13,7 +13,7 @@ export default function ListFood({ navigation }) {
   const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const [foodList, setFoodList] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]); // Track selected items for combo
+  // const [selectedItems, setSelectedItems] = useState([]); // Track selected items for combo
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
@@ -23,11 +23,14 @@ export default function ListFood({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("Món");
   const [modalVisible, setModalVisible] = useState(false); // State cho modal thêm nhóm món
   const [groupName, setGroupName] = useState(""); // State cho nhóm món mới
-  const [selectedDishes, setSelectedDishes] = useState([]);
+  // const [selectedDishes, setSelectedDishes] = useState([]);
   const [isSelectingGroups, setIsSelectingGroups] = useState(false); // Trạng thái đang chọn nhóm
   const [currentGroup, setCurrentGroup] = useState(null); // Nhóm món được nhấn `link`
   const [selectedGroups, setSelectedGroups] = useState([]); // Danh sách nhóm đã chọn
   const [groupedNames, setGroupedNames] = useState([]); // Danh sách nhóm đã gộp
+  const [editModalVisible, setEditModalVisible] = useState(false); // Hiển thị modal cập nhật nhóm món
+  const [editGroupName, setEditGroupName] = useState(""); // Tên nhóm món được chỉnh sửa
+  const [editingGroupId, setEditingGroupId] = useState(null); // ID của nhóm món đang chỉnh sửa
 
   // Khi nhấn vào `link` của một nhóm
   const handleLinkClick = (groupId) => {
@@ -319,6 +322,40 @@ export default function ListFood({ navigation }) {
     [foodGroups] // Theo dõi sự thay đổi của foodGroups
   );
 
+  const handleUpdateFoodGroup = async () => {
+    if (!editingGroupId || !editGroupName) {
+      Alert.alert("Lỗi", "ID nhóm món và tên nhóm món không được để trống.");
+      return;
+    }
+
+    try {
+      const response = await api({
+        method: typeHTTP.PUT,
+        url: `/foodgroup/update-foodgroup/${editingGroupId}`, // Đường dẫn API cập nhật nhóm món
+        body: { groupName: editGroupName },
+        sendToken: true,
+      });
+
+      if (response && response.message === "Cập nhật tên nhóm món thành công.") {
+        Alert.alert("Thành công", "Tên nhóm món đã được cập nhật.");
+
+        // Cập nhật danh sách nhóm món trong state
+        const updatedFoodGroups = foodGroups.map((group) => (group._id === editingGroupId ? { ...group, groupName: editGroupName } : group));
+        setFoodGroups(updatedFoodGroups);
+
+        // Đóng modal sau khi cập nhật
+        setEditModalVisible(false);
+        setEditingGroupId(null);
+        setEditGroupName("");
+      } else {
+        Alert.alert("Lỗi", "Không thể cập nhật tên nhóm món.");
+      }
+    } catch (error) {
+      console.error("Error updating food group:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra. Vui lòng thử lại sau.");
+    }
+  };
+
   // Khi người dùng bấm vào món ăn
   const handleDishClick = (foodId) => {
     globalHandler.setSelectedFoodId(foodId); // Lưu foodId vào globalData
@@ -467,13 +504,51 @@ export default function ListFood({ navigation }) {
                         <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupedNames[group._id]?.original || group.groupName}</Text>
                         {groupedNames[group._id]?.combined && <Text style={{ fontSize: 16, color: "#6B7280", marginLeft: 5 }}>+ {groupedNames[group._id].combined}</Text>}
                       </View>
-                      <TouchableOpacity onPress={() => handleLinkClick(group._id)}>
-                        <Icon name="link" size={24} color="#E53935" />
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: "row" }}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setEditGroupName(group.groupName); // Lưu tên nhóm món hiện tại
+                            setEditingGroupId(group._id); // Lưu ID nhóm món hiện tại
+                            setEditModalVisible(true); // Hiển thị modal chỉnh sửa
+                          }}
+                        >
+                          <Icon name="edit" size={24} color="#E53935" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleLinkClick(group._id)} style={{ paddingLeft: 10 }}>
+                          <Icon name="link" size={24} color="#E53935" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </Swipeable>
                 </View>
               ))}
+
+              <Modal transparent={true} visible={editModalVisible} onRequestClose={() => setEditModalVisible(false)}>
+                <View style={styles.modalBackground}>
+                  <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Cập nhật tên nhóm món</Text>
+                    <TextInput style={styles.modalInput} value={editGroupName} onChangeText={setEditGroupName} placeholder="Nhập tên nhóm món mới" />
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        style={styles.modalButton}
+                        onPress={handleUpdateFoodGroup} // Gọi hàm cập nhật nhóm món
+                      >
+                        <Text style={styles.modalButtonText}>Lưu</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.modalButton}
+                        onPress={() => {
+                          setEditModalVisible(false); // Đóng modal
+                          setEditingGroupId(null); // Xóa ID nhóm món đang chỉnh sửa
+                          setEditGroupName(""); // Xóa tên nhóm món đang chỉnh sửa
+                        }}
+                      >
+                        <Text style={styles.modalButtonText}>Hủy</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
 
               {isSelectingGroups && (
                 <View style={{ marginTop: 20, flexDirection: "row", justifyContent: "space-around" }}>
