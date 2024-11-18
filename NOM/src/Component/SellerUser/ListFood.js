@@ -5,9 +5,8 @@ import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable
 import { AntDesign } from "@expo/vector-icons"; // Import AntDesign
 import { globalContext } from "../../context/globalContext"; // Đảm bảo import đúng đường dẫn
 import { api, typeHTTP } from "../../utils/api"; // Đảm bảo import đúng API
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import Icon from 'react-native-vector-icons/MaterialIcons'; // or any other icon set
+import Icon from "react-native-vector-icons/MaterialIcons"; // or any other icon set
 
 export default function ListFood({ navigation }) {
   const { globalData, globalHandler } = useContext(globalContext); // Truy cập globalData từ GlobalContext
@@ -15,7 +14,6 @@ export default function ListFood({ navigation }) {
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const [foodList, setFoodList] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]); // Track selected items for combo
-
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
@@ -44,11 +42,7 @@ export default function ListFood({ navigation }) {
       setCurrentGroup(groupId);
 
       // Nếu nhóm đã gộp trước đó, tự động thêm các nhóm đã gộp vào checkbox
-      const preSelectedGroups = groupedNames[groupId]?.combined
-        ? foodGroups
-          .filter((group) => groupedNames[groupId].combined.split(" + ").includes(group.groupName))
-          .map((group) => group._id)
-        : [];
+      const preSelectedGroups = groupedNames[groupId]?.combined ? foodGroups.filter((group) => groupedNames[groupId].combined.split(" + ").includes(group.groupName)).map((group) => group._id) : [];
       setSelectedGroups([groupId, ...preSelectedGroups]);
     }
   };
@@ -72,9 +66,7 @@ export default function ListFood({ navigation }) {
     } else {
       // Cập nhật nhóm gộp
       const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
-      const selectedNames = foodGroups
-        .filter((group) => selectedGroups.includes(group._id))
-        .map((group) => group.groupName);
+      const selectedNames = foodGroups.filter((group) => selectedGroups.includes(group._id)).map((group) => group.groupName);
 
       // Lưu lại tên gốc + các nhóm được chọn
       setGroupedNames((prev) => ({
@@ -85,7 +77,6 @@ export default function ListFood({ navigation }) {
         },
       }));
 
-
       // Reset trạng thái chọn
       setIsSelectingGroups(false);
       setCurrentGroup(null);
@@ -94,14 +85,10 @@ export default function ListFood({ navigation }) {
 
     // Lấy nhóm hiện tại và các nhóm đã chọn
     const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
-    const selectedNames = foodGroups
-      .filter((group) => selectedGroups.includes(group._id))
-      .map((group) => group.groupName);
+    const selectedNames = foodGroups.filter((group) => selectedGroups.includes(group._id)).map((group) => group.groupName);
 
     // Tạo chuỗi tên gốc + nhóm mới (chỉ các nhóm được chọn, trừ nhóm hiện tại)
-    const newGroupName = `${currentGroupName} + ${selectedNames
-      .filter((name) => name !== currentGroupName)
-      .join(" + ")}`;
+    const newGroupName = `${currentGroupName} + ${selectedNames.filter((name) => name !== currentGroupName).join(" + ")}`;
 
     // Cập nhật tên nhóm đã gộp
     setGroupedNames((prev) => ({
@@ -290,6 +277,48 @@ export default function ListFood({ navigation }) {
     [foodList] // Theo dõi sự thay đổi của foodList
   );
 
+  const handleDeleteFoodGroup = useCallback(
+    async (groupId) => {
+      if (!groupId) {
+        console.error("Invalid groupId:", groupId);
+        Alert.alert("Lỗi", "ID nhóm món không hợp lệ.");
+        return;
+      }
+
+      try {
+        await api({
+          method: typeHTTP.DELETE,
+          url: `/foodgroup/delete-foodgroup/${groupId}`, // Đường dẫn API xóa nhóm món
+          sendToken: true, // Gửi token để xác thực
+        });
+
+        // Cập nhật danh sách nhóm món, loại bỏ nhóm món vừa xóa
+        const updatedFoodGroups = foodGroups.filter((group) => group._id !== groupId);
+        setFoodGroups(updatedFoodGroups);
+
+        // Lấy lại danh sách món ăn để đồng bộ
+        const storeId = globalData.storeData?._id;
+        if (storeId) {
+          const response = await api({
+            method: typeHTTP.GET,
+            url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn
+            sendToken: true,
+          });
+
+          if (response && response.foods) {
+            setFoodList(response.foods); // Cập nhật danh sách món ăn sau khi xóa nhóm món
+          }
+        }
+
+        Alert.alert("Thành công", "Nhóm món đã được xóa khỏi danh sách.", [{ text: "OK" }]);
+      } catch (error) {
+        console.error("Error deleting food group:", error);
+        Alert.alert("Lỗi", "Không thể xóa nhóm món. Vui lòng thử lại sau.");
+      }
+    },
+    [foodGroups] // Theo dõi sự thay đổi của foodGroups
+  );
+
   // Khi người dùng bấm vào món ăn
   const handleDishClick = (foodId) => {
     globalHandler.setSelectedFoodId(foodId); // Lưu foodId vào globalData
@@ -387,15 +416,10 @@ export default function ListFood({ navigation }) {
                     </View>
                     {groupedFoods[groupName].map((item, index) => (
                       <Swipeable key={index} renderLeftActions={() => renderLeftActions(item._id)}>
-                        <TouchableOpacity
-                          onPress={() => handleDishClick(item._id)}
-                          style={styles.foodItem}
-                        >
+                        <TouchableOpacity onPress={() => handleDishClick(item._id)} style={styles.foodItem}>
                           <View>
                             <Text style={styles.foodName}>{item.foodName}</Text>
-                            <Text style={styles.foodPrice}>
-                              {item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
-                            </Text>
+                            <Text style={styles.foodPrice}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                           </View>
                         </TouchableOpacity>
                       </Swipeable>
@@ -413,35 +437,41 @@ export default function ListFood({ navigation }) {
             <ScrollView contentContainerStyle={{ padding: 15 }}>
               {foodGroups.map((group, index) => (
                 <View key={index} style={{ marginBottom: 20 }}>
-                  <View style={styles.foodItem}>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      {isSelectingGroups && currentGroup !== group._id && (
-                        <TouchableOpacity
-                          onPress={() => handleGroupSelection(group._id)}
-                          style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 3,
-                            borderWidth: 1,
-                            borderColor: "#E53935",
-                            backgroundColor: selectedGroups.includes(group._id) ? "#E53935" : "#fff",
-                            marginRight: 10,
-                          }}
-                        />
-                      )}
-                      <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>
-                        {groupedNames[group._id]?.original || group.groupName}
-                      </Text>
-                      {groupedNames[group._id]?.combined && (
-                        <Text style={{ fontSize: 16, color: "#6B7280", marginLeft: 5 }}>
-                          + {groupedNames[group._id].combined}
-                        </Text>
-                      )}
+                  <Swipeable
+                    renderLeftActions={() => (
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteFoodGroup(group._id)} // Thêm hành động xóa nhóm món
+                      >
+                        <Ionicons name="trash-outline" size={22} color="#fff" />
+                        <Text style={{ color: "#fff" }}>Xóa</Text>
+                      </TouchableOpacity>
+                    )}
+                  >
+                    <View style={styles.foodItem}>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        {isSelectingGroups && currentGroup !== group._id && (
+                          <TouchableOpacity
+                            onPress={() => handleGroupSelection(group._id)}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: 3,
+                              borderWidth: 1,
+                              borderColor: "#E53935",
+                              backgroundColor: selectedGroups.includes(group._id) ? "#E53935" : "#fff",
+                              marginRight: 10,
+                            }}
+                          />
+                        )}
+                        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupedNames[group._id]?.original || group.groupName}</Text>
+                        {groupedNames[group._id]?.combined && <Text style={{ fontSize: 16, color: "#6B7280", marginLeft: 5 }}>+ {groupedNames[group._id].combined}</Text>}
+                      </View>
+                      <TouchableOpacity onPress={() => handleLinkClick(group._id)}>
+                        <Icon name="link" size={24} color="#E53935" />
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={() => handleLinkClick(group._id)}>
-                      <Icon name="link" size={24} color="#E53935" />
-                    </TouchableOpacity>
-                  </View>
+                  </Swipeable>
                 </View>
               ))}
 
@@ -481,8 +511,6 @@ export default function ListFood({ navigation }) {
           </View>
         )}
       </View>
-
-
 
       {/* Modal for adding new group */}
       <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
