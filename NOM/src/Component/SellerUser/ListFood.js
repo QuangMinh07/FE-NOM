@@ -31,28 +31,45 @@ export default function ListFood({ navigation }) {
   const [editModalVisible, setEditModalVisible] = useState(false); // Hiển thị modal cập nhật nhóm món
   const [editGroupName, setEditGroupName] = useState(""); // Tên nhóm món được chỉnh sửa
   const [editingGroupId, setEditingGroupId] = useState(null); // ID của nhóm món đang chỉnh sửa
+  const [removeGroups, setRemoveGroups] = useState([]); // Danh sách nhóm cần xóa khỏi combo
 
   // Khi nhấn vào `link` của một nhóm
   const handleLinkClick = (groupId) => {
-    // Nếu đã trong chế độ chọn combo và nhấn vào nhóm hiện tại -> reset
+    // Kiểm tra nếu đang chọn nhóm và nhấn lại vào nhóm cha hiện tại
     if (isSelectingGroups && currentGroup === groupId) {
-      setIsSelectingGroups(false);
-      setCurrentGroup(null);
-      setSelectedGroups([]);
+      setIsSelectingGroups(false); // Tắt chế độ chọn nhóm
+      setCurrentGroup(null); // Reset nhóm hiện tại
+      setSelectedGroups([]); // Xóa danh sách nhóm đã chọn
     } else {
-      // Bật chế độ chọn combo và thêm nhóm hiện tại vào danh sách chọn
+      // Bật chế độ chọn
       setIsSelectingGroups(true);
       setCurrentGroup(groupId);
-      setSelectedGroups([groupId]); // Tự động thêm nhóm món hiện tại vào danh sách chọn
+
+      // Tìm tất cả nhóm con của nhóm cha hiện tại
+      const parentGroup = foodGroups.find((group) => group._id === groupId);
+      if (!parentGroup) {
+        console.error("Không tìm thấy nhóm cha.");
+        return;
+      }
+
+      // Nếu nhóm cha có nhóm con, lấy danh sách ID nhóm con
+      const childGroups = parentGroup.comboGroups || [];
+
+      // Gộp nhóm cha và nhóm con vào `selectedGroups`
+      setSelectedGroups([groupId, ...childGroups]);
     }
   };
 
   // Khi chọn/deselect checkbox
   const handleGroupSelection = (groupId) => {
     if (selectedGroups.includes(groupId)) {
-      setSelectedGroups(selectedGroups.filter((id) => id !== groupId));
+      // Nếu checkbox chuyển từ đỏ sang trắng
+      setRemoveGroups((prev) => [...prev, groupId]); // Thêm nhóm vào danh sách cần xóa
+      setSelectedGroups(selectedGroups.filter((id) => id !== groupId)); // Loại bỏ khỏi nhóm được chọn
     } else {
-      setSelectedGroups([...selectedGroups, groupId]);
+      // Nếu checkbox chuyển từ trắng sang đỏ
+      setSelectedGroups([...selectedGroups, groupId]); // Thêm nhóm vào danh sách được chọn
+      setRemoveGroups((prev) => prev.filter((id) => id !== groupId)); // Loại bỏ khỏi danh sách cần xóa
     }
   };
 
@@ -107,22 +124,42 @@ export default function ListFood({ navigation }) {
   // };
 
   const handleConfirmGroups = async () => {
+    // Kiểm tra nếu không có nhóm món nào được chọn ngoài nhóm hiện tại
     if (selectedGroups.length <= 1) {
       Alert.alert("Lỗi", "Vui lòng chọn ít nhất một nhóm món khác để ghép combo.");
       return;
     }
 
     try {
+      // Lấy thông tin nhóm hiện tại và tên của các nhóm được chọn
+      const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
+      const selectedNames = foodGroups.filter((group) => selectedGroups.includes(group._id)).map((group) => group.groupName);
+
+      // Tạo chuỗi tên gộp cho nhóm hiện tại
+      const newGroupName = `${currentGroupName} + ${selectedNames.filter((name) => name !== currentGroupName).join(" + ")}`;
+
+      // Gọi API để lưu thông tin nhóm gộp trên server
       const response = await api({
         method: typeHTTP.POST,
-        url: `/foodgroup/add-combo/${currentGroup}`, // Đường dẫn API thêm combo
+        url: `/foodgroup/add-combo/${currentGroup}`, // Đường dẫn API thêm combo nhóm
         body: { comboGroupIds: selectedGroups.filter((id) => id !== currentGroup) },
         sendToken: true,
       });
 
       if (response && response.message === "Ghép nhóm món thành công.") {
         Alert.alert("Thành công", "Combo nhóm món đã được thêm thành công.");
-        await getFoodGroups(); // Làm mới danh sách nhóm món
+
+        // Cập nhật danh sách nhóm món từ server
+        await getFoodGroups();
+
+        // Lưu thông tin nhóm gộp cục bộ
+        setGroupedNames((prev) => ({
+          ...prev,
+          [currentGroup]: {
+            original: currentGroupName,
+            combined: selectedNames.filter((name) => name !== currentGroupName).join(" + "),
+          },
+        }));
       } else {
         throw new Error(response?.message || "Không thể thêm combo nhóm món.");
       }
@@ -130,10 +167,50 @@ export default function ListFood({ navigation }) {
       console.error("Error adding combo to food group:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi thêm combo nhóm món.");
     } finally {
-      // Reset trạng thái
+      // Reset trạng thái chọn nhóm
       setIsSelectingGroups(false);
       setCurrentGroup(null);
       setSelectedGroups([]);
+    }
+  };
+
+  const handleDeleteConfirmGroups = async () => {
+    if (removeGroups.length === 0) {
+      Alert.alert("Lỗi", "Không có nhóm nào được chọn để xóa.");
+      return;
+    }
+
+    try {
+      for (const groupId of removeGroups) {
+        console.log("Xóa comboGroupId:", groupId); // Log kiểm tra comboGroupId
+
+        const response = await api({
+          method: typeHTTP.PUT, // Chuyển từ DELETE sang PUT
+          url: `/foodgroup/remove-combo/${currentGroup}`, // currentGroup là ID nhóm chính
+          body: { comboGroupId: groupId }, // Truyền comboGroupId trong body
+          sendToken: true,
+        });
+
+        if (response?.message === "Xóa nhóm món combo thành công.") {
+          console.log(`Nhóm combo ${groupId} đã bị xóa.`);
+        } else {
+          console.error(`Lỗi khi xóa nhóm combo ${groupId}.`);
+        }
+      }
+
+      // Cập nhật lại danh sách nhóm món từ server
+      await getFoodGroups();
+
+      Alert.alert("Thành công", "Nhóm combo đã được cập nhật.");
+    } catch (error) {
+      console.error("Lỗi xóa nhóm combo:", error);
+      Alert.alert("Lỗi", "Không thể xóa nhóm combo. Vui lòng thử lại sau.");
+    } finally {
+      // Reset trạng thái chọn nhóm
+      setIsSelectingGroups(false);
+      setCurrentGroup(null);
+      setSelectedGroups([]); // Xóa danh sách chọn
+      setRemoveGroups([]); // Xóa danh sách cần xóa
     }
   };
 
@@ -564,8 +641,19 @@ export default function ListFood({ navigation }) {
                             }}
                           />
                         )}
-                        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{groupedNames[group._id]?.original || group.groupName}</Text>
-                        {groupedNames[group._id]?.combined && <Text style={{ fontSize: 16, color: "#6B7280", marginLeft: 5 }}>+ {groupedNames[group._id].combined}</Text>}
+                        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935" }}>{group.groupName}</Text>
+                        {group.comboGroups.length > 0 && (
+                          <Text>
+                            {foodGroups
+                              .filter((g) => group.comboGroups.includes(g._id))
+                              .map((g, index) => (
+                                <Text key={g._id} style={{ fontSize: 16, color: "#6B7280" }}>
+                                  {index === 0 ? " + " : ", "}
+                                  {g.groupName}
+                                </Text>
+                              ))}
+                          </Text>
+                        )}
                       </View>
                       <View style={{ flexDirection: "row" }}>
                         <TouchableOpacity
@@ -617,7 +705,14 @@ export default function ListFood({ navigation }) {
               {isSelectingGroups && (
                 <View style={{ marginTop: 20, flexDirection: "row", justifyContent: "space-around" }}>
                   <TouchableOpacity
-                    onPress={handleConfirmGroups}
+                    onPress={async () => {
+                      if (removeGroups.length > 0) {
+                        await handleDeleteConfirmGroups(); // Gọi API xóa nhóm combo
+                      }
+                      if (selectedGroups.length > 1) {
+                        await handleConfirmGroups(); // Gọi API thêm combo
+                      }
+                    }}
                     style={{
                       backgroundColor: "#E53935",
                       padding: 10,
