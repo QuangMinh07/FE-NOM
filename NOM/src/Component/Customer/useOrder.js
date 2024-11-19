@@ -9,6 +9,31 @@ export const useOrder = (foodId, storeId) => {
   const [foodData, setFoodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const { globalData, globalHandler } = useContext(globalContext);
+  const [comboFoods, setComboFoods] = useState([]);
+
+  useEffect(() => {
+    const fetchFoodComBoData = async () => {
+      try {
+        const response = await api({
+          method: typeHTTP.GET,
+          url: `/food/get-foodcombo/${foodId}`,
+          sendToken: true,
+        });
+
+        const food = response.food;
+        setFoodData(food);
+        setPrice(food.price);
+        setQuantity(1);
+        setComboFoods(response.comboFoods || []);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching food data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchFoodComBoData();
+  }, [foodId]);
 
   useEffect(() => {
     const fetchFoodData = async () => {
@@ -45,24 +70,36 @@ export const useOrder = (foodId, storeId) => {
     }
   };
 
-  const addToCart = async (userId) => {
+  const addToCart = async (userId, storeId, selectedCombos) => {
     try {
-      console.log("Adding to cart:", { foodId: foodData._id, quantity, storeId }); // Log to check data
+      const formattedCombos = selectedCombos.map((comboId) => ({ foodId: comboId })); // Định dạng combos
+
+      console.log("Adding to cart:", {
+        foodId: foodData._id,
+        quantity,
+        storeId,
+        combos: formattedCombos,
+      });
 
       const response = await api({
         method: typeHTTP.POST,
         url: `/cart/add-to-cart/${userId}`,
-        body: { foodId: foodData._id, quantity, storeId },
+        body: {
+          foodId: foodData._id,
+          quantity,
+          storeId,
+          combos: formattedCombos, // Gửi combos đã định dạng
+        },
         sendToken: true,
       });
 
-      console.log("Added to cart:", response.message); // Log response after adding to cart
+      console.log("Added to cart:", response.message); // Log phản hồi sau khi thêm vào giỏ hàng
 
-      const updatedCart = Array.isArray(globalData.cart) ? [...globalData.cart, { foodName: foodData._id, ...foodData, quantity }] : [{ foodName: foodData._id, ...foodData, quantity }];
+      const updatedCart = Array.isArray(globalData.cart) ? [...globalData.cart, { foodName: foodData.foodName, ...foodData, quantity, combos: formattedCombos }] : [{ foodName: foodData.foodName, ...foodData, quantity, combos: formattedCombos }];
       await globalHandler.setCart(updatedCart);
-      console.log("Cart saved to globalData:", updatedCart); // Log cart after updating
+      console.log("Cart saved to globalData:", updatedCart); // Log cart sau khi cập nhật
     } catch (error) {
-      console.error("Error adding to cart:", error); // Log the error
+      console.error("Error adding to cart:", error); // Log lỗi
     }
   };
 
@@ -70,6 +107,7 @@ export const useOrder = (foodId, storeId) => {
     quantity,
     price,
     foodData,
+    comboFoods, // Add combo foods
     loading,
     incrementQuantity,
     decrementQuantity,

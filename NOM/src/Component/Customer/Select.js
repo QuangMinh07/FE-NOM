@@ -78,40 +78,38 @@ export default function Select() {
       return;
     }
 
-    if (selectedPaymentMethod === "Cash") {
-      // Tạo đơn hàng ngay khi chọn thanh toán tiền mặt
-      handleCreateOrder();
-      return;
-    }
+    try {
+      setIsLoading(true);
 
-    if (selectedPaymentMethod === "PayOS") {
-      try {
-        setIsLoading(true);
+      // Gọi API tạo giao dịch thanh toán
+      const response = await api({
+        method: typeHTTP.POST,
+        url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`,
+        body: {
+          paymentMethod: selectedPaymentMethod, // Truyền phương thức thanh toán (Cash hoặc PayOS)
+          useLoyaltyPoints,
+        },
+        sendToken: true,
+      });
 
-        // Tạo giao dịch thanh toán và hiển thị QR code
-        const response = await api({
-          method: typeHTTP.POST,
-          url: `/PaymentTransaction/create-payment/${cartId}/${storeId}`,
-          body: {
-            paymentMethod: "PayOS",
-            useLoyaltyPoints,
-          },
-          sendToken: true,
-        });
-
-        if (response?.transaction) {
+      if (response?.transaction) {
+        if (selectedPaymentMethod === "Cash") {
+          // Điều hướng về màn hình Shopping sau khi tạo giao dịch thành công
+          navigation.navigate("Shopping", { paymentMethod: selectedPaymentMethod });
+          Alert.alert("Thành công", "Phương thức thanh toán tiền mặt đã được xác nhận!");
+        } else if (selectedPaymentMethod === "PayOS") {
+          // Hiển thị QR code cho PayOS
           setQrCodeDataUrl(response.qrCode);
-          console.log("QR Code Value:", response.qrCode); // Thêm log ở đây
           Alert.alert("Thông báo", "Quét mã QR để hoàn tất thanh toán. Đơn hàng sẽ được xử lý tự động sau khi thanh toán thành công.");
-        } else {
-          Alert.alert("Lỗi", "Không thể xử lý thanh toán qua PayOS.");
         }
-      } catch (error) {
-        console.error("Lỗi khi xử lý thanh toán:", error);
-        Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình xử lý.");
-      } finally {
-        setIsLoading(false);
+      } else {
+        Alert.alert("Lỗi", "Không thể xử lý thanh toán.");
       }
+    } catch (error) {
+      console.error("Lỗi khi xử lý thanh toán:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình xử lý.");
+    } finally {
+      setIsLoading(false);
     }
   };
 

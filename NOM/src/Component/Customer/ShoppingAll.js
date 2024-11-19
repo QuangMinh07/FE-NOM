@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import { View, Text, Image, FlatList, TouchableOpacity, SafeAreaView, Dimensions, Alert } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -47,9 +47,11 @@ export default function ShoppingAll() {
     }
   }, [userId]);
 
-  useEffect(() => {
-    fetchCartData();
-  }, [fetchCartData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCartData();
+    }, [fetchCartData])
+  );
 
   const handleSelectItem = (id) => {
     if (selectedItems.includes(id)) {
