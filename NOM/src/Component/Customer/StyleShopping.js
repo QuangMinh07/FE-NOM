@@ -84,10 +84,6 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10,
     padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderColor: "#eee",
-    borderWidth: 1,
   },
   orderItemText: {
     fontSize: 14,

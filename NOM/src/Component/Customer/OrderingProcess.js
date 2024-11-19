@@ -319,12 +319,26 @@ const OrderingProcess = () => {
               {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
                 orderDetails.cartSnapshot.items.map((item, index) => (
                   <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.01 }}>
-                    {/* Display quantity and food name */}
-                    <Text style={{ fontSize: width * 0.04 }}>
-                      {item.quantity}x {item.foodName}
-                    </Text>
-                    {/* Display food price */}
-                    <Text style={{ fontSize: width * 0.04 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    <View style={{ flexDirection: "column" }}>
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={{ fontSize: width * 0.04 }}>
+                          {item.quantity}x {item.foodName}
+                        </Text>
+                        <Text style={{ fontSize: width * 0.04, paddingLeft: 100 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+
+                      {/* Hiển thị các món ăn trong combo */}
+                      {item.combos && item.combos.foods && item.combos.foods.length > 0 && (
+                        <View style={{ marginLeft: width * 0.05, marginTop: height * 0.01 }}>
+                          {item.combos.foods.map((comboFood, comboIndex) => (
+                            <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.005 }}>
+                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.foodName}</Text>
+                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
                   </View>
                 ))
               ) : (
@@ -343,12 +357,26 @@ const OrderingProcess = () => {
                 {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
                   orderDetails.cartSnapshot.items.map((item, index) => (
                     <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.01 }}>
-                      {/* Display quantity and food name */}
-                      <Text style={{ fontSize: width * 0.04, width:200 }}>
-                        {item.quantity}x {item.foodName}
-                      </Text>
-                      {/* Display food price */}
-                      <Text style={{ fontSize: width * 0.04 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      <View style={{ flexDirection: "column" }}>
+                        <View style={{ flexDirection: "row" }}>
+                          <Text style={{ fontSize: width * 0.04, width: 170 }}>
+                            {item.quantity}x {item.foodName}
+                          </Text>
+                          <Text style={{ fontSize: width * 0.04, paddingLeft: 30 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                        </View>
+
+                        {/* Hiển thị các món ăn trong combo */}
+                        {item.combos && item.combos.foods && item.combos.foods.length > 0 && (
+                          <View style={{ marginLeft: width * 0.05, marginTop: height * 0.01 }}>
+                            {item.combos.foods.map((comboFood, comboIndex) => (
+                              <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.005 }}>
+                                <Text style={{ fontSize: width * 0.035, color: "#666", width: 150 }}>{comboFood.foodName}</Text>
+                                <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
                     </View>
                   ))
                 ) : (

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -15,11 +15,23 @@ export default function Orderfood() {
   const { globalData } = useContext(globalContext);
   const userId = globalData.user?.id;
 
-  const { quantity, price, foodData, loading, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId); // Sử dụng hook useOrder
+  const { quantity, price, foodData, loading, comboFoods, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId); // Sử dụng hook useOrder
+  const [selectedCombos, setSelectedCombos] = useState([]); // Trạng thái lưu các combo được chọn
 
   if (loading) {
     return <Text>Loading...</Text>;
   }
+
+  // Xử lý chọn/hủy chọn combo
+  const toggleComboSelection = (comboFood) => {
+    setSelectedCombos((prevSelectedCombos) => {
+      if (prevSelectedCombos.includes(comboFood._id)) {
+        return prevSelectedCombos.filter((id) => id !== comboFood._id); // Hủy chọn nếu đã được chọn
+      } else {
+        return [...prevSelectedCombos, comboFood._id]; // Chọn combo
+      }
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -88,6 +100,56 @@ export default function Orderfood() {
         </View>
       </ScrollView>
 
+      {/* Combo Group Section */}
+      {comboFoods.length > 0 && (
+        <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935", marginBottom: 10 }}>Món ăn trong Combo Nhóm</Text>
+          {comboFoods.map((comboFood) => (
+            <View
+              key={comboFood._id}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottomWidth: 1,
+                borderBottomColor: "#ddd",
+                paddingVertical: 10,
+              }}
+            >
+              {/* Checkbox and Food Name */}
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  flex: 1,
+                }}
+                onPress={() => toggleComboSelection(comboFood)}
+              >
+                <View
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderWidth: 2,
+                    borderColor: "#E53935",
+                    borderRadius: 4,
+                    marginRight: 10,
+                    backgroundColor: selectedCombos.includes(comboFood._id) ? "#E53935" : "#fff",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {selectedCombos.includes(comboFood._id) && <Ionicons name="checkmark" size={18} color="#fff" />}
+                </View>
+                <Text style={{ fontSize: 16, color: "#333" }}>{comboFood.foodName}</Text>
+              </TouchableOpacity>
+
+              {/* Price */}
+              <Text style={{ fontSize: 16, fontWeight: "bold", color: "#E53935" }}>+{comboFood.price.toLocaleString("vi-VN")} VND</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <View style={{ backgroundColor: "#fff", padding: 16, flexDirection: "row", justifyContent: "space-between" }}>
         <TouchableOpacity
           style={{
@@ -103,7 +165,7 @@ export default function Orderfood() {
           }}
           onPress={async () => {
             console.log("userId:", userId, "foodId:", foodId, "storeId:", storeId);
-            await addToCart(userId, storeId);
+            await addToCart(userId, storeId, selectedCombos);
             navigation.navigate("Shopping", { storeId, userId, foodId });
           }}
         >
