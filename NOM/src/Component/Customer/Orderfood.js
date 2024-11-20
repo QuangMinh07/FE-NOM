@@ -1,192 +1,195 @@
 import React, { useContext, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useOrder } from "./useOrder"; // Import hook useOrder
 import { globalContext } from "../../context/globalContext"; // Import globalContext
 
+const { width, height } = Dimensions.get("window"); // Screen dimensions
+
 export default function Orderfood() {
   const navigation = useNavigation();
   const route = useRoute();
   const { foodId, storeId } = route.params;
-  console.log("storeId in Orderfood:", storeId);
-  console.log("foodId in Orderfood:", foodId);
 
   const { globalData } = useContext(globalContext);
   const userId = globalData.user?.id;
 
-  const { quantity, price, foodData, loading, comboFoods, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId); // Sử dụng hook useOrder
-  const [selectedCombos, setSelectedCombos] = useState([]); // Trạng thái lưu các combo được chọn
+  const { quantity, price, foodData, loading, comboFoods, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId);
+  const [selectedCombos, setSelectedCombos] = useState([]);
 
   if (loading) {
     return <Text>Loading...</Text>;
   }
 
-  // Xử lý chọn/hủy chọn combo
   const toggleComboSelection = (comboFood) => {
-    setSelectedCombos((prevSelectedCombos) => {
-      if (prevSelectedCombos.includes(comboFood._id)) {
-        return prevSelectedCombos.filter((id) => id !== comboFood._id); // Hủy chọn nếu đã được chọn
-      } else {
-        return [...prevSelectedCombos, comboFood._id]; // Chọn combo
-      }
-    });
+    setSelectedCombos((prevSelectedCombos) =>
+      prevSelectedCombos.includes(comboFood._id)
+        ? prevSelectedCombos.filter((id) => id !== comboFood._id)
+        : [...prevSelectedCombos, comboFood._id]
+    );
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={{ height: 300, backgroundColor: "#E53935" }}>
-        <Image source={{ uri: foodData?.imageUrl || "https://your-default-image-url" }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+      {/* Food Image and Quantity */}
+      <View style={{ height: height * 0.4, backgroundColor: "#E53935" }}>
+        <Image
+          source={{ uri: foodData?.imageUrl || "https://your-default-image-url" }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
         <View
           style={{
             position: "absolute",
             bottom: 0,
-            left: 16,
-            right: 16,
+            left: width * 0.04,
+            right: width * 0.04,
             backgroundColor: "rgba(0, 0, 0, 0.5)",
-            padding: 10,
-            borderRadius: 8,
+            padding: height * 0.02,
+            borderRadius: width * 0.03,
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <View>
-            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff", width: 230 }}>{foodData?.foodName}</Text>
+            <Text
+              style={{
+                fontSize: width * 0.05,
+                fontWeight: "bold",
+                color: "#fff",
+                maxWidth: width * 0.6,
+              }}
+              numberOfLines={1}
+            >
+              {foodData?.foodName}
+            </Text>
           </View>
 
+          {/* Quantity Controls */}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity onPress={decrementQuantity} style={{ padding: 10 }}>
+            <TouchableOpacity onPress={decrementQuantity} style={{ padding: width * 0.02 }}>
               <View
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
+                  width: width * 0.08,
+                  height: width * 0.08,
+                  borderRadius: width * 0.04,
                   backgroundColor: "#fff",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontSize: 20, color: "#E53935" }}>-</Text>
+                <Text style={{ fontSize: width * 0.05, color: "#E53935" }}>-</Text>
               </View>
             </TouchableOpacity>
-            <Text style={{ fontSize: 18, paddingHorizontal: 10, color: "#fff" }}>{quantity}</Text>
-            <TouchableOpacity onPress={incrementQuantity} style={{ padding: 10 }}>
+            <Text style={{ fontSize: width * 0.045, paddingHorizontal: width * 0.03, color: "#fff" }}>{quantity}</Text>
+            <TouchableOpacity onPress={incrementQuantity} style={{ padding: width * 0.02 }}>
               <View
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
+                  width: width * 0.08,
+                  height: width * 0.08,
+                  borderRadius: width * 0.04,
                   backgroundColor: "#fff",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontSize: 20, color: "#E53935" }}>+</Text>
+                <Text style={{ fontSize: width * 0.05, color: "#E53935" }}>+</Text>
               </View>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1, padding: 16, marginTop: 10 }}>
-        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginVertical: 10 }}>
-          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#E53935" }}>{price.toLocaleString("vi-VN")} VND</Text>
+      {/* Food Description and Price */}
+      <ScrollView style={{ flex: 1, padding: width * 0.04, marginTop: height * 0.01 }}>
+        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginVertical: height * 0.01 }}>
+          <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{price.toLocaleString("vi-VN")} VND</Text>
         </View>
 
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Mô tả</Text>
-          <Text style={{ fontSize: 16, color: "#666", marginTop: 5 }}>{foodData?.description}</Text>
+        <View style={{  }}>
+          <Text style={{ fontSize: width * 0.05, fontWeight: "bold" }}>Mô tả</Text>
+          <Text style={{ fontSize: width * 0.045, color: "#666", marginTop: height * 0.01 }}>{foodData?.description}</Text>
         </View>
-      </ScrollView>
 
-      {/* Combo Group Section */}
-      {comboFoods.length > 0 && (
-        <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold", color: "#E53935", marginBottom: 10 }}>Món ăn trong Combo Nhóm</Text>
-          {comboFoods.map((comboFood) => (
-            <View
-              key={comboFood._id}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottomWidth: 1,
-                borderBottomColor: "#ddd",
-                paddingVertical: 10,
-              }}
-            >
-              {/* Checkbox and Food Name */}
-              <TouchableOpacity
+        {/* Combo Section */}
+        {comboFoods.length > 0 && (
+          <View style={{ marginTop: height * 0.03 }}>
+            <Text style={{ fontSize: width * 0.05, fontWeight: "bold", color: "black", marginBottom: height * 0.01 }}>
+              Tên nhóm
+            </Text>
+            {comboFoods.map((comboFood) => (
+              <View
+                key={comboFood._id}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  flex: 1,
+                  justifyContent: "space-between",
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#ddd",
+                  paddingVertical: height * 0.015,
                 }}
-                onPress={() => toggleComboSelection(comboFood)}
               >
-                <View
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderWidth: 2,
-                    borderColor: "#E53935",
-                    borderRadius: 4,
-                    marginRight: 10,
-                    backgroundColor: selectedCombos.includes(comboFood._id) ? "#E53935" : "#fff",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
+                {/* Checkbox and Food Name */}
+                <TouchableOpacity
+                  style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+                  onPress={() => toggleComboSelection(comboFood)}
                 >
-                  {selectedCombos.includes(comboFood._id) && <Ionicons name="checkmark" size={18} color="#fff" />}
-                </View>
-                <Text style={{ fontSize: 16, color: "#333" }}>{comboFood.foodName}</Text>
-              </TouchableOpacity>
+                  <View
+                    style={{
+                      width: width * 0.06,
+                      height: width * 0.06,
+                      borderWidth: 2,
+                      borderColor: "#E53935",
+                      borderRadius: width * 0.02,
+                      marginRight: width * 0.03,
+                      backgroundColor: selectedCombos.includes(comboFood._id) ? "#E53935" : "#fff",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {selectedCombos.includes(comboFood._id) && <Ionicons name="checkmark" size={width * 0.04} color="#fff" />}
+                  </View>
+                  <Text
+                    style={{ fontSize: width * 0.04, color: "#333" }}
+                    numberOfLines={1} // Limit text to 1 line
+                    ellipsizeMode="tail" // Add "..." at the end of truncated text
+                  >
+                    {comboFood.foodName}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* Price */}
-              <Text style={{ fontSize: 16, fontWeight: "bold", color: "#E53935" }}>+{comboFood.price.toLocaleString("vi-VN")} VND</Text>
-            </View>
-          ))}
-        </View>
-      )}
+                {/* Price */}
+                <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "black" }}>+{comboFood.price.toLocaleString("vi-VN")} VND</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
-      <View style={{ backgroundColor: "#fff", padding: 16, flexDirection: "row", justifyContent: "space-between" }}>
+      {/* Add to Cart Button */}
+      <View style={{ backgroundColor: "#fff", padding: width * 0.04, flexDirection: "row", justifyContent: "space-between" }}>
         <TouchableOpacity
           style={{
             backgroundColor: "#fff",
             borderWidth: 2,
             borderColor: "#E53935",
-            paddingVertical: 15,
-            borderRadius: 8,
+            paddingVertical: height * 0.02,
+            borderRadius: width * 0.02,
             flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            width: "98%",
+            width: "100%",
           }}
           onPress={async () => {
-            console.log("userId:", userId, "foodId:", foodId, "storeId:", storeId);
             await addToCart(userId, storeId, selectedCombos);
             navigation.navigate("Shopping", { storeId, userId, foodId });
           }}
         >
-          <Ionicons name="cart-outline" size={24} color="#E53935" />
-          <Text style={{ color: "#E53935", fontSize: 18, fontWeight: "bold", marginLeft: 5 }}>Giỏ hàng</Text>
+          <Ionicons name="cart-outline" size={width * 0.06} color="#E53935" />
+          <Text style={{ color: "#E53935", fontSize: width * 0.045, fontWeight: "bold", marginLeft: width * 0.02 }}>Giỏ hàng</Text>
         </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          style={{
-            backgroundColor: "#E53935",
-            paddingVertical: 15,
-            borderRadius: 8,
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "48%",
-          }}
-          onPress={() => addToCart(userId)} // Thêm món ăn vào giỏ hàng
-        >
-          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>Mua ngay</Text>
-        </TouchableOpacity> */}
       </View>
     </View>
   );

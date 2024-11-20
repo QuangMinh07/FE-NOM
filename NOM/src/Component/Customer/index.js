@@ -9,5 +9,6 @@ import OrderingProcess from "./OrderingProcess";
 import SearchByGroup from "./SearchByGroup";
 import ShoppingAll from "./ShoppingAll";
 import CommentDetails from "./CommentDetails";
+import SeachAll from "./SeachAll";
 
-export { Seach, StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood,OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails}
+export { Seach, StoreKH,Shopping,EditAddress,Select,Orderfood,ReviewFood,OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails,SeachAll}

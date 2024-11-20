@@ -258,10 +258,10 @@ export default function Shopping({ route }) {
   const calculateTotal = useCallback(() => {
     const total = Array.isArray(orderItems)
       ? orderItems.reduce((accumulator, item) => {
-          const foodPrice = item.price; // Giá món chính
-          const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
-          return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
-        }, 0)
+        const foodPrice = item.price; // Giá món chính
+        const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
+        return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
+      }, 0)
       : 0;
 
     let discount = 0;
@@ -434,33 +434,90 @@ export default function Shopping({ route }) {
                   </View>
                 </View>
 
-                {/* Hiển thị các món trong combo */}
+                {/* Display Combo Foods and Total Price */}
                 {item.combos && item.combos.foods.length > 0 && (
-                  <View>
+                  <View style={{ marginTop: 10, paddingHorizontal: 10 }}>
+                    {/* Section Title */}
+                    <Text style={{ fontSize: 14, fontWeight: "bold", color: "#E53935", marginBottom: 5 }}>
+                      Các món trong Combo
+                    </Text>
+
+                    {/* Combo Foods List */}
                     {item.combos.foods.map((comboFood, comboIndex) => (
-                      <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                      <View
+                        key={comboIndex}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 8,
+                          padding: 5,
+                          borderBottomWidth: 1,
+                          borderBottomColor: "#ddd",
+                        }}
+                      >
+                        {/* Food Name */}
                         <Text
                           style={{
-                            fontSize: 14,
+                            fontSize: 12,
                             color: "#333",
-                            width: 200,
-                            paddingLeft: 10,
+                            width: "65%", // Restrict width for long names
                           }}
+                          numberOfLines={1}
+                          ellipsizeMode="tail" // Truncate text if too long
                         >
                           {comboFood.foodName || "Món không xác định"}
                         </Text>
+
+                        {/* Price */}
                         <Text
                           style={{
                             fontSize: 14,
-                            color: "#555", // Màu xám nhạt hơn cho giá tiền
+                            color: "#555", // Light gray for price
                           }}
                         >
-                          {comboFood.price ? comboFood.price.toLocaleString("vi-VN") : "N/A"} VND
+                          + {comboFood.price ? comboFood.price.toLocaleString("vi-VN") : "N/A"} VND
                         </Text>
                       </View>
                     ))}
+
+                    {/* Total Price */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginTop: 10,
+                        paddingVertical: 10,
+                        borderTopWidth: 1,
+                        borderTopColor: "#ddd",
+                      }}
+                    >
+                      {/* Main Dish Name */}
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          color: "#333",
+                        }}
+                      >
+                        Tổng cộng
+                      </Text>
+
+                      {/* Total Price Calculation */}
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          color: "#E53935",
+                        }}
+                      >
+                        {(item.price + item.combos.foods.reduce((sum, food) => sum + (food.price || 0), 0)).toLocaleString("vi-VN")} VND
+                      </Text>
+                    </View>
                   </View>
                 )}
+
               </View>
             </Swipeable>
           ))}
