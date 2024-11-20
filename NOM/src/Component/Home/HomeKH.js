@@ -6,7 +6,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { globalContext } from "../../context/globalContext"; // Import globalContext
 
-const { width } = Dimensions.get("window"); // Get screen width
+const { width,height } = Dimensions.get("window"); // Get screen width
 
 const HomeKH = () => {
   const [userData, setUserData] = useState(null); // State to store user data
@@ -19,6 +19,10 @@ const HomeKH = () => {
   const userId = globalData.user?.id;
   const [searchResults, setSearchResults] = useState({ stores: [], foods: [] }); // Khởi tạo mảng rỗng mặc định
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  // const { width, height } = Dimensions.get("window");
+
+
+
 
   const addToCart = async (userId, foodId, quantity, storeId) => {
     try {
@@ -295,20 +299,77 @@ const HomeKH = () => {
         </View>
       </View>
 
-      {/* Search Bar and Heart Icon */}
-      <View style={{ flexDirection: "row", paddingHorizontal: 15, marginTop: -30, alignItems: "center" }}>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, elevation: 5, height: 50 }}>
-            <Ionicons onPress={() => navigation.navigate("Seach")} name="search-outline" size={25} color="#E53935" />
-            <TextInput placeholder="Tìm kiếm" style={{ marginLeft: 10, flex: 1 }} value={searchQuery} onChangeText={handleSearch} />
-          </View>
+      <View
+      style={{
+        flexDirection: "row",
+        paddingHorizontal: width * 0.04,
+        marginTop: -height * 0.03, // Giảm kích thước linh hoạt thay vì giá trị cố định
+        alignItems: "center",
+      }}
+    >
+      {/* Search Bar */}
+      <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#fff",
+            borderRadius: width * 0.03, // Bo góc linh hoạt
+            paddingHorizontal: width * 0.045, // Padding ngang
+            height: height * 0.065, // Chiều cao linh hoạt
+            elevation: 5, // Bóng cho Android
+            shadowColor: "#000", // Bóng cho iOS
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 3.84,
+          }}
+        >
+          <Ionicons
+            onPress={() => navigation.navigate("Seach")}
+            name="search-outline"
+            size={height * 0.03} // Kích thước linh hoạt
+            color="#E53935"
+          />
+          <TextInput
+              placeholder="Tìm kiếm"
+              style={{
+                marginLeft: width * 0.03,
+                flex: 1,
+                fontSize: height * 0.018,
+              }}
+              value={searchQuery}
+              onChangeText={handleSearch}
+              onFocus={() =>
+                navigation.navigate("SeachAll", { searchQuery }) // Chuyển hướng tới SeachAll
+              }
+            />
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("FavoriteFood")} style={{ marginLeft: 10 }}>
-          <View style={{ backgroundColor: "#fff", width: 50, height: 50, justifyContent: "center", alignItems: "center", borderRadius: 25 }}>
-            <Ionicons name="heart-outline" size={25} color="#E53935" />
-          </View>
-        </TouchableOpacity>
       </View>
+
+      {/* Heart Icon */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("FavoriteFood")}
+        style={{ marginLeft: width * 0.025 }}
+      >
+        <View
+          style={{
+            backgroundColor: "#fff",
+            width: height * 0.065,
+            height: height * 0.065,
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: (height * 0.065) / 2, // Đảm bảo bo góc tròn hoàn hảo
+            elevation: 5, // Bóng cho Android
+            shadowColor: "#000", // Bóng cho iOS
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 3.84,
+          }}
+        >
+          <Ionicons name="heart-outline" size={height * 0.03} color="#E53935" />
+        </View>
+      </TouchableOpacity>
+    </View>
 
       {/* Categories */}
       <View style={{ marginTop: 20 }}>
@@ -329,7 +390,7 @@ const HomeKH = () => {
         </ScrollView>
       </View>
       <ScrollView>
-        {searchQuery ? (
+        {/* {searchQuery ? (
           <View style={{ paddingHorizontal: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, marginTop: 10 }}>Kết quả tìm kiếm</Text>
             {searchResults?.stores?.length > 0 || searchResults?.foods?.length > 0 ? (
@@ -363,7 +424,7 @@ const HomeKH = () => {
               <Text style={{ fontSize: 16, color: "#888" }}>Không tìm thấy kết quả phù hợp</Text>
             )}
           </View>
-        ) : (
+        ) : ( */}
           <>
             {/* Banner List */}
             <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
@@ -495,7 +556,7 @@ const HomeKH = () => {
               </ScrollView>
             </View>
           </>
-        )}
+        {/* )} */}
       </ScrollView>
     </View>
   );

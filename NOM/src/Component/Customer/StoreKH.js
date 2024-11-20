@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert, Platform } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
@@ -265,35 +265,39 @@ export default function StoreKH() {
           <TouchableOpacity
             style={{
               position: "absolute",
-              top: 60,
-              right: 30,
+              top: Platform.OS === "ios" ? height * 0.06 : height * 0.035,
+              right: width * 0.05,
               backgroundColor: "#fff",
-              borderRadius: 20,
-              padding: 8,
+              borderRadius: width * 0.1,
+              padding: width * 0.03,
               elevation: 5,
-              shadowColor: "#000",
-              shadowOpacity: 0.3,
-              shadowRadius: 5,
-              shadowOffset: { width: 0, height: 2 },
+              ...Platform.select({
+                ios: {
+                  shadowColor: "#000",
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  shadowOffset: { width: 0, height: 2 },
+                },
+              }),
             }}
             onPress={() => {
-              console.log("Navigating to Shopping with Store ID:", storeId); // Log để kiểm tra storeId
+              console.log("Navigating to Shopping with Store ID:", storeId);
               navigation.navigate("Shopping", { storeId });
             }}
           >
-            <Icon name="shopping-cart" size={24} color="#E53935" />
+            <Icon name="shopping-cart" size={width * 0.06} color="#E53935" />
           </TouchableOpacity>
 
           {/* Store Info */}
           <View
             style={{
               position: "absolute",
-              bottom: -40,
-              left: width * 0.05,
-              right: width * 0.05,
+              bottom: -height * 0.05, // Dynamic bottom positioning
+              left: width * 0.05, // 5% of screen width from left
+              right: width * 0.05, // 5% of screen width from right
               backgroundColor: "#fff",
-              padding: 15,
-              borderRadius: 10,
+              padding: height * 0.02, // Dynamic padding
+              borderRadius: width * 0.03, // Dynamic border radius
               elevation: 5,
               shadowColor: "#000",
               shadowOpacity: 0.2,
@@ -308,28 +312,106 @@ export default function StoreKH() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000", width: 110 }}>{storeName}</Text>
-              <Text style={{ fontSize: 12, color: "#333", marginTop: 4 }}>
+              {/* Store Name */}
+              <Text
+                style={{
+                  fontSize: width * 0.045, // Dynamic font size
+                  fontWeight: "bold",
+                  color: "#000",
+                  maxWidth: width * 0.4, // Restrict width to prevent overflow
+                }}
+                numberOfLines={1} // Truncate if text is too long
+              >
+                {storeName}
+              </Text>
+
+              {/* Rating */}
+              <Text
+                style={{
+                  fontSize: width * 0.035,
+                  color: "#333",
+                  marginTop: height * 0.005,
+                }}
+              >
                 {averageRating} ⭐ ({reviewCount})
               </Text>
+
+              {/* Open/Close Status */}
               <View
                 style={{
                   backgroundColor: isOpen ? "#00a651" : "#E53935",
-                  borderRadius: 3,
-                  paddingHorizontal: 5,
-                  paddingVertical: 4,
+                  borderRadius: width * 0.01,
+                  paddingHorizontal: width * 0.02,
+                  paddingVertical: height * 0.01,
                 }}
               >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>{isOpen ? "Đang mở cửa" : "Đã đóng cửa"}</Text>
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "bold",
+                    fontSize: width * 0.035,
+                  }}
+                >
+                  {isOpen ? "Đang mở cửa" : "Đã đóng cửa"}
+                </Text>
               </View>
             </View>
 
+            {/* Opening Hours */}
             <View>
-              <Text style={{ fontSize: 14, color: "#E53935", marginTop: 5 }}>Thời gian mở cửa:</Text>
-              <Text style={{ paddingLeft: 20, fontSize: 14, color: "#E53935" }}>{formatSellingTime()}</Text>
-            </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: height * 0.01,
+                }}
+              >
+                {/* Clock Icon */}
+                <Icon name="access-time" size={width * 0.05} color="#E53935" />
 
-            <Text style={{ fontSize: 14, color: "#333", marginTop: 5 }}>{storeAddress}</Text>
+                {/* Opening Time Text */}
+                <Text
+                  style={{
+                    fontSize: width * 0.04,
+                    color: "#000",
+                    marginLeft: width * 0.02,
+                  }}
+                >
+                  Thời gian mở cửa:
+                </Text>
+              </View>
+              <Text
+                style={{
+                  paddingLeft: width * 0.05,
+                  fontSize: width * 0.04,
+                  color: "#E53935",
+                }}
+              >
+                {formatSellingTime()}
+              </Text>
+            </View>
+            {/* Store Address */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: height * 0.01,
+              }}
+            >
+              {/* Location Icon */}
+              <Icon name="location-on" size={width * 0.05} color="#E53935" />
+
+              {/* Store Address */}
+              <Text
+                style={{
+                  fontSize: width * 0.04,
+                  color: "#333",
+                  marginLeft: width * 0.02,
+                }}
+              >
+                {storeAddress}
+              </Text>
+            </View>
           </View>
         </View>
 

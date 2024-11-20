@@ -14,7 +14,7 @@ import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Compo
 import { RatingScreen } from "./src/Component/Rating";
 import { DashboardScreen } from "./src/Component/Dashboard";
 
-import { Seach, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails} from "./src/Component/Customer";
+import { Seach,SeachAll, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails} from "./src/Component/Customer";
 import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails,Offers } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
@@ -226,6 +226,8 @@ const App = () => {
             <Stack.Screen name="TimeScheduleSell" component={TimeScheduleSell} />
             <Stack.Screen name="DishDetails" component={DishDetails} />
             <Stack.Screen name="Seach" component={Seach} />
+            <Stack.Screen name="SeachAll" component={SeachAll} />
+
             <Stack.Screen name="SearchByGroup" component={SearchByGroup} />
             <Stack.Screen name="ShoppingAll" component={ShoppingAll} />
             <Stack.Screen name="CommentDetails" component={CommentDetails} />
