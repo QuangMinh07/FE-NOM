@@ -95,7 +95,7 @@ export default function Select() {
       if (response?.transaction) {
         if (selectedPaymentMethod === "Cash") {
           // Điều hướng về màn hình Shopping sau khi tạo giao dịch thành công
-          navigation.navigate("Shopping", { paymentMethod: selectedPaymentMethod });
+          navigation.navigate("Shopping", { paymentMethod: selectedPaymentMethod, storeId });
           Alert.alert("Thành công", "Phương thức thanh toán tiền mặt đã được xác nhận!");
         } else if (selectedPaymentMethod === "PayOS") {
           // Hiển thị QR code cho PayOS

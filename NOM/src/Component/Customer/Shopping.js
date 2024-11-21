@@ -25,31 +25,55 @@ export default function Shopping({ route }) {
   const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false); // State quản lý trạng thái bật/tắt
   const [totalAmount, setTotalAmount] = useState(0);
   const storeId = route.params?.storeId;
-  console.log("cart", cart);
+  const [loadingItems, setLoadingItems] = useState({}); // Loading cục bộ cho từng mục
 
-  const updateCartItemOnServer = async (userId, cartId, foodId, quantity) => {
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.paymentMethod) {
+        setSelectedPaymentMethod(route.params.paymentMethod);
+      }
+
+      if (route.params?.storeId) {
+        console.log("Received storeId from Select:", route.params.storeId);
+      }
+
+      if (userId && storeId) {
+        fetchUserProfile();
+        fetchStoreCartItems();
+      } else {
+        setError("Không tìm thấy người dùng hoặc cửa hàng.");
+      }
+    }, [userId, storeId, route.params?.paymentMethod])
+  );
+
+  const updateCartItemOnServer = async (userId, cartId, foodId, quantity, combos = []) => {
     if (!userId || !cartId || !foodId || quantity <= 0) {
-      console.error("Invalid parameters for updateCartItemOnServer:", { userId, cartId, foodId, quantity });
+      console.error("Invalid parameters for updateCartItemOnServer:", { userId, cartId, foodId, quantity, combos });
       return;
     }
 
+    setLoadingItems(true);
     try {
-      console.log("Updating cart item on server:", { userId, cartId, foodId, quantity });
+      console.log("Updating cart item on server:", { userId, cartId, foodId, quantity, combos });
 
       const response = await api({
         method: typeHTTP.PUT,
-        url: `/cart/update-item/${userId}/${cartId}/${foodId}`, // Thêm cartId vào URL
-        body: { quantity },
+        url: `/cart/update-item/${userId}/${cartId}/${foodId}`,
+        body: { quantity, combos },
         sendToken: true,
       });
 
-      if (response.message) {
-        console.log("Cập nhật món ăn thành công:", response.message);
+      if (response?.cart) {
+        console.log("Cập nhật món ăn thành công, đồng bộ lại dữ liệu giỏ hàng:", response.cart);
+        setOrderItems(response.cart.items); // Cập nhật lại toàn bộ danh sách món từ server
+        setTotalAmount(response.cart.totalPrice); // Cập nhật tổng tiền từ server
       } else {
         console.error("Không thể cập nhật món ăn:", response.error);
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật món ăn trên server:", error);
+      // console.error("Lỗi khi cập nhật món ăn trên server:", error);
+    } finally {
+      setLoadingItems(false); // Tắt loading cho mục này
     }
   };
 
@@ -214,21 +238,26 @@ export default function Shopping({ route }) {
       const updatedItems = [...prevItems];
       const item = updatedItems[index];
 
-      console.log("Item being updated:", item); // Log dữ liệu của item
+      console.log("Increasing quantity for:", { index, item });
 
       if (item.food && item.food._id) {
-        item.quantity += 1;
-        item.price = item.food.price * item.quantity; // Tính lại giá
+        item.quantity += 1; // Tăng số lượng món
+        item.price = item.food.price * item.quantity; // Tính lại giá món chính
 
-        // Gọi API cập nhật số lượng trên server
-        const cartId = globalData.cart._id; // Lấy cartId từ globalData
-        updateCartItemOnServer(userId, cartId, item.food._id, item.quantity); // Truyền đúng tham số
+        // Gọi API cập nhật trên server với combos
+        const cartId = globalData.cart._id;
+        updateCartItemOnServer(userId, cartId, item.food._id, item.quantity, item.combos?.foods || [])
+          .then(() => fetchStoreCartItems()) // Đồng bộ lại toàn bộ giỏ hàng từ server
+          .catch((error) => console.error("Error syncing cart:", error));
 
-        setTotalAmount(calculateTotal(updatedItems)); // Tính lại tổng tiền
+        setTotalAmount(calculateTotal(updatedItems)); // Cập nhật tổng tiền
       } else {
         console.error("Item does not have a valid food ID:", item);
       }
-      return updatedItems;
+
+      console.log("Updated items after increase:", updatedItems);
+
+      return updatedItems; // Cập nhật lại danh sách món ăn
     });
   };
 
@@ -237,31 +266,36 @@ export default function Shopping({ route }) {
       const updatedItems = [...prevItems];
       const item = updatedItems[index];
 
-      console.log("Item being updated:", item); // Log dữ liệu của item
+      console.log("Decreasing quantity for:", { index, item });
 
       if (item.food && item.food._id && item.quantity > 1) {
-        item.quantity -= 1;
-        item.price = item.food.price * item.quantity; // Tính lại giá
+        item.quantity -= 1; // Giảm số lượng món
+        item.price = item.food.price * item.quantity; // Tính lại giá món chính
 
-        // Gọi API cập nhật số lượng trên server
-        const cartId = globalData.cart._id; // Lấy cartId từ globalData
-        updateCartItemOnServer(userId, cartId, item.food._id, item.quantity); // Truyền đúng tham số
+        // Gọi API cập nhật trên server với combos
+        const cartId = globalData.cart._id;
+        updateCartItemOnServer(userId, cartId, item.food._id, item.quantity, item.combos?.foods || [])
+          .then(() => fetchStoreCartItems()) // Đồng bộ lại toàn bộ giỏ hàng từ server
+          .catch((error) => console.error("Error syncing cart:", error));
 
-        setTotalAmount(calculateTotal(updatedItems)); // Tính lại tổng tiền
+        setTotalAmount(calculateTotal(updatedItems)); // Cập nhật tổng tiền
       } else {
         console.error("Item does not have a valid food ID or quantity <= 1:", item);
       }
-      return updatedItems;
+
+      console.log("Updated items after decrease:", updatedItems);
+
+      return updatedItems; // Cập nhật lại danh sách món ăn
     });
   };
 
   const calculateTotal = useCallback(() => {
     const total = Array.isArray(orderItems)
       ? orderItems.reduce((accumulator, item) => {
-        const foodPrice = item.price; // Giá món chính
-        const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
-        return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
-      }, 0)
+          const foodPrice = item.price; // Giá món chính
+          const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
+          return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
+        }, 0)
       : 0;
 
     let discount = 0;
@@ -283,6 +317,16 @@ export default function Shopping({ route }) {
   };
 
   const handlePayment = async () => {
+    if (!selectedPaymentMethod) {
+      Alert.alert("Thông báo", "Vui lòng chọn phương thức thanh toán trước khi tiếp tục.");
+      return;
+    }
+
+    if (!deliveryAddress) {
+      Alert.alert("Thông báo", "Vui lòng nhập địa chỉ giao hàng trước khi tiếp tục.");
+      return;
+    }
+
     try {
       setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const cartId = globalData.cart?._id; // Make sure you retrieve the cartId from global state
@@ -427,7 +471,7 @@ export default function Shopping({ route }) {
                     <TouchableOpacity onPress={() => decreaseQuantity(index)}>
                       <Icon name="remove-circle-outline" size={24} color="#E53935" />
                     </TouchableOpacity>
-                    <Text style={{ marginHorizontal: 10 }}>{item.quantity}</Text>
+                    {loadingItems[index] ? <ActivityIndicator size="small" color="#E53935" style={{ marginHorizontal: 10 }} /> : <Text style={{ marginHorizontal: 10 }}>{item.quantity}</Text>}
                     <TouchableOpacity onPress={() => increaseQuantity(index)}>
                       <Icon name="add-circle-outline" size={24} color="#E53935" />
                     </TouchableOpacity>
@@ -438,9 +482,7 @@ export default function Shopping({ route }) {
                 {item.combos && item.combos.foods.length > 0 && (
                   <View style={{ marginTop: 10, paddingHorizontal: 10 }}>
                     {/* Section Title */}
-                    <Text style={{ fontSize: 14, fontWeight: "bold", color: "#E53935", marginBottom: 5 }}>
-                      Các món trong Combo
-                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: "bold", color: "#E53935", marginBottom: 5 }}>Các món trong Combo</Text>
 
                     {/* Combo Foods List */}
                     {item.combos.foods.map((comboFood, comboIndex) => (
@@ -517,7 +559,6 @@ export default function Shopping({ route }) {
                     </View>
                   </View>
                 )}
-
               </View>
             </Swipeable>
           ))}
@@ -564,6 +605,10 @@ export default function Shopping({ route }) {
           style={styles.paymentSection}
           onPress={async () => {
             try {
+              if (!storeId) {
+                Alert.alert("Lỗi", "Không tìm thấy ID cửa hàng. Vui lòng thử lại.");
+                return;
+              }
               // Gọi API để lấy giỏ hàng theo userId và storeId
               const data = await api({
                 method: typeHTTP.GET,

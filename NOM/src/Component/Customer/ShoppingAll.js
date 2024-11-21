@@ -1,5 +1,5 @@
 import React, { useState, useContext, useCallback } from "react";
-import { View, Text, Image, FlatList, TouchableOpacity, SafeAreaView, Dimensions, Alert,Platform } from "react-native";
+import { View, Text, Image, FlatList, TouchableOpacity, SafeAreaView, Dimensions, Alert, Platform } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api";
 import { globalContext } from "../../context/globalContext";
@@ -156,14 +156,14 @@ export default function ShoppingAll() {
           borderBottomColor: "#e0e0e0",
         }}
       >
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333", }}>Giỏ hàng của tôi</Text>
+        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>Giỏ hàng của tôi</Text>
         <TouchableOpacity onPress={() => setIsManaging(!isManaging)}>
           <Text style={{ fontSize: 16, color: "#E53935" }}>{isManaging ? "Hủy" : "Quản lý"}</Text>
         </TouchableOpacity>
       </View>
 
       {shoppingData.length > 0 ? (
-        <FlatList data={shoppingData} keyExtractor={(item) => item.id.toString()} renderItem={renderShoppingItem} contentContainerStyle={{ padding: 16 }} />
+        <FlatList data={shoppingData} keyExtractor={(item, index) => `${item.cartId}-${item.id}-${index}`} renderItem={renderShoppingItem} contentContainerStyle={{ padding: 16 }} />
       ) : (
         <View
           style={{
