@@ -550,7 +550,7 @@ export default function StoreKH() {
           {/* Title and "See More" Arrow Button */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff" }}>Tất cả đánh giá</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("CommentDetails")}>
+            <TouchableOpacity onPress={() => navigation.navigate("CommentDetails", { storeId })}>
               <Icon name="arrow-forward" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -571,13 +571,13 @@ export default function StoreKH() {
                   shadowRadius: 5,
                   position: "relative",
                 }}
-                onPress={() => navigation.navigate("CommentDetails", { reviewId: review.id })} // Navigate to CommentDetails with reviewId
+                onPress={() => navigation.navigate("CommentDetails", { reviewId: review.id, storeId })} // Navigate to CommentDetails with reviewId
               >
                 <Text style={{ fontSize: 14, color: "#333", marginBottom: 10 }}>{review.comment}</Text>
                 <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
                   <Icon name="star" size={14} color="#FFD700" />
                   <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>{review.rating}</Text>
-                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>• {review.user?.fullName}</Text>
+                  <Text style={{ fontSize: 14, color: "#333", marginLeft: 5 }}>• {review.user}</Text>
                 </View>
 
                 {/* Decorative Chat Icon in the Bottom-Right Corner */}

@@ -6,6 +6,7 @@ import { useNavigation, useRoute } from "@react-navigation/native"; // Thêm use
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
+import QRCode from "react-native-qrcode-svg"; // Import QR Code library
 
 const { width } = Dimensions.get("window");
 
@@ -24,9 +25,9 @@ export default function Select() {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null); // Lưu phương thức thanh toán đã chọn
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(""); // Lưu dữ liệu QR code
   const [isLoading, setIsLoading] = useState(false);
   const qrCodeRef = useRef(null); // Tham chiếu mã QR
+  const [qrCodeValue, setQrCodeValue] = useState(""); // Giá trị QR Code
 
   // Hàm kiểm tra dữ liệu hợp lệ
   // const validatePaymentDetails = () => {
@@ -99,7 +100,7 @@ export default function Select() {
           Alert.alert("Thành công", "Phương thức thanh toán tiền mặt đã được xác nhận!");
         } else if (selectedPaymentMethod === "PayOS") {
           // Hiển thị QR code cho PayOS
-          setQrCodeDataUrl(response.qrCode);
+          setQrCodeValue(response.qrCode);
           Alert.alert("Thông báo", "Quét mã QR để hoàn tất thanh toán. Đơn hàng sẽ được xử lý tự động sau khi thanh toán thành công.");
         }
       } else {
@@ -243,21 +244,14 @@ export default function Select() {
           <Text style={{ marginLeft: 10, fontSize: 16, color: selectedPaymentMethod === "PayOS" ? "#fff" : "#333" }}>PayOS</Text>
         </TouchableOpacity>
 
-        {selectedPaymentMethod === "PayOS" && qrCodeDataUrl && (
+        {selectedPaymentMethod === "PayOS" && qrCodeValue && (
           <View style={{ alignItems: "center", marginTop: 20 }}>
             <Text style={{ marginBottom: 10, fontSize: 16, color: "#333" }}>Quét mã QR để thanh toán:</Text>
-            <Image
-              source={{ uri: qrCodeDataUrl }}
-              style={{
-                width: 200,
-                height: 200,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: "#ccc",
-                backgroundColor: "#FFFFFF",
-              }}
-              getRef={(ref) => (qrCodeRef.current = ref)} // Gán ref
-              resizeMode="contain"
+            <QRCode
+              value={qrCodeValue} // Chuỗi dữ liệu QR Code
+              size={200}
+              color="#000"
+              backgroundColor="#fff"
             />
             <TouchableOpacity
               style={{
