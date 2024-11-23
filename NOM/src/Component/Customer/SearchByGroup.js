@@ -135,7 +135,8 @@ export default function SearchByGroup({ route, navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f8f8f8", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, margin: 16 }}>
+      
+      <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f8f8f8", borderRadius: 10, paddingHorizontal: 15, paddingVertical: 10, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, margin: 16, }}>
         <Ionicons name="search-outline" size={25} color="#E53935" />
         <TextInput placeholder="Tìm kiếm" placeholderTextColor="#999" style={{ marginLeft: 10, flex: 1, color: "#333" }} value={searchQuery} onChangeText={handleSearch} />
       </View>
@@ -170,7 +171,7 @@ export default function SearchByGroup({ route, navigation }) {
               padding: 20,
             }}
           >
-            <Image
+            {/* <Image
               source={require("../../img/LOGOBLACK.png")}
               style={{
                 width: 180,
@@ -178,7 +179,7 @@ export default function SearchByGroup({ route, navigation }) {
                 resizeMode: "contain",
                 marginBottom: 30,
               }}
-            />
+            /> */}
             <Image
               source={require("../../img/Illustration.png")}
               style={{
@@ -186,10 +187,12 @@ export default function SearchByGroup({ route, navigation }) {
                 height: 180,
                 resizeMode: "contain",
                 marginBottom: 30,
+                marginTop:"30%",
+                
               }}
             />
 
-            <Text style={{ fontSize: 18, color: "#333" }}>Không có cửa hàng thuộc nhóm món này</Text>
+            <Text style={{ fontSize: 14, color: "#333" }}>Không có cửa hàng thuộc nhóm món này</Text>
           </View>
         ) : (
           <FlatList data={stores} keyExtractor={(item) => item._id.toString()} renderItem={renderStoreItem} showsVerticalScrollIndicator={false} />

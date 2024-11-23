@@ -156,7 +156,7 @@ export default function ShoppingAll() {
           borderBottomColor: "#e0e0e0",
         }}
       >
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>Giỏ hàng của tôi</Text>
+        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333",color: "#E53935" }}>Giỏ hàng của tôi</Text>
         <TouchableOpacity onPress={() => setIsManaging(!isManaging)}>
           <Text style={{ fontSize: 16, color: "#E53935" }}>{isManaging ? "Hủy" : "Quản lý"}</Text>
         </TouchableOpacity>
