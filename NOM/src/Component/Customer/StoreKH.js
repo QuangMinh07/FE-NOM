@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert, Platform } from "react-native";
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert, Platform } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
@@ -421,33 +421,41 @@ export default function StoreKH() {
               <TouchableOpacity
                 key={food._id || index} // Sử dụng id chính xác cho key
                 style={{
-                  backgroundColor: "#fff", // Tô màu nổi bật
+                  backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Đổi nền nếu không có sẵn
                   padding: 10,
                   borderRadius: 10,
                   borderWidth: 1,
                   borderColor: "#eee",
                   marginRight: 15,
                   width: width * 0.4, // Chiều rộng của khung chứa
+                  overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+
                 }}
                 onPress={() => {
-                  console.log("Navigating to Orderfood with foodId:", food._id);
-                  console.log("Navigating to Orderfood with storeId:", storeIdState);
-                  if (storeIdState) {
-                    navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                  if (food.isAvailable) {
+                    console.log("Navigating to Orderfood with foodId:", food._id);
+                    console.log("Navigating to Orderfood with storeId:", storeIdState);
+                    if (storeIdState) {
+                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                    } else {
+                      console.error("storeIdState is undefined!");
+                    }
                   } else {
-                    console.error("storeIdState is undefined!");
+                    console.warn("Food is not available!");
                   }
                 }}
+                disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
               >
                 {/* Placeholder cho ảnh */}
                 <View
                   style={{
-                    height: 100, // Chiều cao khung chứa
+                    height: 140, // Chiều cao lớn hơn để phù hợp dạng chữ nhật đứng
                     width: "100%", // Đảm bảo chiếm toàn bộ chiều rộng
                     backgroundColor: "#f0f0f0", // Màu nền cho khung chứa ảnh
                     borderRadius: 10,
                     justifyContent: "center",
                     alignItems: "center",
+                    position: "relative", // Để thêm lớp phủ và ruy băng
                   }}
                 >
                   {food.imageUrl ? (
@@ -461,21 +469,65 @@ export default function StoreKH() {
                       resizeMode="cover"
                     />
                   ) : (
-                    <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                    <Text style={{ fontSize: 14, color: "#888" }}>Ảnh món ăn</Text>
+                  )}
+
+                  {/* Overlay chữ "Đã hết" */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        ...StyleSheet.absoluteFillObject,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền đen bán trong suốt
+                        borderRadius: 10,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                        Đã hết
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Dây ruy băng đỏ */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: "80%", // Chiều dài ruy băng vừa khung
+                        height: 25, // Chiều rộng ruy băng
+                        backgroundColor: "#E53935", // Màu đỏ
+                        transform: [{ rotate: "-39deg" }], // Điều chỉnh góc xoay để nghiêng đúng
+                        bottom: -45, // Đặt sát cạnh dưới
+                        right: -35, // Đảm bảo nằm trong khung
+                        justifyContent: "center",
+                        alignItems: "center",
+                        overflow: "hidden", // Giữ nội dung trong khung
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                        Hết món
+                      </Text>
+                    </View>
                   )}
                 </View>
 
                 {/* Thông tin món ăn */}
                 <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 10 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
+                  {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                </Text>
               </TouchableOpacity>
+
             ))}
           </ScrollView>
         </View>
 
         {firstGroup && (
           <View style={{ paddingHorizontal: 15 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+              {foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -490,48 +542,108 @@ export default function StoreKH() {
                 <TouchableOpacity
                   key={food._id || index}
                   style={{
-                    backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
+                    backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu nếu không có sẵn
                     padding: 10,
                     borderRadius: 10,
                     borderWidth: 1,
                     borderColor: "#eee",
                     marginRight: 15,
                     width: width * 0.55,
+                    position: "relative", // Để thêm ruy băng lên ngoài khung
+                    overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+
                   }}
                   onPress={() => {
-                    console.log("Navigating to Orderfood with foodId:", food._id);
-                    console.log("Navigating to Orderfood with storeId:", storeIdState);
-                    if (storeIdState) {
-                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                    if (food.isAvailable) {
+                      console.log("Navigating to Orderfood with foodId:", food._id);
+                      console.log("Navigating to Orderfood with storeId:", storeIdState);
+                      if (storeIdState) {
+                        navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                      } else {
+                        console.error("storeIdState is undefined!");
+                      }
                     } else {
-                      console.error("storeIdState is undefined!");
+                      console.warn("Food is not available!");
                     }
                   }}
+                  disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
                 >
+                  {/* Placeholder cho ảnh */}
                   <View
                     style={{
-                      height: 120,
-                      width: "100%",
-                      backgroundColor: "#f0f0f0", // Placeholder background color
+                      height: 120, // Chiều cao lớn hơn để phù hợp dạng chữ nhật đứng
+                      width: "100%", // Đảm bảo chiếm toàn bộ chiều rộng
+                      backgroundColor: "#f0f0f0", // Màu nền cho khung chứa ảnh
                       borderRadius: 10,
-                      overflow: "hidden", // Ensure the image doesn't exceed the border radius
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden", // Đảm bảo hình ảnh không vượt ra ngoài border radius
+                      position: "relative", // Để thêm lớp phủ lên ảnh
+                      overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+
                     }}
                   >
                     {food.imageUrl ? (
                       <Image
                         source={{ uri: food.imageUrl }}
                         style={{
-                          height: "100%", // Fill the height of the parent View
-                          width: "100%", // Fill the width of the parent View
+                          height: "100%",
+                          width: "100%",
+                          borderRadius: 10,
                         }}
-                        resizeMode="cover" // Ensure the image covers the View without distortion
+                        resizeMode="cover" // Đảm bảo hình ảnh bao phủ mà không bị méo
                       />
                     ) : (
                       <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
                     )}
+
+                    {/* Lớp phủ chữ "Đã hết" */}
+                    {!food.isAvailable && (
+                      <View
+                        style={{
+                          ...StyleSheet.absoluteFillObject,
+                          backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền đen bán trong suốt
+                          borderRadius: 10,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                          Đã hết
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                  <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                  <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
+
+                  {/* Thông tin món ăn */}
+                  <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>
+                    {food.foodName}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
+                    {food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND
+                  </Text>
+
+                  {/* Dây ruy băng đỏ nằm ngoài khung */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: 150, // Chiều dài ruy băng
+                        height: 30, // Chiều rộng ruy băng
+                        backgroundColor: "#E53935", // Màu đỏ
+                        transform: [{ rotate: "-29deg" }], // Điều chỉnh góc xoay để nghiêng đúng
+                        bottom: 6, // Đưa ruy băng lên ngoài khung dưới
+                        left: 100, // Đảm bảo nằm bên ngoài khung
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 1, // Đảm bảo ruy băng nằm trên các phần tử khác
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                        Hết món
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -588,13 +700,15 @@ export default function StoreKH() {
         </View>
         {remainingGroups.map((group, index) => (
           <ScrollView key={group || index} style={{ marginTop: 20, paddingHorizontal: 15 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+              {foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}
+            </Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {groupedFoods[group].map((food, index) => (
                 <TouchableOpacity
                   key={food._id || index} // Sử dụng id chính xác cho key
                   style={{
-                    backgroundColor: highlightedFoodId === food._id ? "#e1f7e1" : "#fff", // Tô màu nổi bật
+                    backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu nếu không có sẵn
                     padding: 10,
                     borderRadius: 10,
                     borderWidth: 1,
@@ -602,16 +716,24 @@ export default function StoreKH() {
                     marginBottom: 10,
                     flexDirection: "row",
                     alignItems: "center",
+                    position: "relative", // Để thêm lớp phủ và ruy băng
+                    overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+
                   }}
                   onPress={() => {
-                    console.log("Navigating to Orderfood with foodId:", food._id);
-                    console.log("Navigating to Orderfood with storeId:", storeIdState);
-                    if (storeIdState) {
-                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                    if (food.isAvailable) {
+                      console.log("Navigating to Orderfood with foodId:", food._id);
+                      console.log("Navigating to Orderfood with storeId:", storeIdState);
+                      if (storeIdState) {
+                        navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
+                      } else {
+                        console.error("storeIdState is undefined!");
+                      }
                     } else {
-                      console.error("storeIdState is undefined!");
+                      console.warn("Food is not available!");
                     }
                   }}
+                  disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
                 >
                   <View
                     style={{
@@ -621,6 +743,7 @@ export default function StoreKH() {
                       borderRadius: 10,
                       overflow: "hidden",
                       marginRight: 15,
+                      position: "relative", // Để thêm lớp phủ và ruy băng
                     }}
                   >
                     {food.imageUrl ? (
@@ -635,14 +758,57 @@ export default function StoreKH() {
                     ) : (
                       <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
                     )}
+
+                    {/* Lớp phủ chữ "Đã hết" */}
+                    {!food.isAvailable && (
+                      <View
+                        style={{
+                          ...StyleSheet.absoluteFillObject,
+                          backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền đen bán trong suốt
+                          borderRadius: 10,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                          Đã hết
+                        </Text>
+                      </View>
+                    )}
                   </View>
+
+                  {/* Thông tin món ăn */}
                   <View>
                     <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
                     <Text style={{ fontSize: 14 }}>{food.description}</Text>
-                    <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    <Text style={{ fontSize: 12, color: "#E53935" }}>
+                      {food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND
+                    </Text>
                   </View>
+
+                  {/* Dây ruy băng đỏ nằm ngoài khung */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: "50%", // Đặt chiều rộng dây ruy băng theo tỷ lệ của TouchableOpacity
+                        height: 25,
+                        backgroundColor: "#E53935", // Màu đỏ
+                        transform: [{ rotate: "-45deg" }], // Gạch chéo
+                        bottom: 30, // Gần sát đáy
+                        right: -25, // Dịch sang phải
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                        Hết món
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))}
+
             </ScrollView>
           </ScrollView>
         ))}
