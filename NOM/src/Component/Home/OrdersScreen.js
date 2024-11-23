@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, Alert, Modal, TextInput, Button } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, Alert, Modal, TextInput, Button, Animated, } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Gọi API
@@ -16,6 +16,7 @@ export default function OrdersScreen() {
   const navigation = useNavigation();
 
   const tabs = ["Đang đặt", "Lịch sử", "Chờ thanh toán"];
+
 
   // Hàm gọi API để lấy tất cả các đơn hàng
   const fetchAllOrders = useCallback(async () => {
@@ -95,7 +96,11 @@ export default function OrdersScreen() {
               <Text style={{ fontSize: 14, color: order.orderStatus === "Cancelled" ? "#E53935" : "#666" }}>{getOrderStatusDisplay(order.orderStatus)}</Text>
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-              <Text style={{ fontSize: 14, color: "#666" }}>{order.foods.map((food) => food.foodName).join(", ")}</Text>
+              <Text style={{ fontSize: 14, color: "#666" }}>
+                {order.foods.map((food) => food.foodName).join(", ").length > 25
+                  ? order.foods.map((food) => food.foodName).join(", ").slice(0, 25) + "..."
+                  : order.foods.map((food) => food.foodName).join(", ")}
+              </Text>
               <Text style={{ fontSize: 14, color: "#666" }}>{order.foods.length} món</Text>
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
@@ -120,7 +125,7 @@ export default function OrdersScreen() {
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           {/* Icon giỏ hàng */}
           <TouchableOpacity style={{ marginRight: 15 }}>
-            <Ionicons onPress={() => navigation.navigate("Shopping")} name="cart-outline" size={30} color="#fff" />
+            <Ionicons onPress={() => navigation.navigate("ShoppingAll")} name="cart-outline" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>

@@ -27,6 +27,32 @@ const renderFoodNames = (foods) => {
   return `${foods[0].foodName}, ${foods[1].foodName}...`; // Hiển thị 2 tên món ăn và dấu 3 chấm
 };
 
+// Component SplashScreen
+const SplashScreen = () => (
+  <View style={{
+    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff", // Đặt tỷ lệ phần trăm cho kích thước hình ảnh để hiển thị hợp lý trên mọi thiết bị
+    height: '50%',
+  }}>
+    <Image
+      source={require("../../img/LOGOBLACK.png")}
+      style={{
+        // Tự động điều chỉnh chiều cao theo tỷ lệ của chiều rộng
+        resizeMode: 'contain', // Đảm bảo hình ảnh giữ tỷ lệ gốc và không bị biến dạng
+      }}
+    />
+    <Image
+      source={require("../../img/Shipper1.png")}
+      style={{
+        height: "45%",
+
+        resizeMode: 'contain', // Giữ tỷ lệ gốc của hình ảnh
+      }}
+    />
+  </View>
+
+);
+
+
 export default function HomeShiper() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +63,17 @@ export default function HomeShiper() {
   const [showAddress, setShowAddress] = useState(false);
   const [shipperInfo, setShipperInfo] = useState(null); // State to store shipperInfo data
   const [userData, setUserData] = useState(null);
+  const [showSplash, setShowSplash] = useState(true); // Trạng thái kiểm soát Splash Screen
+
+
+
+  // Hiển thị Splash Screen trong 2 giây
+  useEffect(() => {
+    const timeout = setTimeout(() => setShowSplash(false), 4000);
+    return () => clearTimeout(timeout); // Dọn dẹp timeout khi component unmount
+  }, []);
+
+
 
   useEffect(() => {
     console.log("Orders fetched:", orders);
@@ -179,7 +216,10 @@ export default function HomeShiper() {
       </View>
     );
   }
-
+  // Render Splash Screen nếu showSplash đang bật
+  if (showSplash) {
+    return <SplashScreen />;
+  }
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ backgroundColor: "#E53935", padding: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 140 }}>
@@ -254,17 +294,48 @@ export default function HomeShiper() {
               <TouchableOpacity onPress={() => (acceptedOrderId === item.orderId || isAcceptedStatus ? handleSelectedOrderPress(item) : handleAcceptOrder(item.orderId))} disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId}>
                 <View style={{ backgroundColor: "#f9f9f9", padding: 15, marginBottom: 10, borderRadius: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
-                    <View style={{ flexDirection: "column" }}>
-                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.user.fullName}</Text>
-                      <Text style={{ color: "red", fontWeight: "bold" }}>{item.store.storeName}</Text>
-                      <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>{renderFoodNames(item.foods)}</Text>
+
+                    {/* Đơn hàng*/}
+                    <View style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                        {item.user.fullName.length > 25
+                          ? `${item.user.fullName.slice(0, 25)}...`
+                          : item.user.fullName}
+                      </Text>
+                      <Text style={{ color: "red", fontWeight: "bold" }}>
+                        {item.store.storeName.length > 25
+                          ? `${item.store.storeName.slice(0, 25)}...`
+                          : item.store.storeName}
+                      </Text>
+
+                      <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>
+                        {renderFoodNames(item.foods).length > 25
+                          ? `${renderFoodNames(item.foods).slice(0, 25)}...`
+                          : renderFoodNames(item.foods)}
+                      </Text>
                     </View>
-                    <View style={{ flexDirection: "column", alignItems: "flex-end" }}>
+                    {/* Đơn hàng*/}
+                    <View style={{ flexDirection: "column", alignItems: "flex-end", marginTop: 5 }}>
                       <Text>{formatDateTime(item.orderDate)}</Text>
-                      <Text>{item.store.storeName}</Text>
-                      <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>{item.totalAmount} VND</Text>
+
+                      <Text
+                        style={{
+                          maxWidth: 200, // Limit the width to avoid overflow
+                          overflow: 'hidden', // Hide the overflow text
+                          textOverflow: 'ellipsis', // Add ellipsis for overflow text
+                        }}
+                        numberOfLines={1} // Limit to 1 line
+                      >
+                        {item.store.storeName}
+                      </Text>
+
+                      <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>
+                        {new Intl.NumberFormat('vi-VN').format(item.totalAmount)} VND
+                      </Text>
                     </View>
+
                   </View>
+
                   <TouchableOpacity
                     onPress={() => {
                       console.log("Button pressed!");

@@ -56,15 +56,23 @@ export default function Orderfood() {
           <View>
             <Text
               style={{
-                fontSize: width * 0.05,
+                fontSize: width * 0.05, // Default font size
                 fontWeight: "bold",
                 color: "#fff",
                 maxWidth: width * 0.6,
+                lineHeight: width * 0.07, // Adjust line height for better readability
               }}
-              numberOfLines={1}
+              numberOfLines={2} // Maximum 2 lines to prevent layout distortion
+              ellipsizeMode="tail" // Adds "..." if text exceeds allowed lines
             >
-              {foodData?.foodName}
+              {foodData?.foodName.length > 25
+                ? `${foodData?.foodName.substring(0, 25)}...` // Truncate and add "..." if text exceeds 25 characters
+                : foodData?.foodName}
             </Text>
+
+
+
+
           </View>
 
           {/* Quantity Controls */}
@@ -72,8 +80,8 @@ export default function Orderfood() {
             <TouchableOpacity onPress={decrementQuantity} style={{ padding: width * 0.02 }}>
               <View
                 style={{
-                  width: width * 0.08,
-                  height: width * 0.08,
+                  width: width * 0.07,
+                  height: width * 0.07,
                   borderRadius: width * 0.04,
                   backgroundColor: "#fff",
                   justifyContent: "center",
@@ -87,8 +95,8 @@ export default function Orderfood() {
             <TouchableOpacity onPress={incrementQuantity} style={{ padding: width * 0.02 }}>
               <View
                 style={{
-                  width: width * 0.08,
-                  height: width * 0.08,
+                  width: width * 0.07,
+                  height: width * 0.07,
                   borderRadius: width * 0.04,
                   backgroundColor: "#fff",
                   justifyContent: "center",
@@ -100,6 +108,7 @@ export default function Orderfood() {
             </TouchableOpacity>
           </View>
         </View>
+        
       </View>
 
       {/* Food Description and Price */}
@@ -108,7 +117,7 @@ export default function Orderfood() {
           <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{price.toLocaleString("vi-VN")} VND</Text>
         </View>
 
-        <View style={{  }}>
+        <View style={{}}>
           <Text style={{ fontSize: width * 0.05, fontWeight: "bold" }}>Mô tả</Text>
           <Text style={{ fontSize: width * 0.045, color: "#666", marginTop: height * 0.01 }}>{foodData?.description}</Text>
         </View>

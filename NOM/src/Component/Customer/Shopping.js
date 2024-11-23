@@ -25,6 +25,8 @@ export default function Shopping({ route }) {
   const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false); // State quản lý trạng thái bật/tắt
   const [totalAmount, setTotalAmount] = useState(0);
   const storeId = route.params?.storeId;
+  const foodId = route.params?.foodId;
+  
   const [loadingItems, setLoadingItems] = useState({}); // Loading cục bộ cho từng mục
 
   useFocusEffect(
@@ -292,10 +294,10 @@ export default function Shopping({ route }) {
   const calculateTotal = useCallback(() => {
     const total = Array.isArray(orderItems)
       ? orderItems.reduce((accumulator, item) => {
-          const foodPrice = item.price; // Giá món chính
-          const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
-          return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
-        }, 0)
+        const foodPrice = item.price; // Giá món chính
+        const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
+        return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
+      }, 0)
       : 0;
 
     let discount = 0;
@@ -463,10 +465,13 @@ export default function Shopping({ route }) {
                 </TouchableOpacity>
               )}
             >
-              <View style={{ flexDirection: "column", marginBottom: 10, padding: 10, backgroundColor: "#fff", borderRadius: 10, borderColor: "#eee", borderWidth: 1 }}>
+              <View
+                // onPress={() => navigation.navigate("Orderfood", {foodId,storeId})}
+                
+                style={{ flexDirection: "column", marginBottom: 10, padding: 10, backgroundColor: "#fff", borderRadius: 10, borderColor: "#eee", borderWidth: 1 }}>
                 <View style={styles.orderItemContainer}>
                   <Text style={styles.orderItemText}>{item.food ? item.food.foodName : "Món ăn không tồn tại"}</Text>
-                  <Text style={styles.priceText}>{item.price.toLocaleString()} VND</Text>
+                  {/* <Text style={styles.priceText}>{item.price.toLocaleString()} VND</Text> */}
                   <View style={styles.quantityContainer}>
                     <TouchableOpacity onPress={() => decreaseQuantity(index)}>
                       <Icon name="remove-circle-outline" size={24} color="#E53935" />
@@ -478,9 +483,9 @@ export default function Shopping({ route }) {
                   </View>
                 </View>
 
-                {/* Display Combo Foods and Total Price */}
+                {/* đơn hàng*/}
                 {item.combos && item.combos.foods.length > 0 && (
-                  <View style={{ marginTop: 10, paddingHorizontal: 10 }}>
+                  <View style={{ paddingHorizontal: 10 }}>
                     {/* Section Title */}
                     <Text style={{ fontSize: 14, fontWeight: "bold", color: "#E53935", marginBottom: 5 }}>Các món trong Combo</Text>
 
@@ -538,12 +543,12 @@ export default function Shopping({ route }) {
                       {/* Main Dish Name */}
                       <Text
                         style={{
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: "bold",
                           color: "#333",
                         }}
                       >
-                        Tổng cộng
+                        Giá
                       </Text>
 
                       {/* Total Price Calculation */}
@@ -566,7 +571,7 @@ export default function Shopping({ route }) {
 
         <View style={styles.totalSection}>
           <View style={styles.totalBreakdown}>
-            <Text style={styles.totalBreakdownText}>Thành tiền</Text>
+            <Text style={styles.totalBreakdownText}>Tổng giá tiền</Text>
             <Text style={styles.totalBreakdownText}>{calculateTotal().toLocaleString()} VND</Text>
           </View>
 
