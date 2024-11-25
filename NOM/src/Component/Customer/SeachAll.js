@@ -13,7 +13,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width,height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const SeachAll = () => {
   const route = useRoute();
@@ -96,7 +96,6 @@ const SeachAll = () => {
           padding: 10,
         }}
       >
-        {/* Go Back Button */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{
@@ -128,7 +127,7 @@ const SeachAll = () => {
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.3,
             shadowRadius: 3.84,
-        }}
+          }}
         >
           <Ionicons name="search-outline" size={30} color="#E53935" />
           <TextInput
