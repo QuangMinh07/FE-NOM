@@ -297,13 +297,13 @@ export default function OrderManagementScreen({ navigation }) {
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchBarContainer}>
+      {/* <View style={styles.searchBarContainer}>
         <Ionicons name="search-outline" size={20} color="#E53935" />
         <TextInput placeholder="Tìm kiếm" style={styles.searchInput} />
-      </View>
+      </View> */}
 
       {/* Tabs */}
-      <View style={{ marginTop: 30, flexDirection: "row", justifyContent: "space-around", backgroundColor: "#fff", paddingVertical: 20 }}>
+      <View style={{  flexDirection: "row", justifyContent: "space-around", backgroundColor: "#fff", paddingVertical: 20 }}>
         {tabs.map((tab) => (
           <TouchableOpacity key={tab} onPress={() => setSelectedTab(tab)} style={{ paddingBottom: 10, borderBottomWidth: selectedTab === tab ? 4 : 0, borderBottomColor: "#E53935" }}>
             <Text style={{ color: selectedTab === tab ? "#E53935" : "#6B7280", fontSize: selectedTab === tab ? 18 : 16, fontWeight: selectedTab === tab ? "bold" : "normal" }}>{tab}</Text>

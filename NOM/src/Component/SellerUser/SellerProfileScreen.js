@@ -150,7 +150,7 @@ export default function SellerProfileScreen() {
                       navigation.navigate("LanguageSettingsScreen");
                       break;
                     case "Nhận xét đánh giá":
-                      navigation.navigate("ReviewsScreen");
+                      navigation.navigate("ChatSellerScreen");
                       break;
                     default:
                       console.log("No action assigned for this item");

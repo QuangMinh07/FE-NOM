@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  StyleSheet
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -186,49 +187,124 @@ const SeachAll = () => {
                 ))}
               </>
             )}
-
             {/* Food Results */}
             {searchResults.foods.length > 0 && (
               <>
                 <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Món ăn</Text>
-                {searchResults.foods.map((food, index) => (
-                  <TouchableOpacity
-                    key={food._id || index}
-                    onPress={() =>
-                      handleFoodPress(food.store?.storeId || food.store?._id, food._id)
-                    }
-                    style={{
-                      flexDirection: "row",
-                      backgroundColor: "#fff",
-                      borderRadius: 10,
-                      marginBottom: 15,
-                      padding: 10,
-                      elevation: 3,
-                    }}
-                  >
-                    <Image
-                      source={{ uri: food.imageUrl }}
+                <ScrollView>
+                  {searchResults.foods.map((food, index) => (
+                    <TouchableOpacity
+                      key={food._id || index}
+                      onPress={() =>
+                        food.isAvailable && handleFoodPress(food.store?.storeId || food.store?._id, food._id)
+                      }
                       style={{
-                        width: 80,
-                        height: 80,
+                        flexDirection: "row",
+                        backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu khi hết hàng
                         borderRadius: 10,
+                        marginBottom: 15,
+                        padding: 10,
+                        elevation: 3,
+                        position: "relative", // Hỗ trợ overlay và ruy băng
+                        overflow: "hidden", // Ngăn tràn
                       }}
-                    />
-                    <View style={{ marginLeft: 10, flex: 1, justifyContent: "space-around" }}>
-                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
-                      <Text style={{ fontSize: 14, color: "#888" }}>{food.store?.storeName}</Text>
-                      <Text style={{ fontSize: 14, color: "#E53935" }}>
-                        {food.price.toLocaleString("vi-VN")} VND
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                      disabled={!food.isAvailable} // Vô hiệu hóa nút nếu không có sẵn
+                    >
+                      {/* Hình ảnh món ăn */}
+                      <View
+                        style={{
+                          width: 80,
+                          height: 80,
+                          backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3",
+                          borderRadius: 10,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          position: "relative",
+                        }}
+                      >
+                        {food.imageUrl ? (
+                          <Image
+                            source={{ uri: food.imageUrl }}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: 10,
+                            }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Text style={{ color: "#888" }}>Ảnh món ăn</Text>
+                        )}
+
+                        {/* Overlay chữ "Đã hết" */}
+                        {!food.isAvailable && (
+                          <View
+                            style={{
+                              ...StyleSheet.absoluteFillObject,
+                              backgroundColor: "rgba(0, 0, 0, 0.5)",
+                              borderRadius: 10,
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đã hết</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Thông tin món ăn */}
+                      <View style={{ marginLeft: 10, flex: 1, justifyContent: "space-around" }}>
+                        <Text
+                          style={{
+                            fontSize: food.foodName.length > 30 ? 14 : 16, // Giảm font nếu dài hơn 30 ký tự
+                            fontWeight: "bold",
+                          }}
+                          numberOfLines={1} // Hiển thị tối đa 1 dòng
+                          ellipsizeMode="tail" // Thêm "..." nếu bị cắt
+                        >
+                          {food.foodName}
+                        </Text>
+                        <Text style={{ fontSize: 14, color: "#888" }}>{food.store?.storeName}</Text>
+                        <Text style={{ fontSize: 14, color: "#E53935" }}>
+                          {food.price.toLocaleString("vi-VN")} VND
+                        </Text>
+                      </View>
+
+                      {/* Ruy băng đỏ */}
+                      {!food.isAvailable && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            width: 300, // Chiều dài ruy băng
+                            height: 30, // Chiều rộng ruy băng
+                            backgroundColor: "#E53935",
+                            transform: [{ rotate: "-45deg" }], // Xoay chéo
+                            bottom: 35, // Vị trí dưới
+                            right: -100, // Vị trí phải
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "#fff",
+                              fontSize: 12,
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            Hết món
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </>
             )}
+
           </>
         )}
-
-        {/* All Foods */}
         {!searchQuery && allFoods.length > 0 && (
           <>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Tất cả món ăn</Text>
@@ -242,35 +318,108 @@ const SeachAll = () => {
               {allFoods.map((food, index) => (
                 <TouchableOpacity
                   key={food.foodId || index}
-                  onPress={() => handleFoodPress(food.storeId, food.foodId)}
+                  onPress={() => food.isAvailable && handleFoodPress(food.storeId, food.foodId)}
                   style={{
                     width: (width - 60) / 3,
-                    backgroundColor: "#fff",
+                    backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu nếu không khả dụng
                     borderRadius: 10,
                     marginBottom: 15,
                     alignItems: "center",
                     padding: 5,
                     elevation: 3,
+                    position: "relative", // Để thêm lớp phủ và ruy băng
+                    overflow: "hidden", // Đảm bảo không tràn ra ngoài
                   }}
+                  disabled={!food.isAvailable} // Vô hiệu hóa nếu không khả dụng
                 >
-                  <Image
-                    source={{ uri: food.imageUrl }}
+                  {/* Hình ảnh món ăn */}
+                  <View
                     style={{
                       width: "100%",
                       height: 100,
+                      backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3",
                       borderRadius: 10,
+                      position: "relative", // Hỗ trợ lớp phủ
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden",
                     }}
-                  />
-                  <Text style={{ fontSize: 14, fontWeight: "bold", textAlign: "center", marginTop: 5 }}>
+                  >
+                    {food.imageUrl ? (
+                      <Image
+                        source={{ uri: food.imageUrl }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: 10,
+                        }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={{ color: "#888" }}>Ảnh món ăn</Text>
+                    )}
+
+                    {/* Lớp phủ chữ "Đã hết" */}
+                    {!food.isAvailable && (
+                      <View
+                        style={{
+                          ...StyleSheet.absoluteFillObject,
+                          backgroundColor: "rgba(0, 0, 0, 0.5)", // Nền đen bán trong suốt
+                          borderRadius: 10,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đã hết</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Thông tin món ăn */}
+                  <Text
+                    style={{
+                      fontSize: 14, // Giữ kích thước font cố định
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      marginTop: 5,
+                    }}
+                  >
                     {food.foodName}
                   </Text>
-                  <Text style={{ fontSize: 12, color: "#E53935", textAlign: "center", marginTop: 3 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#E53935",
+                      textAlign: "center",
+                      marginTop: 3,
+                    }}
+                  >
                     {food.price.toLocaleString("vi-VN")} VND
                   </Text>
+
+                  {/* Ruy băng đỏ */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: 90, // Chiều dài ruy băng nhỏ hơn
+                        height: 20, // Chiều rộng ruy băng nhỏ hơn
+                        backgroundColor: "#E53935",
+                        transform: [{ rotate: "-30deg" }], // Xoay chéo
+                        bottom: 5, // Vị trí bên dưới
+                        right: -15, // Vị trí bên phải
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold" }}>Hết món</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
           </>
+
         )}
 
         {/* No Results */}
