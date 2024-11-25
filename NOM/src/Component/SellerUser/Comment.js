@@ -122,13 +122,13 @@ export default function Comment() {
                   const filled = index + 1 <= Math.floor(rating);
                   const halfFilled = index + 1 === Math.ceil(rating) && !Number.isInteger(rating);
 
-                  return <FontAwesome key={index} name={filled ? "star" : halfFilled ? "star-half" : "star-o"} size={18} color="#E53935" />;
+                  return <FontAwesome key={index} name={filled ? "star" : halfFilled ? "star-half" : "star-o"} size={18} color="#FFC529" />;
                 })
               : null}
           </View>
           <Text style={styles.ratingCount}>{storeReviews.length} người bình luận</Text>
         </View>
-        <View style={styles.ratingBox}>
+        {/* <View style={styles.ratingBox}>
           <Text style={styles.ratingTitle}>Món</Text>
           <Text style={styles.ratingScore}>{storeData ? storeData.averageRating.toFixed(1) : "Đang tải..."}</Text>
           <View style={styles.starContainer}>
@@ -143,7 +143,7 @@ export default function Comment() {
               : null}
           </View>
           <Text style={styles.ratingCount}>{storeReviews.length} người bình luận</Text>
-        </View>
+        </View> */}
       </View>
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -165,7 +165,7 @@ export default function Comment() {
                     const filled = idx + 1 <= Math.floor(review.rating);
                     const halfFilled = idx + 1 === Math.ceil(review.rating) && !Number.isInteger(review.rating);
 
-                    return <FontAwesome key={idx} name={filled ? "star" : halfFilled ? "star-half" : "star-o"} size={16} color="#E53935" />;
+                    return <FontAwesome key={idx} name={filled ? "star" : halfFilled ? "star-half" : "star-o"} size={16} color="#FFC529" />;
                   })}
                   <Text style={styles.commentRating}>{review.rating.toFixed(1)}</Text>
                 </View>
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     alignItems: "center",
-    width: "45%",
+    width: "95%",
     elevation: 3,
   },
   ratingTitle: {

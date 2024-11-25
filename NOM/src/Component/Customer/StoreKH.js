@@ -416,46 +416,45 @@ export default function StoreKH() {
         </View>
 
         <View style={{ paddingHorizontal: 15, marginBottom: 20, marginTop: 50 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: width * 0.03 }} // Padding động cho nội dung bên trong
+          >
             {foodList.map((food, index) => (
               <TouchableOpacity
-                key={food._id || index} // Sử dụng id chính xác cho key
+                key={food._id || index}
                 style={{
-                  backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Đổi nền nếu không có sẵn
-                  padding: 10,
-                  borderRadius: 10,
+                  backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Đổi màu nền khi hết món
+                  padding: width * 0.025, // Padding động
+                  borderRadius: width * 0.025, // Border radius động
                   borderWidth: 1,
                   borderColor: "#eee",
-                  marginRight: 15,
-                  width: width * 0.4, // Chiều rộng của khung chứa
-                  overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
-
+                  marginRight: width * 0.03, // Khoảng cách giữa các phần tử
+                  width: width * 0.4, // Chiều rộng động của khung món ăn
+                  overflow: "hidden",
                 }}
                 onPress={() => {
                   if (food.isAvailable) {
                     console.log("Navigating to Orderfood with foodId:", food._id);
                     console.log("Navigating to Orderfood with storeId:", storeIdState);
-                    if (storeIdState) {
-                      navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
-                    } else {
-                      console.error("storeIdState is undefined!");
-                    }
+                    navigation.navigate("Orderfood", { foodId: food._id, storeId: storeIdState });
                   } else {
                     console.warn("Food is not available!");
                   }
                 }}
-                disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
+                disabled={!food.isAvailable}
               >
                 {/* Placeholder cho ảnh */}
                 <View
                   style={{
-                    height: 140, // Chiều cao lớn hơn để phù hợp dạng chữ nhật đứng
-                    width: "100%", // Đảm bảo chiếm toàn bộ chiều rộng
-                    backgroundColor: "#f0f0f0", // Màu nền cho khung chứa ảnh
-                    borderRadius: 10,
+                    height: width * 0.35, // Chiều cao động (35% chiều rộng màn hình)
+                    width: "100%",
+                    backgroundColor: "#f0f0f0",
+                    borderRadius: width * 0.025,
                     justifyContent: "center",
                     alignItems: "center",
-                    position: "relative", // Để thêm lớp phủ và ruy băng
+                    position: "relative",
                   }}
                 >
                   {food.imageUrl ? (
@@ -464,12 +463,12 @@ export default function StoreKH() {
                       style={{
                         height: "100%",
                         width: "100%",
-                        borderRadius: 10,
+                        borderRadius: width * 0.025,
                       }}
                       resizeMode="cover"
                     />
                   ) : (
-                    <Text style={{ fontSize: 14, color: "#888" }}>Ảnh món ăn</Text>
+                    <Text style={{ fontSize: width * 0.035, color: "#888" }}>Ảnh món ăn</Text>
                   )}
 
                   {/* Overlay chữ "Đã hết" */}
@@ -477,13 +476,13 @@ export default function StoreKH() {
                     <View
                       style={{
                         ...StyleSheet.absoluteFillObject,
-                        backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu nền đen bán trong suốt
-                        borderRadius: 10,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        borderRadius: width * 0.025,
                         justifyContent: "center",
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                      <Text style={{ color: "#fff", fontSize: width * 0.04, fontWeight: "bold" }}>
                         Đã hết
                       </Text>
                     </View>
@@ -494,18 +493,18 @@ export default function StoreKH() {
                     <View
                       style={{
                         position: "absolute",
-                        width: "80%", // Chiều dài ruy băng vừa khung
-                        height: 25, // Chiều rộng ruy băng
-                        backgroundColor: "#E53935", // Màu đỏ
-                        transform: [{ rotate: "-39deg" }], // Điều chỉnh góc xoay để nghiêng đúng
-                        bottom: -45, // Đặt sát cạnh dưới
-                        right: -35, // Đảm bảo nằm trong khung
+                        width: "90%",
+                        height: width * 0.05,
+                        backgroundColor: "#E53935",
+                        transform: [{ rotate: "-50deg" }],
+                        bottom: -width * 0.1,
+                        right: -width * 0.12,
                         justifyContent: "center",
                         alignItems: "center",
-                        overflow: "hidden", // Giữ nội dung trong khung
+                        overflow: "hidden",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                      <Text style={{ color: "#fff", fontSize: width * 0.03, fontWeight: "bold" }}>
                         Hết món
                       </Text>
                     </View>
@@ -513,14 +512,25 @@ export default function StoreKH() {
                 </View>
 
                 {/* Thông tin món ăn */}
-                <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>{food.foodName}</Text>
-                <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
+                <Text
+                  style={{
+                    fontSize: food.foodName.length > 25 ? width * 0.028 : width * 0.035, // Giảm font nếu quá 25 ký tự
+                    fontWeight: "bold",
+                    marginTop: width * 0.02,
+                  }}
+                  numberOfLines={2} // Cho phép hiển thị tối đa 2 dòng
+                  ellipsizeMode="tail" // Thêm "..." nếu vượt quá giới hạn
+                >
+                  {food.foodName}
+                </Text>
+
+                <Text style={{ fontSize: width * 0.03, color: "#E53935", marginTop: width * 0.01 }}>
                   {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
                 </Text>
               </TouchableOpacity>
-
             ))}
           </ScrollView>
+
         </View>
 
         {firstGroup && (
@@ -616,9 +626,18 @@ export default function StoreKH() {
                   </View>
 
                   {/* Thông tin món ăn */}
-                  <Text style={{ fontSize: 14, fontWeight: "bold", marginTop: 10 }}>
-                    {food.foodName}
+                  <Text
+                    style={{
+                      fontSize: food.foodName.length > 30 ? 1 : 14, // Giảm font nếu dài hơn 30 ký tự
+                      fontWeight: "bold",
+                      marginTop: 10,
+                    }}
+                    numberOfLines={3} // Cho phép tối đa 2 dòng
+                    ellipsizeMode="tail" // Thêm "..." nếu vượt quá giới hạn
+                  >
+                    {food.foodName.length > 40 ? `${food.foodName.slice(0, 40)}...` : food.foodName}
                   </Text>
+
                   <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
                     {food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND
                   </Text>
@@ -628,12 +647,12 @@ export default function StoreKH() {
                     <View
                       style={{
                         position: "absolute",
-                        width: 150, // Chiều dài ruy băng
+                        width: 160, // Chiều dài ruy băng
                         height: 30, // Chiều rộng ruy băng
                         backgroundColor: "#E53935", // Màu đỏ
-                        transform: [{ rotate: "-29deg" }], // Điều chỉnh góc xoay để nghiêng đúng
-                        bottom: 6, // Đưa ruy băng lên ngoài khung dưới
-                        left: 100, // Đảm bảo nằm bên ngoài khung
+                        transform: [{ rotate: "-35deg" }], // Điều chỉnh góc xoay để nghiêng đúng
+                        bottom: 7, // Đưa ruy băng lên ngoài khung dưới
+                        left: 95, // Đảm bảo nằm bên ngoài khung
                         justifyContent: "center",
                         alignItems: "center",
                         zIndex: 1, // Đảm bảo ruy băng nằm trên các phần tử khác
