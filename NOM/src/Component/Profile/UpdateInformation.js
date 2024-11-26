@@ -120,7 +120,7 @@ export default function UpdateInformation() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         quality: 0.5, // Điều chỉnh chất lượng ảnh
       });
@@ -133,6 +133,7 @@ export default function UpdateInformation() {
       } else {
         Alert.alert("Lỗi", "Không thể chọn ảnh.");
       }
+      toggleModal(); // Đóng modal sau khi chọn ảnh xong
     } catch (error) {
       console.error("Lỗi khi chọn ảnh:", error);
       Alert.alert("Lỗi", "Đã xảy ra lỗi khi chọn ảnh.");
@@ -334,25 +335,7 @@ export default function UpdateInformation() {
                     marginBottom: 10,
                   }}
                   onPress={() => {
-                    openCamera(); // Mở camera
-                    toggleModal(); // Đóng modal sau khi camera được mở
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 16 }}>Chụp ảnh</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "#E53935",
-                    padding: 10,
-                    borderRadius: 5,
-                    width: "100%",
-                    alignItems: "center",
-                    marginBottom: 10,
-                  }}
-                  onPress={() => {
                     openImageLibrary(); // Mở thư viện ảnh
-                    toggleModal(); // Đóng modal sau khi thư viện ảnh được mở
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 16 }}>Chọn từ thư viện</Text>

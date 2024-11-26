@@ -90,42 +90,100 @@ export default function Staff() {
         Alert.alert("Lỗi", "Không tìm thấy storeId");
         return;
       }
-
+  
       try {
+        console.log("Bắt đầu gọi API thêm nhân viên mới với:", {
+          phone: newStaffPhone,
+          name: newStaffName,
+          storeId,
+        });
+  
         // Gọi API để thêm nhân viên mới
         const response = await api({
           method: typeHTTP.POST,
-          url: "/staff/add-staff", // Endpoint thêm nhân viên
+          url: "/staff/add-staff",
           body: {
             phone: newStaffPhone,
             name: newStaffName,
-            storeId, // Truyền storeId từ globalData
+            storeId,
           },
-          sendToken: true, // Nếu cần gửi token
+          sendToken: true,
         });
-
-        // Nếu thêm thành công, cập nhật danh sách nhân viên trong state
-        if (response) {
+  
+        console.log("Phản hồi từ API:", response);
+  
+        // Kiểm tra phản hồi từ API
+        if (response && response.staff) {
+          console.log("Dữ liệu phản hồi từ API:", response.staff);
+  
           const newStaff = response.staff;
           setStaffList([...staffList, newStaff]);
           setNewStaffName("");
           setNewStaffPhone("");
           setModalVisible(false);
+          Alert.alert("Thành công", response.message || "Nhân viên đã được thêm.");
         } else {
-          Alert.alert("Lỗi", response.message);
+          console.error("API trả về phản hồi không hợp lệ:", response);
+          Alert.alert("Lỗi", response.message || "Có lỗi xảy ra. Vui lòng thử lại sau.");
         }
       } catch (error) {
-        Alert.alert("Lỗi", "Không thể thêm nhân viên. Vui lòng thử lại sau.");
+        console.error("Lỗi khi gọi API thêm nhân viên:", error);
+  
+        if (error.response) {
+          console.error("Chi tiết lỗi từ backend:", error.response.data);
+          Alert.alert("Lỗi", error.response.data?.message || "Không thể thêm nhân viên. Vui lòng thử lại sau.");
+        } else {
+          console.error("Lỗi không từ backend:", error);
+          Alert.alert("Lỗi", "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
+        }
       }
     } else {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin nhân viên");
     }
   };
-
+  
+  
+  
   // Hàm xóa nhân viên
-  const deleteStaff = (index) => {
-    const updatedList = staffList.filter((_, i) => i !== index);
-    setStaffList(updatedList);
+  const deleteStaff = async (index) => {
+    const staffId = staffList[index]._id; // Lấy staffId của nhân viên cần xóa
+
+    Alert.alert(
+      "Xác nhận",
+      "Bạn có chắc chắn muốn xóa nhân viên này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          onPress: async () => {
+            try {
+              // Gọi API xóa nhân viên
+              const response = await api({
+                method: typeHTTP.DELETE,
+                url: `/staff/delete-staff/${staffId}`, // Endpoint xóa nhân viên theo staffId
+                sendToken: true,
+              });
+
+              if (response && response.status === 200) {
+                // Cập nhật danh sách nhân viên sau khi xóa thành công
+                const updatedList = staffList.filter((_, i) => i !== index);
+                setStaffList(updatedList);
+                Alert.alert("Thành công", "Nhân viên đã được xóa.");
+              } else {
+                Alert.alert("Lỗi", response.data.message || "Không thể xóa nhân viên.");
+              }
+            } catch (error) {
+              if (error.response) {
+                Alert.alert("Lỗi", error.response.data.message || "Không thể xóa nhân viên. Vui lòng thử lại sau.");
+              } else {
+                Alert.alert("Lỗi", "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
+              }
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   // Hàm lưu thông tin sau khi sửa

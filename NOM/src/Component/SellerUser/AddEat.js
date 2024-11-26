@@ -82,7 +82,7 @@ export default function AddEat() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         quality: 0.5, // Điều chỉnh chất lượng ảnh
       });
