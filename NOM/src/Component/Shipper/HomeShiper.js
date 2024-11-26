@@ -29,15 +29,20 @@ const renderFoodNames = (foods) => {
 
 // Component SplashScreen
 const SplashScreen = () => (
-  <View style={{
-    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff", // Đặt tỷ lệ phần trăm cho kích thước hình ảnh để hiển thị hợp lý trên mọi thiết bị
-    height: '50%',
-  }}>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "#fff", // Đặt tỷ lệ phần trăm cho kích thước hình ảnh để hiển thị hợp lý trên mọi thiết bị
+      height: "50%",
+    }}
+  >
     <Image
       source={require("../../img/LOGOBLACK.png")}
       style={{
         // Tự động điều chỉnh chiều cao theo tỷ lệ của chiều rộng
-        resizeMode: 'contain', // Đảm bảo hình ảnh giữ tỷ lệ gốc và không bị biến dạng
+        resizeMode: "contain", // Đảm bảo hình ảnh giữ tỷ lệ gốc và không bị biến dạng
       }}
     />
     <Image
@@ -45,13 +50,11 @@ const SplashScreen = () => (
       style={{
         height: "45%",
 
-        resizeMode: 'contain', // Giữ tỷ lệ gốc của hình ảnh
+        resizeMode: "contain", // Giữ tỷ lệ gốc của hình ảnh
       }}
     />
   </View>
-
 );
-
 
 export default function HomeShiper() {
   const [orders, setOrders] = useState([]);
@@ -65,15 +68,11 @@ export default function HomeShiper() {
   const [userData, setUserData] = useState(null);
   const [showSplash, setShowSplash] = useState(true); // Trạng thái kiểm soát Splash Screen
 
-
-
   // Hiển thị Splash Screen trong 2 giây
   useEffect(() => {
     const timeout = setTimeout(() => setShowSplash(false), 4000);
     return () => clearTimeout(timeout); // Dọn dẹp timeout khi component unmount
   }, []);
-
-
 
   useEffect(() => {
     console.log("Orders fetched:", orders);
@@ -153,6 +152,14 @@ export default function HomeShiper() {
   );
 
   const handleAcceptOrder = async (orderId) => {
+    // Kiểm tra nếu đã có đơn hàng nào ở trạng thái "Shipped"
+    const hasShippedOrder = orders.some((order) => order.orderStatus === "Shipped");
+
+    if (hasShippedOrder) {
+      Alert.alert("Không thể nhận thêm đơn hàng", "Bạn chỉ có thể thực hiện một đơn hàng tại một thời điểm.");
+      return;
+    }
+
     if (acceptedOrderId === null) {
       // Chỉ cho phép chấp nhận đơn hàng nếu chưa có đơn hàng nào đang ở trạng thái "Shipped"
       try {
@@ -290,50 +297,38 @@ export default function HomeShiper() {
           keyExtractor={(item) => item.orderId}
           renderItem={({ item }) => {
             const isAcceptedStatus = ["Shipped", "Completed", "Received"].includes(item.orderStatus);
+            const hasShippedOrder = orders.some((order) => order.orderStatus === "Shipped");
+
             return (
-              <TouchableOpacity onPress={() => (acceptedOrderId === item.orderId || isAcceptedStatus ? handleSelectedOrderPress(item) : handleAcceptOrder(item.orderId))} disabled={acceptedOrderId !== null && acceptedOrderId !== item.orderId}>
-                <View style={{ backgroundColor: "#f9f9f9", padding: 15, marginBottom: 10, borderRadius: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 }}>
+              <TouchableOpacity
+                onPress={() => (acceptedOrderId === item.orderId || isAcceptedStatus ? handleSelectedOrderPress(item) : handleAcceptOrder(item.orderId))}
+                disabled={hasShippedOrder && acceptedOrderId !== item.orderId} // Vô hiệu hóa nếu đã nhận một đơn hàng khác
+              >
+                <View
+                  style={{
+                    backgroundColor: "#f9f9f9",
+                    padding: 15,
+                    marginBottom: 10,
+                    borderRadius: 8,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 1,
+                    elevation: 2,
+                  }}
+                >
                   <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
-
-                    {/* Đơn hàng*/}
+                    {/* Nội dung hiển thị đơn hàng */}
                     <View style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                        {item.user.fullName.length > 25
-                          ? `${item.user.fullName.slice(0, 25)}...`
-                          : item.user.fullName}
-                      </Text>
-                      <Text style={{ color: "red", fontWeight: "bold" }}>
-                        {item.store.storeName.length > 25
-                          ? `${item.store.storeName.slice(0, 25)}...`
-                          : item.store.storeName}
-                      </Text>
-
-                      <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>
-                        {renderFoodNames(item.foods).length > 25
-                          ? `${renderFoodNames(item.foods).slice(0, 25)}...`
-                          : renderFoodNames(item.foods)}
-                      </Text>
+                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.user.fullName.length > 25 ? `${item.user.fullName.slice(0, 25)}...` : item.user.fullName}</Text>
+                      <Text style={{ color: "red", fontWeight: "bold" }}>{item.store.storeName.length > 25 ? `${item.store.storeName.slice(0, 25)}...` : item.store.storeName}</Text>
+                      <Text style={{ fontSize: 14, color: "black", marginTop: 5 }}>{renderFoodNames(item.foods).length > 25 ? `${renderFoodNames(item.foods).slice(0, 25)}...` : renderFoodNames(item.foods)}</Text>
                     </View>
-                    {/* Đơn hàng*/}
+
                     <View style={{ flexDirection: "column", alignItems: "flex-end", marginTop: 5 }}>
                       <Text>{formatDateTime(item.orderDate)}</Text>
-
-                      <Text
-                        style={{
-                          maxWidth: 200, // Limit the width to avoid overflow
-                          overflow: 'hidden', // Hide the overflow text
-                          textOverflow: 'ellipsis', // Add ellipsis for overflow text
-                        }}
-                        numberOfLines={1} // Limit to 1 line
-                      >
-                        {item.store.storeName}
-                      </Text>
-
-                      <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>
-                        {new Intl.NumberFormat('vi-VN').format(item.totalAmount)} VND
-                      </Text>
+                      <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>{new Intl.NumberFormat("vi-VN").format(item.totalAmount)} VND</Text>
                     </View>
-
                   </View>
 
                   <TouchableOpacity
@@ -347,11 +342,11 @@ export default function HomeShiper() {
                     }}
                     style={{
                       marginTop: 10,
-                      backgroundColor: acceptedOrderId === item.orderId || isAcceptedStatus ? "#ccc" : "#E53935",
+                      backgroundColor: hasShippedOrder && acceptedOrderId !== item.orderId ? "#ccc" : "#E53935",
                       paddingVertical: 10,
                       borderRadius: 5,
                     }}
-                    disabled={(acceptedOrderId !== null && acceptedOrderId !== item.orderId) || isAcceptedStatus}
+                    disabled={hasShippedOrder && acceptedOrderId !== item.orderId}
                   >
                     <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>{acceptedOrderId === item.orderId || isAcceptedStatus ? "Đã chấp nhận" : "Chấp nhận"}</Text>
                   </TouchableOpacity>
