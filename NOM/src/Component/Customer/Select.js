@@ -1,14 +1,12 @@
-import React, { useState, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, Image } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Linking, Text, TextInput, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, Image, Modal } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MomoIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation, useRoute } from "@react-navigation/native"; // Thêm useRoute để lấy params
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
-import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system";
-import QRCode from "react-native-qrcode-svg"; // Import QR Code library
+import { WebView } from "react-native-webview";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export default function Select() {
   const navigation = useNavigation();
@@ -26,8 +24,8 @@ export default function Select() {
   const [cvv, setCvv] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null); // Lưu phương thức thanh toán đã chọn
   const [isLoading, setIsLoading] = useState(false);
-  const qrCodeRef = useRef(null); // Tham chiếu mã QR
-  const [qrCodeValue, setQrCodeValue] = useState(""); // Giá trị QR Code
+  const [paymentUrl, setPaymentUrl] = useState(""); // URL thanh toán từ API
+  const [modalVisible, setModalVisible] = useState(false); // Điều khiển hiển thị Modal
 
   // Hàm kiểm tra dữ liệu hợp lệ
   // const validatePaymentDetails = () => {
@@ -40,40 +38,8 @@ export default function Select() {
   //   return true;
   // };
 
-  // Hàm xử lý tải mã QR
-  const handleDownloadQRCode = async () => {
-    if (!qrCodeRef.current) {
-      Alert.alert("Lỗi", "Không tìm thấy mã QR để tải.");
-      return;
-    }
-
-    // Yêu cầu quyền truy cập thư viện ảnh
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Lỗi", "Ứng dụng cần quyền truy cập thư viện ảnh để lưu tệp.");
-      return;
-    }
-
-    qrCodeRef.current.toDataURL(async (data) => {
-      try {
-        // Lưu tệp QR code tạm thời trong thư mục nội bộ
-        const fileUri = `${FileSystem.cacheDirectory}qrcode.png`;
-        await FileSystem.writeAsStringAsync(fileUri, data, { encoding: FileSystem.EncodingType.Base64 });
-
-        // Di chuyển tệp từ thư mục tạm thời vào thư viện ảnh
-        const asset = await MediaLibrary.createAssetAsync(fileUri);
-        await MediaLibrary.createAlbumAsync("Download", asset, false);
-
-        Alert.alert("Thành công", "Mã QR đã được lưu vào thư viện ảnh.");
-      } catch (error) {
-        console.error("Lỗi khi lưu mã QR:", error);
-        Alert.alert("Lỗi", "Không thể tải mã QR. Vui lòng thử lại.");
-      }
-    });
-  };
-
   // Hàm xử lý xác nhận thanh toán và gọi API
-  const handleConfirmPayment = async () => {
+  const handleConfirmPayment = useCallback(async () => {
     if (!selectedPaymentMethod) {
       Alert.alert("Lỗi", "Vui lòng chọn phương thức thanh toán");
       return;
@@ -99,9 +65,15 @@ export default function Select() {
           navigation.navigate("Shopping", { paymentMethod: selectedPaymentMethod, storeId });
           Alert.alert("Thành công", "Phương thức thanh toán tiền mặt đã được xác nhận!");
         } else if (selectedPaymentMethod === "PayOS") {
-          // Hiển thị QR code cho PayOS
-          setQrCodeValue(response.qrCode);
-          Alert.alert("Thông báo", "Quét mã QR để hoàn tất thanh toán. Đơn hàng sẽ được xử lý tự động sau khi thanh toán thành công.");
+          // // Hiển thị QR code cho PayOS
+          // setQrCodeValue(response.qrCode);
+          // Alert.alert("Thông báo", "Quét mã QR để hoàn tất thanh toán. Đơn hàng sẽ được xử lý tự động sau khi thanh toán thành công.");
+          if (response?.paymentLink) {
+            setPaymentUrl(response.paymentLink); // Lưu URL thanh toán vào state
+            setModalVisible(true); // Mở Modal khi nhận được paymentUrl
+          } else {
+            Alert.alert("Lỗi", "Không nhận được liên kết thanh toán từ máy chủ.");
+          }
         }
       } else {
         Alert.alert("Lỗi", "Không thể xử lý thanh toán.");
@@ -111,6 +83,23 @@ export default function Select() {
       Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình xử lý.");
     } finally {
       setIsLoading(false);
+    }
+  }, [selectedPaymentMethod, cartId, storeId, useLoyaltyPoints, navigation]);
+
+  // Hàm lắng nghe sự kiện sau khi thanh toán hoàn tất
+  const handleNavigationStateChange = (navState) => {
+    if (navState.url.includes("payment-success")) {
+      const urlParams = new URLSearchParams(navState.url.split("?")[1]);
+      const status = urlParams.get("status");
+
+      if (status === "PAID" || status === "SUCCESS") {
+        navigation.navigate("HomeKH");
+        Alert.alert("Thanh toán thành công!", "Cảm ơn bạn đã sử dụng dịch vụ.");
+        setModalVisible(false); // Đóng Modal sau khi thanh toán thành công
+      } else {
+        Alert.alert("Thanh toán không thành công", "Vui lòng thử lại.");
+        setModalVisible(false); // Đóng Modal nếu thanh toán thất bại
+      }
     }
   };
 
@@ -244,29 +233,6 @@ export default function Select() {
           <Text style={{ marginLeft: 10, fontSize: 16, color: selectedPaymentMethod === "PayOS" ? "#fff" : "#333" }}>PayOS</Text>
         </TouchableOpacity>
 
-        {selectedPaymentMethod === "PayOS" && qrCodeValue && (
-          <View style={{ alignItems: "center", marginTop: 20 }}>
-            <Text style={{ marginBottom: 10, fontSize: 16, color: "#333" }}>Quét mã QR để thanh toán:</Text>
-            <QRCode
-              value={qrCodeValue} // Chuỗi dữ liệu QR Code
-              size={200}
-              color="#000"
-              backgroundColor="#fff"
-            />
-            <TouchableOpacity
-              style={{
-                marginTop: 20,
-                padding: 10,
-                backgroundColor: "#E53935",
-                borderRadius: 5,
-              }}
-              onPress={handleDownloadQRCode}
-            >
-              <Text style={{ color: "#fff", fontSize: 16 }}>Lưu vào Thư Viện Ảnh</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Cash Payment Option */}
         <TouchableOpacity
           style={{
@@ -307,6 +273,20 @@ export default function Select() {
       >
         <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Xác nhận</Text>
       </TouchableOpacity>
+
+      {/* Modal để hiển thị WebView khi thanh toán */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)} // Đóng Modal khi nhấn nút quay lại
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <View style={{ width: width * 0.9, height: height * 0.8 }}>
+            <WebView source={{ uri: paymentUrl }} style={{ flex: 1 }} onNavigationStateChange={handleNavigationStateChange} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

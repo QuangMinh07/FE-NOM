@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  StyleSheet
-} from "react-native";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, Dimensions, StyleSheet } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api";
@@ -47,7 +38,7 @@ const SeachAll = () => {
         setSearchResults({ stores: [], foods: [] });
       }
     } catch (error) {
-      console.error("Error fetching search results:", error);
+      // console.error("Error fetching search results:", error);
       setSearchResults({ stores: [], foods: [] });
     }
   };
@@ -195,9 +186,7 @@ const SeachAll = () => {
                   {searchResults.foods.map((food, index) => (
                     <TouchableOpacity
                       key={food._id || index}
-                      onPress={() =>
-                        food.isAvailable && handleFoodPress(food.store?.storeId || food.store?._id, food._id)
-                      }
+                      onPress={() => food.isAvailable && handleFoodPress(food.store?.storeId || food.store?._id, food._id)}
                       style={{
                         flexDirection: "row",
                         backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu khi hết hàng
@@ -265,9 +254,27 @@ const SeachAll = () => {
                           {food.foodName}
                         </Text>
                         <Text style={{ fontSize: 14, color: "#888" }}>{food.store?.storeName}</Text>
-                        <Text style={{ fontSize: 14, color: "#E53935" }}>
-                          {food.price.toLocaleString("vi-VN")} VND
-                        </Text>
+                        {food.isDiscounted && food.discountedPrice ? (
+                          <View style={{ flexDirection: "row" }}>
+                            {/* Giá gốc */}
+                            <Text
+                              style={{
+                                fontSize: 10,
+                                color: "#888",
+                                textDecorationLine: "line-through",
+                                marginRight: 5,
+                                marginTop: 2,
+                              }}
+                            >
+                              {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                            </Text>
+                            {/* Giá giảm */}
+                            <Text style={{ fontSize: 12, color: "#E53935", fontWeight: "bold" }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                          </View>
+                        ) : (
+                          // Chỉ hiển thị giá gốc nếu không có giá giảm
+                          <Text style={{ fontSize: 12, color: "#E53935", fontWeight: "bold" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                        )}
                       </View>
 
                       {/* Ruy băng đỏ */}
@@ -302,7 +309,6 @@ const SeachAll = () => {
                 </ScrollView>
               </>
             )}
-
           </>
         )}
         {!searchQuery && allFoods.length > 0 && (
@@ -386,16 +392,26 @@ const SeachAll = () => {
                   >
                     {food.foodName}
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#E53935",
-                      textAlign: "center",
-                      marginTop: 3,
-                    }}
-                  >
-                    {food.price.toLocaleString("vi-VN")} VND
-                  </Text>
+                  {food.isDiscounted && food.discountedPrice ? (
+                    <View style={{ flexDirection: "column" }}>
+                      {/* Giá gốc */}
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          color: "#888",
+                          textDecorationLine: "line-through",
+                          marginRight: 5,
+                        }}
+                      >
+                        {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                      {/* Giá giảm */}
+                      <Text style={{ fontSize: 12, color: "#E53935", fontWeight: "bold" }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                  ) : (
+                    // Chỉ hiển thị giá gốc nếu không có giá giảm
+                    <Text style={{ fontSize: 12, color: "#E53935", fontWeight: "bold" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  )}
 
                   {/* Ruy băng đỏ */}
                   {!food.isAvailable && (
@@ -419,24 +435,21 @@ const SeachAll = () => {
               ))}
             </View>
           </>
-
         )}
 
         {/* No Results */}
-        {searchQuery &&
-          searchResults.stores.length === 0 &&
-          searchResults.foods.length === 0 && (
-            <Text
-              style={{
-                fontSize: 16,
-                color: "#888",
-                textAlign: "center",
-                marginTop: 20,
-              }}
-            >
-              Không tìm thấy kết quả phù hợp
-            </Text>
-          )}
+        {searchQuery && searchResults.stores.length === 0 && searchResults.foods.length === 0 && (
+          <Text
+            style={{
+              fontSize: 16,
+              color: "#888",
+              textAlign: "center",
+              marginTop: 20,
+            }}
+          >
+            Không tìm thấy kết quả phù hợp
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -490,7 +490,6 @@ const HomeKH = () => {
           <View style={{ marginTop: 20, paddingHorizontal: 15, flex: 1 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold" }}>Các món ăn nổi bật</Text>
             <ScrollView style={{ marginTop: 10 }}>
-
               {foodList1.map((food, index) => (
                 <TouchableOpacity key={food._id || index} onPress={() => handleStorePress(food.storeId, food.foodId)} style={{ flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, elevation: 3 }}>
                   <View style={{ width: 80, height: 80, backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3", borderRadius: 10, justifyContent: "center", alignItems: "center" }}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: "100%", height: "100%", borderRadius: 10 }} /> : <Text style={{ color: "#fff" }}>Ảnh món ăn</Text>}</View>
@@ -562,9 +561,7 @@ const HomeKH = () => {
                           alignItems: "center",
                         }}
                       >
-                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                          Đã hết
-                        </Text>
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đã hết</Text>
                       </View>
                     )}
 
@@ -583,9 +580,7 @@ const HomeKH = () => {
                           alignItems: "center",
                         }}
                       >
-                        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
-                          Hết món
-                        </Text>
+                        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>Hết món</Text>
                       </View>
                     )}
                   </View>
@@ -599,13 +594,27 @@ const HomeKH = () => {
                     {food.foodName}
                   </Text>
 
-                  <Text style={{ fontSize: 14, color: "#888" }}>
-                    {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
-                  </Text>
+                  {food.isDiscounted && food.discountedPrice ? (
+                    <View style={{ flexDirection: "column" }}>
+                      {/* Giá gốc */}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#888",
+                          textDecorationLine: "line-through",
+                          marginRight: 5,
+                        }}
+                      >
+                        {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                      {/* Giá giảm */}
+                      <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                  ) : (
+                    // Chỉ hiển thị giá gốc nếu không có giá giảm
+                    <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  )}
                 </TouchableOpacity>
-
-
-
               ))}
             </ScrollView>
           </View>
@@ -682,9 +691,7 @@ const HomeKH = () => {
                           alignItems: "center",
                         }}
                       >
-                        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "bold" }}>
-                          Đã hết
-                        </Text>
+                        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "bold" }}>Đã hết</Text>
                       </View>
                     )}
                   </View>
@@ -692,9 +699,26 @@ const HomeKH = () => {
                   {/* Chi tiết món ăn */}
                   <View style={{ flex: 1, marginLeft: 10, justifyContent: "space-around" }}>
                     <Text style={{ fontSize: 16, fontWeight: "bold" }}>{food.foodName}</Text>
-                    <Text style={{ fontSize: 14, color: "#E53935" }}>
-                      {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
-                    </Text>
+                    {food.isDiscounted && food.discountedPrice ? (
+                      <View style={{ flexDirection: "column" }}>
+                        {/* Giá gốc */}
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#888",
+                            textDecorationLine: "line-through",
+                            marginRight: 5,
+                          }}
+                        >
+                          {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                        </Text>
+                        {/* Giá giảm */}
+                        <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+                    ) : (
+                      // Chỉ hiển thị giá gốc nếu không có giá giảm
+                      <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    )}
                   </View>
 
                   {/* Dây ruy băng đỏ (đặt gọn trong View) */}
@@ -712,18 +736,14 @@ const HomeKH = () => {
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
-                        Hết món
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>Hết món</Text>
                     </View>
                   )}
                 </TouchableOpacity>
-
               ))}
             </ScrollView>
           </View>
         </>
-        {/* )} */}
       </ScrollView>
     </View>
   );
