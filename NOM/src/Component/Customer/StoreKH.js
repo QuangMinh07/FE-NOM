@@ -162,6 +162,8 @@ export default function StoreKH() {
           url: `/food/get-foodstore/${storeId}`, // API endpoint to get foods by store ID
           sendToken: true, // Send authentication token
         });
+        console.log("Fetched foods:", data.foods); // Log dữ liệu trả về từ API
+
         setFoodList(data.foods); // Set food data
       } catch (err) {
         console.error("Error fetching foods:", err);
@@ -482,9 +484,7 @@ export default function StoreKH() {
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: width * 0.04, fontWeight: "bold" }}>
-                        Đã hết
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: width * 0.04, fontWeight: "bold" }}>Đã hết</Text>
                     </View>
                   )}
 
@@ -504,9 +504,7 @@ export default function StoreKH() {
                         overflow: "hidden",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: width * 0.03, fontWeight: "bold" }}>
-                        Hết món
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: width * 0.03, fontWeight: "bold" }}>Hết món</Text>
                     </View>
                   )}
                 </View>
@@ -524,20 +522,35 @@ export default function StoreKH() {
                   {food.foodName}
                 </Text>
 
-                <Text style={{ fontSize: width * 0.03, color: "#E53935", marginTop: width * 0.01 }}>
-                  {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
-                </Text>
+                {food.isDiscounted && food.discountedPrice ? (
+                  <View style={{ flexDirection: "column" }}>
+                    {/* Giá gốc */}
+                    <Text
+                      style={{
+                        fontSize: width * 0.025,
+                        color: "#888",
+                        textDecorationLine: "line-through",
+                        marginRight: 5,
+                        marginTop: width * 0.01,
+                      }}
+                    >
+                      {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                    </Text>
+                    {/* Giá giảm */}
+                    <Text style={{ fontSize: width * 0.03, color: "#E53935", marginTop: width * 0.01 }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  </View>
+                ) : (
+                  // Hiển thị giá gốc nếu không giảm giá
+                  <Text style={{ fontSize: width * 0.03, color: "#E53935", marginTop: width * 0.01 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
-
         </View>
 
         {firstGroup && (
           <View style={{ paddingHorizontal: 15 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-              {foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}
-            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === firstGroup)?.groupName || "Món Đặc Biệt"}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -561,7 +574,6 @@ export default function StoreKH() {
                     width: width * 0.55,
                     position: "relative", // Để thêm ruy băng lên ngoài khung
                     overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
-
                   }}
                   onPress={() => {
                     if (food.isAvailable) {
@@ -590,7 +602,6 @@ export default function StoreKH() {
                       overflow: "hidden", // Đảm bảo hình ảnh không vượt ra ngoài border radius
                       position: "relative", // Để thêm lớp phủ lên ảnh
                       overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
-
                     }}
                   >
                     {food.imageUrl ? (
@@ -618,9 +629,7 @@ export default function StoreKH() {
                           alignItems: "center",
                         }}
                       >
-                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                          Đã hết
-                        </Text>
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đã hết</Text>
                       </View>
                     )}
                   </View>
@@ -638,10 +647,27 @@ export default function StoreKH() {
                     {food.foodName.length > 40 ? `${food.foodName.slice(0, 40)}...` : food.foodName}
                   </Text>
 
-                  <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>
-                    {food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND
-                  </Text>
-
+                  {food.isDiscounted && food.discountedPrice ? (
+                    <View style={{ flexDirection: "column" }}>
+                      {/* Giá gốc */}
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          color: "#888",
+                          textDecorationLine: "line-through",
+                          marginRight: 5,
+                          marginTop: 5,
+                        }}
+                      >
+                        {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                      {/* Giá giảm */}
+                      <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    </View>
+                  ) : (
+                    // Hiển thị giá gốc nếu không giảm giá
+                    <Text style={{ fontSize: 12, color: "#E53935", marginTop: 5 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                  )}
                   {/* Dây ruy băng đỏ nằm ngoài khung */}
                   {!food.isAvailable && (
                     <View
@@ -658,9 +684,7 @@ export default function StoreKH() {
                         zIndex: 1, // Đảm bảo ruy băng nằm trên các phần tử khác
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
-                        Hết món
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>Hết món</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -719,9 +743,7 @@ export default function StoreKH() {
         </View>
         {remainingGroups.map((group, index) => (
           <ScrollView key={group || index} style={{ marginTop: 20, paddingHorizontal: 15 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-              {foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}
-            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>{foodGroups.find((fg) => fg._id === group)?.groupName || "Khác"}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {groupedFoods[group].map((food, index) => (
                 <TouchableOpacity
@@ -737,7 +759,6 @@ export default function StoreKH() {
                     alignItems: "center",
                     position: "relative", // Để thêm lớp phủ và ruy băng
                     overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
-
                   }}
                   onPress={() => {
                     if (food.isAvailable) {
@@ -789,9 +810,7 @@ export default function StoreKH() {
                           alignItems: "center",
                         }}
                       >
-                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                          Đã hết
-                        </Text>
+                        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Đã hết</Text>
                       </View>
                     )}
                   </View>
@@ -800,9 +819,28 @@ export default function StoreKH() {
                   <View>
                     <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
                     <Text style={{ fontSize: 14 }}>{food.description}</Text>
-                    <Text style={{ fontSize: 12, color: "#E53935" }}>
-                      {food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND
-                    </Text>
+                    <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
+                    {food.isDiscounted && food.discountedPrice ? (
+                      <View style={{ flexDirection: "row" }}>
+                        {/* Giá gốc */}
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            color: "#888",
+                            textDecorationLine: "line-through",
+                            marginRight: 5,
+                            marginTop: 5,
+                          }}
+                        >
+                          {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                        </Text>
+                        {/* Giá giảm */}
+                        <Text style={{ fontSize: 12, color: "#E53935" }}>{food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+                    ) : (
+                      // Hiển thị giá gốc nếu không giảm giá
+                      <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    )}
                   </View>
 
                   {/* Dây ruy băng đỏ nằm ngoài khung */}
@@ -820,14 +858,11 @@ export default function StoreKH() {
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
-                        Hết món
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>Hết món</Text>
                     </View>
                   )}
                 </TouchableOpacity>
               ))}
-
             </ScrollView>
           </ScrollView>
         ))}
