@@ -1,20 +1,66 @@
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator } from "react-native";
 import React, { useState, useEffect, useContext } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { api, typeHTTP } from "../../utils/api"; // Import hàm api của bạn
 import { useRoute } from "@react-navigation/native"; // Để lấy orderId từ params
 import { globalContext } from "../../context/globalContext";
 
+const { width, height } = Dimensions.get("window");
+
 export default function DeliveryODDetails({ navigation }) {
   const [orderDetails, setOrderDetails] = useState(null); // Dữ liệu đơn hàng
   const [loading, setLoading] = useState(true); // Trạng thái loading
   const [isPickedUp, setIsPickedUp] = useState(false); // Trạng thái để theo dõi việc lấy món ăn
   const { globalData } = useContext(globalContext);
+  const [storeDetails, setStoreDetails] = useState(null); // State để lưu thông tin cửa hàng
+  const [reviewCount, setReviewCount] = useState(0); // State để lưu tổng số lượng đánh giá
 
   const userRole = globalData?.user?.roleId; // Lấy role từ dữ liệu global
 
   const route = useRoute(); // Sử dụng useRoute để lấy orderId từ params
   const { orderId } = route.params; // Lấy orderId từ params được truyền từ màn hình trước
+
+  useEffect(() => {
+    const fetchStoreReviews = async () => {
+      try {
+        if (orderDetails?.store?.storeId) {
+          const response = await api({
+            method: typeHTTP.GET,
+            url: `/orderReview/store-reviews/${orderDetails.store.storeId}`, // Thay đổi endpoint API cho đúng
+            sendToken: true,
+          });
+          setReviewCount(response.reviews?.length || 0); // Lưu tổng số lượng đánh giá
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đánh giá:", error);
+      }
+    };
+
+    if (orderDetails) {
+      fetchStoreReviews();
+    }
+  }, [orderDetails]);
+
+  useEffect(() => {
+    const fetchStoreDetails = async () => {
+      try {
+        if (orderDetails?.store?.storeId) {
+          const response = await api({
+            method: typeHTTP.GET,
+            url: `/store/get-store/${orderDetails.store.storeId}`, // Thay đổi URL theo API của bạn
+            sendToken: true,
+          });
+          setStoreDetails(response.data); // Lưu thông tin cửa hàng vào state
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin cửa hàng:", error);
+      }
+    };
+
+    if (orderDetails) {
+      fetchStoreDetails();
+    }
+  }, [orderDetails]);
 
   useEffect(() => {
     // Gọi API để lấy chi tiết đơn hàng khi component được mount
@@ -150,7 +196,10 @@ export default function DeliveryODDetails({ navigation }) {
             <Icon name="location-outline" size={16} color="#4CAF50" />
             <Text style={{ fontSize: 16, fontWeight: "bold", marginLeft: 8 }}>{orderDetails.store.storeName}</Text>
           </View>
-          <Text style={{ fontSize: 14, color: "#E53935" }}>4.5 ⭐ (25+)</Text>
+          <Text style={{ fontSize: 14, color: "#E53935" }}>
+            {" "}
+            {storeDetails?.averageRating} ⭐ ({reviewCount}+)
+          </Text>
         </View>
         <Text style={{ fontSize: 14, color: "#333" }}>{orderDetails.store.storeAddress}</Text>
       </View>
@@ -175,7 +224,9 @@ export default function DeliveryODDetails({ navigation }) {
             <Icon name="person-outline" size={16} color="#E53935" />
             <Text style={{ fontSize: 16, fontWeight: "bold", marginLeft: 8 }}>{orderDetails.user.fullName}</Text>
           </View>
-          <Text style={{ fontSize: 14, color: "#E53935" }}>4.5 ⭐ (25+)</Text>
+          <Text style={{ fontSize: 14, color: "#E53935" }}>
+            {storeDetails?.averageRating} ⭐ ({reviewCount}+)
+          </Text>
         </View>
         <Text style={{ fontSize: 14, color: "#333" }}>{orderDetails.cartSnapshot.deliveryAddress}</Text>
         <Text style={{ fontSize: 14, color: "#333", marginTop: 4 }}>Số điện thoại: {orderDetails.cartSnapshot.receiverPhone}</Text>
@@ -197,14 +248,34 @@ export default function DeliveryODDetails({ navigation }) {
 
       {/* Chi tiết đơn hàng */}
       <View style={{ paddingHorizontal: 16 }}>
-        {orderDetails.foods.map((food, index) => (
-          <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-            <Text style={{ fontSize: 16 }}>
-              {food.quantity}x {food.foodName}
-            </Text>
-            <Text style={{ fontSize: 16 }}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
-          </View>
-        ))}
+        {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
+          orderDetails.cartSnapshot.items.map((item, index) => (
+            <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+              <View style={{ flexDirection: "column" }}>
+                <View style={{ flexDirection: "row" }}>
+                  <Text style={{ fontSize: width * 0.04, width: 230 }}>
+                    {item.quantity}x {item.foodName}
+                  </Text>
+                  <Text style={{ fontSize: width * 0.04, paddingLeft: 30 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                </View>
+
+                {/* Hiển thị các món ăn trong combo */}
+                {item.combos && item.combos.foods && item.combos.foods.length > 0 && (
+                  <View style={{ marginLeft: width * 0.05, marginTop: height * 0.01 }}>
+                    {item.combos.foods.map((comboFood, comboIndex) => (
+                      <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.005 }}>
+                        <Text style={{ fontSize: width * 0.035, color: "#666", width: 150 }}>{comboFood.foodName}</Text>
+                        <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
+        )}
       </View>
 
       {/* Tổng hóa đơn */}

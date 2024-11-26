@@ -388,10 +388,10 @@ const OrderingProcess = () => {
         </Modal>
 
         {/* Order info (e.g., utensils and payment method) */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
+        {/* <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Dụng cụ ăn uống</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>Có</Text>
-        </View>
+        </View> */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
           <Text style={{ fontSize: width * 0.04 }}>Phương thức thanh toán</Text>
           <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>{orderDetails ? (orderDetails.paymentMethod === "Cash" ? "Tiền mặt" : orderDetails.paymentMethod) : "Đang tải..."}</Text>
