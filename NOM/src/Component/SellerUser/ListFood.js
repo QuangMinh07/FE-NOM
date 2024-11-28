@@ -13,7 +13,6 @@ export default function ListFood({ navigation }) {
   const { foods, storeData } = globalData; // Lấy danh sách món ăn và thông tin cửa hàng từ globalData
   const [foodGroups, setFoodGroups] = useState([]); // State để lưu danh sách nhóm món từ MongoDB
   const [foodList, setFoodList] = useState([]);
-  // const [selectedItems, setSelectedItems] = useState([]); // Track selected items for combo
 
   useEffect(() => {
     console.log("Foods in globalData:", foods); // Kiểm tra danh sách món ăn từ globalData
@@ -23,7 +22,6 @@ export default function ListFood({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("Món");
   const [modalVisible, setModalVisible] = useState(false); // State cho modal thêm nhóm món
   const [groupName, setGroupName] = useState(""); // State cho nhóm món mới
-  // const [selectedDishes, setSelectedDishes] = useState([]);
   const [isSelectingGroups, setIsSelectingGroups] = useState(false); // Trạng thái đang chọn nhóm
   const [currentGroup, setCurrentGroup] = useState(null); // Nhóm món được nhấn `link`
   const [selectedGroups, setSelectedGroups] = useState([]); // Danh sách nhóm đã chọn
@@ -32,6 +30,63 @@ export default function ListFood({ navigation }) {
   const [editGroupName, setEditGroupName] = useState(""); // Tên nhóm món được chỉnh sửa
   const [editingGroupId, setEditingGroupId] = useState(null); // ID của nhóm món đang chỉnh sửa
   const [removeGroups, setRemoveGroups] = useState([]); // Danh sách nhóm cần xóa khỏi combo
+  const [searchQuery, setSearchQuery] = useState(""); // Lưu từ khóa tìm kiếm
+  const [searchResults, setSearchResults] = useState({ foods: [] }); // Lưu kết quả tìm kiếm
+  const [searchResultsGroups, setSearchResultsGroups] = useState({ foodGroups: [] }); // Lưu kết quả tìm kiếm nhóm món
+
+  useEffect(() => {
+    if (searchQuery) {
+      handleSearch(searchQuery);
+    } else if (selectedTab === "Món") {
+      fetchFoodsByStoreId(); // Gọi API lấy danh sách món ăn nếu đang ở tab "Món"
+    } else if (selectedTab === "Nhóm món") {
+      getFoodGroups(); // Gọi API lấy danh sách nhóm món nếu đang ở tab "Nhóm món"
+    }
+  }, [searchQuery, selectedTab]);
+
+  const handleSearch = useCallback(
+    async (query) => {
+      try {
+        const storeId = globalData.storeData?._id; // Lấy storeId từ globalData
+        if (!storeId) {
+          console.error("Không tìm thấy storeId.");
+          return;
+        }
+
+        if (selectedTab === "Món") {
+          // Tìm kiếm món ăn
+          const response = await api({
+            method: typeHTTP.GET,
+            url: `/food/search?foodName=${encodeURIComponent(query)}&storeId=${storeId}`, // Thêm storeId vào query
+            sendToken: true,
+          });
+
+          if (response && response.data) {
+            setSearchResults({ foods: response.data }); // Lưu kết quả tìm kiếm món ăn
+          } else {
+            setSearchResults({ foods: [] });
+          }
+        } else if (selectedTab === "Nhóm món") {
+          // Tìm kiếm nhóm món
+          const response = await api({
+            method: typeHTTP.GET,
+            url: `/foodgroup/search?groupName=${encodeURIComponent(query)}&storeId=${storeId}`, // Thêm storeId vào query
+            sendToken: true,
+          });
+
+          if (response && response.data) {
+            setSearchResultsGroups({ foodGroups: response.data }); // Lưu kết quả tìm kiếm nhóm món
+          } else {
+            setSearchResultsGroups({ foodGroups: [] });
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi tìm kiếm:", error);
+        Alert.alert("Lỗi", "Không thể tìm kiếm. Vui lòng thử lại sau.");
+      }
+    },
+    [selectedTab, globalData.storeData?._id]
+  );
 
   // Khi nhấn vào `link` của một nhóm
   const handleLinkClick = (groupId) => {
@@ -73,56 +128,6 @@ export default function ListFood({ navigation }) {
     }
   };
 
-  // const handleConfirmGroups = () => {
-  //   if (selectedGroups.length === 1) {
-  //     // Nếu chỉ còn lại nhóm gốc, xóa gộp
-  //     setGroupedNames((prev) => {
-  //       const newGroupedNames = { ...prev };
-  //       delete newGroupedNames[currentGroup];
-  //       return newGroupedNames;
-  //     });
-  //   } else {
-  //     // Cập nhật nhóm gộp
-  //     const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
-  //     const selectedNames = foodGroups.filter((group) => selectedGroups.includes(group._id)).map((group) => group.groupName);
-
-  //     // Lưu lại tên gốc + các nhóm được chọn
-  //     setGroupedNames((prev) => ({
-  //       ...prev,
-  //       [currentGroup]: {
-  //         original: currentGroupName,
-  //         combined: selectedNames.filter((name) => name !== currentGroupName).join(" + "),
-  //       },
-  //     }));
-
-  //     // Reset trạng thái chọn
-  //     setIsSelectingGroups(false);
-  //     setCurrentGroup(null);
-  //     setSelectedGroups([]);
-  //   }
-
-  //   // Lấy nhóm hiện tại và các nhóm đã chọn
-  //   const currentGroupName = foodGroups.find((group) => group._id === currentGroup)?.groupName || "";
-  //   const selectedNames = foodGroups.filter((group) => selectedGroups.includes(group._id)).map((group) => group.groupName);
-
-  //   // Tạo chuỗi tên gốc + nhóm mới (chỉ các nhóm được chọn, trừ nhóm hiện tại)
-  //   const newGroupName = `${currentGroupName} + ${selectedNames.filter((name) => name !== currentGroupName).join(" + ")}`;
-
-  //   // Cập nhật tên nhóm đã gộp
-  //   setGroupedNames((prev) => ({
-  //     ...prev,
-  //     [currentGroup]: {
-  //       original: currentGroupName,
-  //       combined: selectedNames.filter((name) => name !== currentGroupName).join(" + "),
-  //     },
-  //   }));
-
-  //   // Reset trạng thái chọn nhóm
-  //   setIsSelectingGroups(false);
-  //   setCurrentGroup(null);
-  //   setSelectedGroups([]);
-  // };
-
   const handleConfirmGroups = async () => {
     // Kiểm tra nếu không có nhóm món nào được chọn ngoài nhóm hiện tại
     if (selectedGroups.length <= 1) {
@@ -163,6 +168,11 @@ export default function ListFood({ navigation }) {
       } else {
         throw new Error(response?.message || "Không thể thêm combo nhóm món.");
       }
+
+      // Gọi lại tìm kiếm nếu đang có từ khóa
+      if (searchQuery) {
+        await handleSearch(searchQuery);
+      }
     } catch (error) {
       console.error("Error adding combo to food group:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi thêm combo nhóm món.");
@@ -200,6 +210,11 @@ export default function ListFood({ navigation }) {
 
       // Cập nhật lại danh sách nhóm món từ server
       await getFoodGroups();
+
+      // Gọi lại tìm kiếm nếu đang có từ khóa
+      if (searchQuery) {
+        await handleSearch(searchQuery);
+      }
 
       Alert.alert("Thành công", "Nhóm combo đã được cập nhật.");
     } catch (error) {
@@ -281,6 +296,10 @@ export default function ListFood({ navigation }) {
       } else {
         console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
       }
+      // Gọi lại tìm kiếm nếu đang có từ khóa
+      if (searchQuery) {
+        await handleSearch(searchQuery);
+      }
     } catch (error) {
       // Kiểm tra xem error.response có tồn tại không
       if (error.response) {
@@ -293,7 +312,7 @@ export default function ListFood({ navigation }) {
 
   useEffect(() => {
     getFoodGroups(); // Lấy danh sách nhóm món khi component được mount
-  }, [storeData]); // Chỉ gọi khi storeData thay đổi
+  }, [storeData, handleSearch, searchQuery]); // Chỉ gọi khi storeData thay đổi
 
   // Nhóm món ăn theo foodGroup và sắp xếp thứ tự
   const groupFoodsByCategory = (foods, foodGroups) => {
@@ -377,13 +396,18 @@ export default function ListFood({ navigation }) {
         setFoodList(updatedFoodList); // Cập nhật danh sách món ăn hiển thị
 
         Alert.alert("Xóa thành công", "Món ăn đã được xóa khỏi danh sách.", [{ text: "OK" }]);
+
+        // Gọi lại tìm kiếm nếu đang có từ khóa
+        if (searchQuery) {
+          await handleSearch(searchQuery);
+        }
         console.log("Đã xóa món ăn và cập nhật dữ liệu.");
       } catch (error) {
         console.error("Error deleting food:", error);
         Alert.alert("Lỗi", "Không thể xóa món ăn. Vui lòng thử lại sau.");
       }
     },
-    [foodList] // Theo dõi sự thay đổi của foodList
+    [foodList, searchQuery, handleSearch] // Theo dõi sự thay đổi của foodList
   );
 
   const handleDeleteFoodGroup = useCallback(
@@ -420,12 +444,16 @@ export default function ListFood({ navigation }) {
         }
 
         Alert.alert("Thành công", "Nhóm món đã được xóa khỏi danh sách.", [{ text: "OK" }]);
+        // Gọi lại tìm kiếm nếu đang có từ khóa
+        if (searchQuery) {
+          await handleSearch(searchQuery);
+        }
       } catch (error) {
         console.error("Error deleting food group:", error);
         Alert.alert("Lỗi", "Không thể xóa nhóm món. Vui lòng thử lại sau.");
       }
     },
-    [foodGroups] // Theo dõi sự thay đổi của foodGroups
+    [foodGroups, searchQuery, handleSearch] // Theo dõi sự thay đổi của foodGroups
   );
 
   const handleUpdateFoodGroup = async () => {
@@ -456,6 +484,10 @@ export default function ListFood({ navigation }) {
       } else {
         Alert.alert("Lỗi", "Không thể cập nhật tên nhóm món.");
       }
+      // Gọi lại tìm kiếm nếu đang có từ khóa
+      if (searchQuery) {
+        await handleSearch(searchQuery);
+      }
     } catch (error) {
       console.error("Error updating food group:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra. Vui lòng thử lại sau.");
@@ -480,6 +512,10 @@ export default function ListFood({ navigation }) {
         Alert.alert("Thành công", `Món ăn đã được ${updatedStatus ? "bật" : "tắt"} thành công.`);
       } else {
         throw new Error("Không thể cập nhật trạng thái món ăn.");
+      }
+      // Gọi lại tìm kiếm nếu đang có từ khóa
+      if (searchQuery) {
+        await handleSearch(searchQuery);
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật trạng thái:", error);
@@ -534,7 +570,15 @@ export default function ListFood({ navigation }) {
           elevation: 5,
         }}
       >
-        <TextInput placeholder="Tìm kiếm" style={{ padding: 10, fontSize: 16 }} />
+        <TextInput
+          placeholder="Tìm kiếm"
+          style={{ padding: 10, fontSize: 16 }}
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text); // Cập nhật từ khóa
+            handleSearch(text); // Gọi API tìm kiếm
+          }}
+        />
       </View>
       {/* Tabs */}
       <View
@@ -566,6 +610,148 @@ export default function ListFood({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
+      {/* Search Results */}
+      {searchQuery ? (
+        <ScrollView contentContainerStyle={{ padding: 10 }}>
+          {/* Hiển thị kết quả tìm kiếm cho Món */}
+          {selectedTab === "Món" && searchResults.foods.length > 0 && (
+            <View>
+              <Text style={styles.resultHeader}>Kết quả tìm kiếm món ăn:</Text>
+              {searchResults.foods.map((food, index) => (
+                <Swipeable key={food._id || index} renderLeftActions={() => renderLeftActions(food._id)}>
+                  <TouchableOpacity onPress={() => handleDishClick(food._id)} style={styles.foodItem}>
+                    <View>
+                      <Text style={styles.foodName}>{food.foodName}</Text>
+                      <Text style={styles.foodPrice}>{food.price.toLocaleString("vi-VN")} VND</Text>
+                    </View>
+
+                    {/* Switch bật/tắt trạng thái */}
+                    <Switch
+                      value={food.isAvailable} // Trạng thái hiện tại của món ăn
+                      onValueChange={() => handleToggleAvailability(food._id, food.isAvailable)} // Gọi hàm xử lý
+                      thumbColor={food.isAvailable ? "#fff" : "#fff"}
+                      trackColor={{ false: "#ccc", true: "#E53935" }}
+                    />
+                  </TouchableOpacity>
+                </Swipeable>
+              ))}
+            </View>
+          )}
+
+          {/* Hiển thị kết quả tìm kiếm cho Nhóm món */}
+          {selectedTab === "Nhóm món" && searchResultsGroups.foodGroups.length > 0 && (
+            <View>
+              <Text style={styles.resultHeader}>Kết quả tìm kiếm nhóm món:</Text>
+              {searchResultsGroups.foodGroups.map((group, index) => (
+                <Swipeable
+                  key={group._id || index}
+                  renderLeftActions={() => (
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteFoodGroup(group._id)} // Xóa nhóm món
+                    >
+                      <Ionicons name="trash-outline" size={22} color="#fff" />
+                      <Text style={{ color: "#fff" }}>Xóa</Text>
+                    </TouchableOpacity>
+                  )}
+                >
+                  <View style={styles.foodItem}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      {/* Checkbox gộp nhóm món */}
+                      {isSelectingGroups && currentGroup !== group._id && (
+                        <TouchableOpacity
+                          onPress={() => handleGroupSelection(group._id)}
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: 3,
+                            borderWidth: 1,
+                            borderColor: "#E53935",
+                            backgroundColor: selectedGroups.includes(group._id) ? "#E53935" : "#fff",
+                            marginRight: 10,
+                          }}
+                        />
+                      )}
+                      {/* Sử dụng style giống tab Nhóm món */}
+                      <Text style={styles.groupHeader}>{group.groupName}</Text>
+                      {group.comboGroups?.length > 0 && (
+                        <Text>
+                          {group.comboGroups.map((comboId, idx) => {
+                            const comboGroup = foodGroups.find((g) => g._id === comboId);
+                            return (
+                              <Text key={idx} style={styles.comboGroup}>
+                                {idx > 0 ? ", " : " + "}
+                                {comboGroup?.groupName || "N/A"}
+                              </Text>
+                            );
+                          })}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: "row" }}>
+                      {/* Nút chỉnh sửa */}
+                      <TouchableOpacity
+                        onPress={() => {
+                          setEditGroupName(group.groupName);
+                          setEditingGroupId(group._id);
+                          setEditModalVisible(true); // Mở modal chỉnh sửa
+                        }}
+                      >
+                        <Icon name="edit" size={24} color="#E53935" />
+                      </TouchableOpacity>
+                      {/* Nút liên kết */}
+                      <TouchableOpacity onPress={() => handleLinkClick(group._id)} style={{ paddingLeft: 10 }}>
+                        <Icon name="link" size={24} color="#E53935" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Swipeable>
+              ))}
+
+              {/* Nút xác nhận gộp nhóm món */}
+              {isSelectingGroups && (
+                <View style={{ marginTop: 20, flexDirection: "row", justifyContent: "space-around" }}>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      if (removeGroups.length > 0) {
+                        await handleDeleteConfirmGroups();
+                      }
+                      if (selectedGroups.length > 1) {
+                        await handleConfirmGroups();
+                      }
+                    }}
+                    style={{
+                      backgroundColor: "#E53935",
+                      padding: 10,
+                      borderRadius: 10,
+                      width: "40%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "bold" }}>Xác nhận</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsSelectingGroups(false);
+                      setCurrentGroup(null);
+                      setSelectedGroups([]);
+                    }}
+                    style={{
+                      backgroundColor: "#ccc",
+                      padding: 10,
+                      borderRadius: 10,
+                      width: "40%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: "#333", fontWeight: "bold" }}>Hủy</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      ) : null}
 
       <View style={{ flex: 1 }}>
         {/* Nội dung tab "Món" */}
@@ -745,7 +931,6 @@ export default function ListFood({ navigation }) {
           </View>
         )}
       </View>
-
       {/* Modal for adding new group */}
       <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalBackground}>
@@ -846,5 +1031,46 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  searchResultItem: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  foodName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  foodPrice: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  resultHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#E53935",
+    marginBottom: 10,
+  },
+  noDataText: {
+    textAlign: "center",
+    color: "#888",
+    fontSize: 16,
+    marginTop: 20,
+  },
+  groupHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#E53935",
+    marginBottom: 10,
   },
 });

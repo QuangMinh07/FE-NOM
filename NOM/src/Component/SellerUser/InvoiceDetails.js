@@ -114,10 +114,10 @@ const InvoiceDetails = () => {
               <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>Thời gian đặt hàng:</Text>
               <Text style={{ fontSize: width * 0.04 }}>{orderDetails ? new Date(orderDetails.orderDate).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "Đang tải..."}</Text>
             </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: height * 0.01 }}>
+            {/* <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: height * 0.01 }}>
               <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>Thời gian nhận hàng:</Text>
               <Text style={{ fontSize: width * 0.04 }}>{orderDetails ? new Date(orderDetails.orderDate).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "Đang tải..."}</Text>
-            </View>
+            </View> */}
           </View>
 
           {/* Customer Info */}
@@ -197,10 +197,10 @@ const InvoiceDetails = () => {
           </View>
 
           {/* Order Tools and Payment */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
+          {/* <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
             <Text style={{ fontSize: width * 0.04 }}>Dụng cụ ăn uống</Text>
             <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}>Có</Text>
-          </View>
+          </View> */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.02, paddingHorizontal: width * 0.05 }}>
             <Text style={{ fontSize: width * 0.04 }}>Phương thức thanh toán</Text>
             <Text style={{ fontSize: width * 0.04, fontWeight: "bold" }}> {orderDetails ? (orderDetails.paymentMethod === "Cash" ? "Tiền mặt" : orderDetails.paymentMethod) : "Đang tải..."}</Text>

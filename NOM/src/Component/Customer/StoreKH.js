@@ -819,7 +819,6 @@ export default function StoreKH() {
                   <View>
                     <Text style={{ fontSize: 14, fontWeight: "bold" }}>{food.foodName}</Text>
                     <Text style={{ fontSize: 14 }}>{food.description}</Text>
-                    <Text style={{ fontSize: 12, color: "#E53935" }}>{food.price ? food.price.toLocaleString("vi-VN").replace(/\./g, ",") : "Chưa có giá"} VND</Text>
                     {food.isDiscounted && food.discountedPrice ? (
                       <View style={{ flexDirection: "row" }}>
                         {/* Giá gốc */}
@@ -829,7 +828,7 @@ export default function StoreKH() {
                             color: "#888",
                             textDecorationLine: "line-through",
                             marginRight: 5,
-                            marginTop: 5,
+                            marginTop: 2,
                           }}
                         >
                           {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND

@@ -15,30 +15,32 @@ export default function Orderfood() {
   const { globalData } = useContext(globalContext);
   const userId = globalData.user?.id;
 
-  const { quantity, price, foodData, loading, comboFoods, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId);
+  const { quantity, price, discountedPrice, foodData, loading, comboFoods, incrementQuantity, decrementQuantity, addToCart } = useOrder(foodId);
   const [selectedCombos, setSelectedCombos] = useState([]);
 
   if (loading) {
     return <Text>Loading...</Text>;
   }
 
-  const toggleComboSelection = (comboFood) => {
-    setSelectedCombos((prevSelectedCombos) =>
-      prevSelectedCombos.includes(comboFood._id)
-        ? prevSelectedCombos.filter((id) => id !== comboFood._id)
-        : [...prevSelectedCombos, comboFood._id]
-    );
+  const toggleComboSelection = (food) => {
+    setSelectedCombos((prevSelectedCombos) => {
+      const existingComboIndex = prevSelectedCombos.findIndex((combo) => combo.foodId === food._id);
+
+      if (existingComboIndex !== -1) {
+        // Nếu món đã được chọn, bỏ chọn nó
+        return prevSelectedCombos.filter((combo) => combo.foodId !== food._id);
+      } else {
+        // Nếu món chưa được chọn, thêm mới với quantity = số lượng món chính
+        return [...prevSelectedCombos, { foodId: food._id, quantity }];
+      }
+    });
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Food Image and Quantity */}
       <View style={{ height: height * 0.4, backgroundColor: "#E53935" }}>
-        <Image
-          source={{ uri: foodData?.imageUrl || "https://your-default-image-url" }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: foodData?.imageUrl || "https://your-default-image-url" }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
         <View
           style={{
             position: "absolute",
@@ -69,10 +71,6 @@ export default function Orderfood() {
                 ? `${foodData?.foodName.substring(0, 25)}...` // Truncate and add "..." if text exceeds 25 characters
                 : foodData?.foodName}
             </Text>
-
-
-
-
           </View>
 
           {/* Quantity Controls */}
@@ -108,73 +106,112 @@ export default function Orderfood() {
             </TouchableOpacity>
           </View>
         </View>
-        
       </View>
 
       {/* Food Description and Price */}
       <ScrollView style={{ flex: 1, padding: width * 0.04, marginTop: height * 0.01 }}>
         <View style={{ flexDirection: "row", justifyContent: "flex-end", marginVertical: height * 0.01 }}>
-          <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{price.toLocaleString("vi-VN")} VND</Text>
+          {/* <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{finalPrice.toLocaleString("vi-VN")} VND</Text> */}
+          {discountedPrice ? (
+            <View style={{ flexDirection: "column" }}>
+              {/* Giá gốc */}
+              <Text
+                style={{
+                  fontSize: width * 0.04,
+                  color: "#888",
+                  textDecorationLine: "line-through",
+                  marginRight: 5,
+                  paddingLeft: 50,
+                }}
+              >
+                {price?.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+              </Text>
+              {/* Giá giảm */}
+              <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+            </View>
+          ) : (
+            // Hiển thị giá gốc nếu không giảm giá
+            <Text style={{ fontSize: width * 0.06, fontWeight: "bold", color: "#E53935" }}>{price?.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+          )}
         </View>
-
         <View style={{}}>
           <Text style={{ fontSize: width * 0.05, fontWeight: "bold" }}>Mô tả</Text>
           <Text style={{ fontSize: width * 0.045, color: "#666", marginTop: height * 0.01 }}>{foodData?.description}</Text>
         </View>
-
-        {/* Combo Section */}
-        {comboFoods.length > 0 && (
-          <View style={{ marginTop: height * 0.03 }}>
-            <Text style={{ fontSize: width * 0.05, fontWeight: "bold", color: "black", marginBottom: height * 0.01 }}>
-              Tên nhóm
-            </Text>
-            {comboFoods.map((comboFood) => (
-              <View
-                key={comboFood._id}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#ddd",
-                  paddingVertical: height * 0.015,
-                }}
-              >
-                {/* Checkbox and Food Name */}
-                <TouchableOpacity
-                  style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
-                  onPress={() => toggleComboSelection(comboFood)}
-                >
-                  <View
-                    style={{
-                      width: width * 0.06,
-                      height: width * 0.06,
-                      borderWidth: 2,
-                      borderColor: "#E53935",
-                      borderRadius: width * 0.02,
-                      marginRight: width * 0.03,
-                      backgroundColor: selectedCombos.includes(comboFood._id) ? "#E53935" : "#fff",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {selectedCombos.includes(comboFood._id) && <Ionicons name="checkmark" size={width * 0.04} color="#fff" />}
-                  </View>
-                  <Text
-                    style={{ fontSize: width * 0.04, color: "#333" }}
-                    numberOfLines={1} // Limit text to 1 line
-                    ellipsizeMode="tail" // Add "..." at the end of truncated text
-                  >
-                    {comboFood.foodName}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Price */}
-                <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "black" }}>+{comboFood.price.toLocaleString("vi-VN")} VND</Text>
-              </View>
-            ))}
-          </View>
-        )}
+        <ScrollView style={{ flex: 1, padding: width * 0.04, marginTop: height * 0.01 }}>
+          {/* Combo Section */}
+          {comboFoods.length > 0 && (
+            <View style={{ marginTop: height * 0.03 }}>
+              {comboFoods.map((combo, index) => (
+                <View key={index} style={{ marginBottom: height * 0.02 }}>
+                  {/* Tên nhóm combo */}
+                  <Text style={{ fontSize: width * 0.05, fontWeight: "bold", color: "black", marginBottom: height * 0.01 }}>{combo.groupName}</Text>
+                  {combo.foods.map((food) => (
+                    <View
+                      key={food._id}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#ddd",
+                        paddingVertical: height * 0.015,
+                      }}
+                    >
+                      {/* Checkbox and Food Name */}
+                      <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", flex: 1 }} onPress={() => toggleComboSelection(food)}>
+                        <View
+                          style={{
+                            width: width * 0.06,
+                            height: width * 0.06,
+                            borderWidth: 2,
+                            borderColor: "#E53935",
+                            borderRadius: width * 0.02,
+                            marginRight: width * 0.03,
+                            backgroundColor: selectedCombos.some((combo) => combo.foodId === food._id) ? "#E53935" : "#fff",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          {selectedCombos.some((combo) => combo.foodId === food._id) && <Ionicons name="checkmark" size={width * 0.04} color="#fff" />}
+                          {console.log("Selected Combos:", selectedCombos)}
+                        </View>
+                        <Text
+                          style={{ fontSize: width * 0.04, color: "#333" }}
+                          numberOfLines={1} // Limit text to 1 line
+                          ellipsizeMode="tail" // Add "..." at the end of truncated text
+                        >
+                          {food.foodName}
+                        </Text>
+                      </TouchableOpacity>
+                      {/* Giá combo */}
+                      {food.discountedPrice ? (
+                        <View style={{ flexDirection: "row" }}>
+                          {/* Giá gốc */}
+                          <Text
+                            style={{
+                              fontSize: width * 0.04,
+                              color: "#888",
+                              textDecorationLine: "line-through",
+                              marginRight: 5,
+                            }}
+                          >
+                            {food.price.toLocaleString("vi-VN")} VND
+                          </Text>
+                          {/* Giá giảm */}
+                          <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "#E53935" }}> {food.discountedPrice.toLocaleString("vi-VN")} VND</Text>
+                        </View>
+                      ) : (
+                        // Hiển thị giá gốc nếu không giảm giá
+                        <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "#E53935" }}> {food.price.toLocaleString("vi-VN")} VND</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
       </ScrollView>
 
       {/* Add to Cart Button */}
