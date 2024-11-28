@@ -1,8 +1,8 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-export const baseURLOrigin = "https://nom-9xxu.onrender.com";
+export const baseURLOrigin = "https://nom-9xxu.onrender.com/";
 
-const baseURL = "https://nom-9xxu.onrender.com/v1";
+const baseURL = "https://nom-9xxu.onrender.com//v1";
 
 export const typeHTTP = {
   POST: "post",

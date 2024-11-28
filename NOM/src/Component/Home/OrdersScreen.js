@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, Alert, Modal, TextInput, Button, Animated, } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, Alert, Modal, TextInput, Button, Animated } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Gọi API
@@ -17,7 +17,6 @@ export default function OrdersScreen() {
 
   const tabs = ["Đang đặt", "Lịch sử", "Chờ thanh toán"];
 
-
   // Hàm gọi API để lấy tất cả các đơn hàng
   const fetchAllOrders = useCallback(async () => {
     try {
@@ -33,8 +32,7 @@ export default function OrdersScreen() {
       const history = allOrdersDetails.filter((order) => order.paymentStatus === "Paid" || order.orderStatus === "Cancelled" || order.orderStatus === "Delivered");
 
       // Sửa lại điều kiện lọc cho tab "Chờ thanh toán"
-      const pendingPayment = allOrdersDetails.filter((order) => order.paymentStatus === "Pending");
-
+      const pendingPayment = allOrdersDetails.filter((order) => order.paymentStatus === "Pending" && order.orderStatus !== "Cancelled");
       // Cập nhật đơn hàng phân loại vào state
       setOrders({ ongoing, history, pendingPayment });
     } catch (error) {
@@ -98,7 +96,10 @@ export default function OrdersScreen() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <Text style={{ fontSize: 14, color: "#666" }}>
                 {order.foods.map((food) => food.foodName).join(", ").length > 25
-                  ? order.foods.map((food) => food.foodName).join(", ").slice(0, 25) + "..."
+                  ? order.foods
+                      .map((food) => food.foodName)
+                      .join(", ")
+                      .slice(0, 25) + "..."
                   : order.foods.map((food) => food.foodName).join(", ")}
               </Text>
               <Text style={{ fontSize: 14, color: "#666" }}>{order.foods.length} món</Text>
