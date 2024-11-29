@@ -16,14 +16,18 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Ứng dụng cần quyền truy cập vào thư viện ảnh để chọn ảnh.",
         "NSUserTrackingUsageDescription": "Ứng dụng cần quyền để cung cấp các thông báo đẩy phù hợp.",
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/LogoAndroid.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.lequangminh.NOM"
     },
     "web": {
       "favicon": "./assets/favicon.png"

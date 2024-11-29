@@ -1,5 +1,5 @@
-import React, { useState, useContext, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Switch } from "react-native";
+import React, { useState, useContext, useCallback, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Switch, Linking } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API utilities
@@ -28,6 +28,32 @@ export default function Shopping({ route }) {
   const foodId = route.params?.foodId;
 
   const [loadingItems, setLoadingItems] = useState({}); // Loading cục bộ cho từng mục
+
+  useEffect(() => {
+    const handleDeepLink = (event) => {
+      const { url } = event;
+      console.log("Deep Link URL:", url);
+
+      // Điều hướng dựa trên URL
+      if (url.includes("payment-success")) {
+        navigation.navigate("HomeKH"); // Điều hướng tới màn hình Shopping
+      } else if (url.includes("payment-failed")) {
+        navigation.navigate("PaymentFailed"); // Điều hướng tới màn hình thất bại
+      }
+    };
+
+    // Lắng nghe URL deep link
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    // Kiểm tra nếu ứng dụng mở từ URL
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {
