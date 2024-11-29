@@ -29,71 +29,71 @@ const App = () => {
   const [initialRoute, setInitialRoute] = useState("");
   const [appState, setAppState] = useState(AppState.currentState);
 
-  // async function registerForPushNotificationsAsync() {
-  //   let token;
+  async function registerForPushNotificationsAsync() {
+    let token;
 
-  //   if (Platform.OS === "android" || Platform.OS === "ios") {
-  //     try {
-  //       // Thiết lập kênh thông báo cho Android
-  //       if (Platform.OS === "android") {
-  //         await Notifications.setNotificationChannelAsync("default", {
-  //           name: "default",
-  //           importance: Notifications.AndroidImportance.MAX,
-  //           vibrationPattern: [0, 250, 250, 250],
-  //           lightColor: "#FF231F7C",
-  //         });
-  //       }
+    if (Platform.OS === "android" || Platform.OS === "ios") {
+      try {
+        // Thiết lập kênh thông báo cho Android
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "default",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#FF231F7C",
+          });
+        }
 
-  //       // Kiểm tra quyền thông báo
-  //       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  //       console.log("Existing notification permission status:", existingStatus);
-  //       let finalStatus = existingStatus;
+        // Kiểm tra quyền thông báo
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        console.log("Existing notification permission status:", existingStatus);
+        let finalStatus = existingStatus;
 
-  //       // Nếu chưa có quyền, yêu cầu quyền
-  //       if (existingStatus !== "granted") {
-  //         const { status } = await Notifications.requestPermissionsAsync();
-  //         finalStatus = status;
-  //         console.log("Notification permission after request:", finalStatus);
-  //       }
+        // Nếu chưa có quyền, yêu cầu quyền
+        if (existingStatus !== "granted") {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+          console.log("Notification permission after request:", finalStatus);
+        }
 
-  //       // Nếu quyền không được cấp, log lỗi và return
-  //       if (finalStatus !== "granted") {
-  //         alert("Failed to get push token for push notification!");
-  //         console.log("Permission not granted");
-  //         return;
-  //       }
+        // Nếu quyền không được cấp, log lỗi và return
+        if (finalStatus !== "granted") {
+          alert("Failed to get push token for push notification!");
+          console.log("Permission not granted");
+          return;
+        }
 
-  //       // Lấy expoPushToken với projectId (cho cả Android và iOS)
-  //       token = (await Notifications.getExpoPushTokenAsync({ projectId: "9e43321d-37b0-4cb5-8c99-0ca0009ba83d" })).data;
-  //       console.log("Successfully obtained push token:", token);
+        // Lấy expoPushToken với projectId (cho cả Android và iOS)
+        token = (await Notifications.getExpoPushTokenAsync({ projectId: "9e43321d-37b0-4cb5-8c99-0ca0009ba83d" })).data;
+        console.log("Successfully obtained push token:", token);
 
-  //       // Lưu token vào AsyncStorage nếu có
-  //       if (token) {
-  //         await AsyncStorage.setItem("expoPushToken", token);
-  //         console.log("Token saved to AsyncStorage:", token);
-  //       } else {
-  //         console.log("Push token is undefined");
-  //       }
-  //     } catch (error) {
-  //       console.log("Error while getting push token:", error);
-  //     }
-  //   } else {
-  //     console.log("Push notifications are not supported on this platform.");
-  //   }
-  // }
+        // Lưu token vào AsyncStorage nếu có
+        if (token) {
+          await AsyncStorage.setItem("expoPushToken", token);
+          console.log("Token saved to AsyncStorage:", token);
+        } else {
+          console.log("Push token is undefined");
+        }
+      } catch (error) {
+        console.log("Error while getting push token:", error);
+      }
+    } else {
+      console.log("Push notifications are not supported on this platform.");
+    }
+  }
 
-  // useEffect(() => {
-  //   const getToken = async () => {
-  //     const token = await AsyncStorage.getItem("expoPushToken");
-  //     console.log("Token retrieved from AsyncStorage after registration:", token);
-  //   };
+  useEffect(() => {
+    const getToken = async () => {
+      const token = await AsyncStorage.getItem("expoPushToken");
+      console.log("Token retrieved from AsyncStorage after registration:", token);
+    };
 
-  //   getToken();
-  // }, []);
+    getToken();
+  }, []);
 
-  // useEffect(() => {
-  //   registerForPushNotificationsAsync();
-  // }, []);
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
 
   useEffect(() => {
     const checkLoginState = async () => {

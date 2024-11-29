@@ -1,12 +1,11 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, SafeAreaView, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, SafeAreaView, ActivityIndicator, ScrollView } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { globalContext } from "../../context/globalContext";
 import { api, typeHTTP } from "../../utils/api";
 import * as ImagePicker from "expo-image-picker";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"; // Import thư viện mới
 import styles from "./StyleSignUpShiper"; // Import styles từ file styles.js
 
 export default function SignUpShiper() {
@@ -309,7 +308,7 @@ export default function SignUpShiper() {
             </View>
           )}
           {/* Sử dụng thêm KeyboardAwareScrollView để đảm bảo cuộn hợp lý */}
-          <KeyboardAwareScrollView
+          <ScrollView
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
             // extraScrollHeight={Platform.OS === "android" ? 60 : 20}  // Điều chỉnh độ cuộn khi bàn phím hiện
@@ -317,7 +316,7 @@ export default function SignUpShiper() {
             <Image source={require("../../img/LOGOBLACK.png")} style={styles.banner} />
             {renderProgressBar()}
             {renderStep()}
-          </KeyboardAwareScrollView>
+          </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </SafeAreaView>
