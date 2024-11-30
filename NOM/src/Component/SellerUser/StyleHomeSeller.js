@@ -131,8 +131,9 @@ export const styles = StyleSheet.create({
   },
   // Styles cho "Món bán chạy"
   bestSellerContainer: {
-    backgroundColor: "#E53935",
-    padding: 15,
+    backgroundColor: "#E53935", // Red background
+    padding: 15, // Add padding inside the container
+    marginBottom: 20, // Add spacing below the section
   },
   bestSellerTitle: {
     fontSize: 16,
@@ -141,26 +142,29 @@ export const styles = StyleSheet.create({
   },
   bestSellerCard: {
     backgroundColor: "#fff",
-    height: height * 0.23,
-    width: width * 0.55,
     borderRadius: 10,
-    marginRight: 15,
     padding: 10,
-    justifyContent: "space-between",
-    borderColor: "#D3D3D3",
-    borderWidth: 1,
+    marginRight: 15,
+    width: 150, // Adjust width to fit multiple cards in a row
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    position: "relative",
   },
   bestSellerImageContainer: {
-    backgroundColor: "#D3D3D3",
-    height: height * 0.15,
+    width: "100%",
+    height: width * 0.3, // Dynamic height for responsiveness
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   bestSellerImage: {
-    height: height * 0.15,
-    borderRadius: 10,
-    width: width * 0.5,
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   bestSellerFoodName: {
     fontSize: 14,
@@ -173,12 +177,14 @@ export const styles = StyleSheet.create({
   },
   // Thêm style cho "Các món khác"
   otherFoodsContainer: {
-    padding: 20,
+    paddingHorizontal: 15,
+    marginVertical: 20,
   },
   otherFoodsTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 15,
+    color: "#333",
   },
   otherFoodCard: {
     backgroundColor: "#fff",

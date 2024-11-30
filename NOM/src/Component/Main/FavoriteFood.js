@@ -1,3 +1,153 @@
+// import React, { useState } from 'react';
+// import {
+//   SafeAreaView,
+//   View,
+//   Text,
+//   TouchableOpacity,
+//   Image,
+//   FlatList,
+//   Dimensions,
+// } from 'react-native';
+// import Icon from 'react-native-vector-icons/Ionicons';
+// import { Swipeable } from 'react-native-gesture-handler';
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// const { width, height } = Dimensions.get('window'); // Lấy kích thước màn hình
+
+// export default function FavoriteFood() {
+//   const insets = useSafeAreaInsets();
+//   const [thucAn, setThucAn] = useState([
+//     {
+//       id: '1',
+//       ten: 'Phở Bò',
+//       moTa: 'Món phở truyền thống với nước dùng thơm ngon.',
+//       hinhAnh: 'https://example.com/pho-bo.jpg',
+//     },
+//     {
+//       id: '2',
+//       ten: 'Bún Chả',
+//       moTa: 'Bún chả Hà Nội với chả nướng thơm lừng.',
+//       hinhAnh: 'https://example.com/bun-cha.jpg',
+//     },
+//     {
+//       id: '3',
+//       ten: 'Cơm Tấm',
+//       moTa: 'Cơm tấm sườn bì với trứng ốp la.',
+//       hinhAnh: 'https://example.com/com-tam.jpg',
+//     },
+//   ]);
+
+//   const loaiBoThucAn = (id) => {
+//     const duLieuMoi = thucAn.filter((monAn) => monAn.id !== id);
+//     setThucAn(duLieuMoi);
+//   };
+
+//   const renderRightActions = (id) => (
+//     <TouchableOpacity
+//       style={{
+//         backgroundColor: '#E53935',
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         width: 80,
+//         borderRadius: 10,
+//         marginBottom: 10,
+//       }}
+//       onPress={() => loaiBoThucAn(id)}
+//     >
+//       <Icon name="trash-outline" size={30} color="#fff" />
+//       <Text style={{ color: '#fff', fontSize: 12, marginTop: 5 }}>Xóa</Text>
+//     </TouchableOpacity>
+//   );
+
+//   const hienThiMonAn = ({ item }) => (
+//     <Swipeable renderRightActions={() => renderRightActions(item.id)} overshootRight={false}>
+//       <View
+//         style={{
+//           flexDirection: 'row',
+//           alignItems: 'center',
+//           backgroundColor: '#f9f9f9',
+//           padding: 15,
+//           borderRadius: 12,
+//           marginBottom: 15,
+//           elevation: 3,
+//           shadowColor: '#000',
+//           shadowOffset: { width: 0, height: 2 },
+//           shadowOpacity: 0.25,
+//           shadowRadius: 3.84,
+//         }}
+//       >
+//         <Image
+//           source={{ uri: item.hinhAnh }}
+//           style={{
+//             width: 70,
+//             height: 70,
+//             borderRadius: 12,
+//             marginRight: 15,
+//           }}
+//         />
+//         <View style={{ flex: 1, justifyContent: 'center' }}>
+//           <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{item.ten}</Text>
+//           <Text style={{ fontSize: 14, color: '#666', marginTop: 6 }}>{item.moTa}</Text>
+//         </View>
+//       </View>
+//     </Swipeable>
+//   );
+
+//   return (
+//     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+//       {/* Header Full Màn Hình */}
+//       <View
+//         style={{
+//           backgroundColor: '#E53935',
+//           height: height * 0.15, // Chiều cao header
+//           width: '100%', // Full chiều ngang
+//           paddingTop: insets.top + 10, // Đệm trên cho notch
+//           paddingHorizontal: 20, // Khoảng cách 2 bên
+//           position: 'absolute', // Đảm bảo chiếm toàn bộ chiều ngang
+//           top: 0, // Căn sát đỉnh màn hình
+//           left: 0, // Căn sát mép trái
+//         }}
+//       >
+
+//         <Text
+//           style={{
+//             color: '#fff',
+//             fontWeight: 'bold',
+//             fontSize: 20,
+//             marginTop: 20, // Thêm khoảng cách giữa icon và tiêu đề
+//           }}
+//         >
+//           Thức Ăn Yêu Thích
+//         </Text>
+//       </View>
+
+//       {/* Danh sách thức ăn */}
+//       {thucAn.length > 0 ? (
+//         <FlatList
+//           data={thucAn}
+//           renderItem={hienThiMonAn}
+//           keyExtractor={(item) => item.id}
+//           contentContainerStyle={{
+//             paddingHorizontal: 15, // Lề hai bên
+//             paddingBottom: insets.bottom + 30, // Khoảng cách phía dưới
+//             paddingTop: height * 0.15 + 10, // Đặt khoảng cách bằng chiều cao của header
+
+//           }}
+//         />
+//       ) : (
+//         <View
+//           style={{
+//             flex: 1,
+//             justifyContent: 'center',
+//             alignItems: 'center',
+//           }}
+//         >
+//           <Text style={{ fontSize: 18, color: '#999' }}>Bạn chưa có món ăn yêu thích nào.</Text>
+//         </View>
+//       )}
+//     </SafeAreaView>
+//   );
+// }
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -6,187 +156,76 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  StyleSheet,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Thư viện Icon
-import { Swipeable } from 'react-native-gesture-handler'; // Thêm Swipeable
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Lấy kích thước màn hình để thiết kế đáp ứng
 const { width } = Dimensions.get('window');
 
-export default function FavoriteFood() {
-  const [thucAn, setThucAn] = useState([
-    {
-      id: '1',
-      ten: 'Phở Bò',
-      moTa: 'Món phở truyền thống với nước dùng thơm ngon.',
-      hinhAnh: 'https://example.com/pho-bo.jpg',
-    },
-    {
-      id: '2',
-      ten: 'Bún Chả',
-      moTa: 'Bún chả Hà Nội với chả nướng thơm lừng.',
-      hinhAnh: 'https://example.com/bun-cha.jpg',
-    },
-    {
-      id: '3',
-      ten: 'Cơm Tấm',
-      moTa: 'Cơm tấm sườn bì với trứng ốp la.',
-      hinhAnh: 'https://example.com/com-tam.jpg',
-    },
-    // Thêm các món ăn yêu thích khác ở đây
-  ]);
-
-  // Hàm để loại bỏ một món ăn khỏi danh sách yêu thích
-  const loaiBoThucAn = (id) => {
-    const duLieuMoi = thucAn.filter((monAn) => monAn.id !== id);
-    setThucAn(duLieuMoi);
-  };
-
-  // Hàm để hiển thị nút xóa khi lướt
-  const renderRightActions = (id) => (
-    <TouchableOpacity style={styles.actionXoa} onPress={() => loaiBoThucAn(id)}>
-      <Icon name="trash-outline" size={30} color="#fff" />
-      <Text style={styles.textActionXoa}>Xóa</Text>
-    </TouchableOpacity>
-  );
-
-  // Hàm để hiển thị từng món ăn
-  const hienThiMonAn = ({ item }) => (
-    <Swipeable
-      renderRightActions={() => renderRightActions(item.id)}
-      overshootRight={false}
-    >
-      <View style={styles.containerMonAn}>
-        <Image
-          source={{ uri: item.hinhAnh }}
-          style={styles.hinhAnhMonAn}
-        />
-        <View style={styles.thongTinMonAn}>
-          <Text style={styles.tenMonAn}>{item.ten}</Text>
-          <Text style={styles.moTaMonAn}>{item.moTa}</Text>
-        </View>
-        {/* Icon xóa không còn ở đây vì sẽ hiển thị qua swipe */}
-      </View>
-    </Swipeable>
-  );
+export default function FavoriteFood({ navigation }) {
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => { /* Xử lý hành động quay lại */ }}>
-            <Icon name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.tenHeader}>Thức Ăn Yêu Thích</Text>
-          {/* Có thể thêm các nút chức năng khác ở đây nếu cần */}
-        </View>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingTop: insets.top,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      {/* Logo */}
+      <Image
+        source={require('../../img/LOGONOM.png')} // Điều chỉnh đường dẫn nếu cần
+        style={{
+          width: width * 0.6,
+          height: width * 0.6,
+          resizeMode: 'contain',
+          marginBottom: 20,
+        }}
+      />
 
-        {/* Danh sách Thức Ăn Yêu Thích */}
-        {thucAn.length > 0 ? (
-          <FlatList
-            data={thucAn}
-            renderItem={hienThiMonAn}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.containerDanhSach}
-          />
-        ) : (
-          <View style={styles.containerTrong}>
-            <Text style={styles.textTrong}>Bạn chưa có món ăn yêu thích nào.</Text>
-          </View>
-        )}
-      </View>
+      {/* Thông báo */}
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: '#333',
+          textAlign: 'center',
+          marginBottom: 10,
+        }}
+      >
+        Tính năng đang được phát triển
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          color: '#666',
+          textAlign: 'center',
+          marginBottom: 30,
+        }}
+      >
+        Xin lỗi đã làm gián đoạn trải nghiệm của bạn. Chúng tôi đang nỗ lực để hoàn thiện tính năng này.
+      </Text>
+
+      {/* Nút Go Back */}
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          backgroundColor: '#E53935',
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          borderRadius: 8,
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
+      >
+        <Icon name="arrow-back" size={20} color="#fff" style={{ marginRight: 10 }} />
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Quay Lại</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
-// Định nghĩa các kiểu dáng bằng StyleSheet
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flex: 1,
-  },
-  header: {
-    backgroundColor: '#E53935',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tenHeader: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 20,
-    marginLeft: 10,
-  },
-  containerDanhSach: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  containerMonAn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 2, // Đối với Android
-    shadowColor: '#000', // Đối với iOS
-    shadowOffset: { width: 0, height: 1 }, // Đối với iOS
-    shadowOpacity: 0.2, // Đối với iOS
-    shadowRadius: 1.41, // Đối với iOS
-  },
-  hinhAnhMonAn: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  thongTinMonAn: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  tenMonAn: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  moTaMonAn: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  buttonXoa: {
-    padding: 5,
-  },
-  containerTrong: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  textTrong: {
-    fontSize: 16,
-    color: '#999',
-  },
-  // Styles cho Swipeable Action (Xóa)
-  actionXoa: {
-    backgroundColor: '#E53935',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  textActionXoa: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 5,
-  },
-});

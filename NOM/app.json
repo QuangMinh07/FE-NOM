@@ -4,7 +4,7 @@
     "slug": "NOM",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/img/LOGONOM.png",
+    "icon": "./src/img/LogoUD.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -30,7 +30,7 @@
       "package": "com.lequangminh.NOM"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/LogoAndroid.png"
     },
     "extra": {
       "eas": {

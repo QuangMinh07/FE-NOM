@@ -121,17 +121,30 @@ export default function HistoryScreenSP() {
       }}
     >
       <View style={{ flexDirection: "column" }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}>{item.name}</Text>
-        <Text style={{ color: "red", fontWeight: "bold" }}>{item.restaurant}</Text>
-        <Text style={{ fontSize: 14, color: "#333" }}>{item.dish}</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}>
+          {item.name.length > 30 ? `${item.name.slice(0, 30)}...` : item.name}
+        </Text>
+        <Text style={{ color: "red", fontWeight: "bold" }}>
+          {item.restaurant.length > 30 ? `${item.restaurant.slice(0, 30)}...` : item.restaurant}
+        </Text>
+        <Text style={{ fontSize: 14, color: "#333" }}>
+          {item.dish.length > 20 ? `${item.dish.slice(0, 20)}...` : item.dish}
+        </Text>
       </View>
       <View style={{ flexDirection: "column", alignItems: "flex-end" }}>
-        <Text>{item.time}</Text>
-        <Text>{item.address}</Text>
-        <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold" }}>{item.amount}</Text>
+        <Text>
+          {item.time.length > 30 ? `${item.time.slice(0, 30)}...` : item.time}
+        </Text>
+        <Text>
+          {item.address.length > 30 ? `${item.address.slice(0, 30)}...` : item.address}
+        </Text>
+        <Text style={{ fontSize: 16, color: "#E53935", fontWeight: "bold",marginTop:5 }}>
+          {item.amount}
+        </Text>
       </View>
     </View>
   );
+  
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>

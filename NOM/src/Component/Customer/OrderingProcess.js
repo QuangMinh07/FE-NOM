@@ -322,8 +322,9 @@ const OrderingProcess = () => {
                     <View style={{ flexDirection: "column" }}>
                       <View style={{ flexDirection: "row" }}>
                         <Text style={{ fontSize: width * 0.04 }}>
-                          {item.quantity}x {item.foodName}
+                          {item.quantity}x {item.foodName.length > 16 ? `${item.foodName.slice(0, 16)}...` : item.foodName}
                         </Text>
+
                         <Text style={{ fontSize: width * 0.04, paddingLeft: 100 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                       </View>
 
@@ -332,7 +333,9 @@ const OrderingProcess = () => {
                         <View style={{ marginLeft: width * 0.05, marginTop: height * 0.01 }}>
                           {item.combos.foods.map((comboFood, comboIndex) => (
                             <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.005 }}>
-                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.foodName}</Text>
+                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>
+                                {comboFood.foodName.length > 20 ? `${comboFood.foodName.slice(0, 20)}...` : comboFood.foodName}
+                              </Text>
                               <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                             </View>
                           ))}
@@ -345,14 +348,15 @@ const OrderingProcess = () => {
                 <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
               )}
             </View>
+
           </TouchableOpacity>
         </ScrollView>
 
         {/* Food modal */}
         <Modal animationType="slide" transparent={true} visible={foodModalVisible} onRequestClose={closeFoodModal}>
-          <TouchableOpacity style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0)", shadowOffset: { width: 0, height: 10 }, elevation: 3, shadowRadius: 10, shadowOpacity: 0.7, shadowColor: "#000" }} onPress={closeFoodModal} activeOpacity={1}>
+          <TouchableOpacity style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.2)", shadowOffset: { width: 0, height: 10 }, elevation: 3, shadowRadius: 10, shadowOpacity: 0.7, shadowColor: "#000" }} onPress={closeFoodModal} activeOpacity={1}>
             <Pressable style={{ width: width * 0.8, backgroundColor: "#fff", padding: 20, borderRadius: 10 }} onPress={(e) => e.stopPropagation()}>
-              <Text style={{ fontSize: width * 0.05, fontWeight: "bold", marginBottom: height * 0.02 }}>Danh sách món ăn</Text>
+              <Text style={{ fontSize: width * 0.05, fontWeight: "bold", marginBottom: height * 0.02, color: "#E53935" }}>Danh sách món ăn</Text>
               <ScrollView>
                 {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
                   orderDetails.cartSnapshot.items.map((item, index) => (
@@ -360,8 +364,9 @@ const OrderingProcess = () => {
                       <View style={{ flexDirection: "column" }}>
                         <View style={{ flexDirection: "row" }}>
                           <Text style={{ fontSize: width * 0.04, width: 170 }}>
-                            {item.quantity}x {item.foodName}
+                            {`${item.quantity}x ${item.foodName.length > 30 ? `${item.foodName.slice(0, 30)}...` : item.foodName}`}
                           </Text>
+
                           <Text style={{ fontSize: width * 0.04, paddingLeft: 30 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                         </View>
 

@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView, ScrollView, Image, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import MapView, { Marker } from "react-native-maps";
-// import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { api, typeHTTP } from "../../utils/api"; // Import API utilities
-import { globalContext } from "../../context/globalContext"; // Lấy globalContext để lấy userId
-import { styles } from "./EditAddressStyles"; // Import styles từ file mới
-import { useRoute } from "@react-navigation/native"; // Import useRoute
+import { api, typeHTTP } from "../../utils/api";
+import { globalContext } from "../../context/globalContext";
+import { styles } from "./EditAddressStyles";
+import { useRoute, useNavigation } from "@react-navigation/native";
 
 export default function EditAddress() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [address, setAddress] = useState({
     phone: "",
     name: "",
@@ -18,56 +17,43 @@ export default function EditAddress() {
     description: "",
   });
 
-  const { globalData } = useContext(globalContext); // Lấy userId từ globalContext
-  const userId = globalData?.user?.id; // Lấy userId từ globalData nếu có
-  const route = useRoute(); // Lấy route để nhận storeId từ params
-  const storeId = route.params?.storeId; // Lấy storeId từ route.params
-  // Gọi API để lấy thông tin giỏ hàng và địa chỉ
+  const navigation = useNavigation();
+  const { globalData } = useContext(globalContext);
+  const userId = globalData?.user?.id;
+  const route = useRoute();
+  const storeId = route.params?.storeId;
 
-  console.log(userId);
-  console.log(storeId);
   useEffect(() => {
     const fetchCartData = async () => {
+      setIsLoading(true);
       try {
         const response = await api({
           method: typeHTTP.GET,
-          url: `/cart/getcart/${userId}/${storeId}`, // Gọi API với cả userId và storeId
+          url: `/cart/getcart/${userId}/${storeId}`,
           sendToken: true,
         });
 
-        // Cập nhật state address với dữ liệu từ API
         if (response && response.cart) {
-          const cart = response.cart;
           setAddress({
-            phone: cart.receiverPhone || "",
-            name: cart.receiverName || "",
-            location: cart.deliveryAddress || "",
-            description: cart.description || "",
+            phone: response.cart.receiverPhone || "",
+            name: response.cart.receiverName || "",
+            location: response.cart.deliveryAddress || "",
+            description: response.cart.description || "",
           });
         }
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin giỏ hàng:", error);
+        console.error("Error fetching cart data:", error);
+        alert("Không thể lấy dữ liệu giỏ hàng.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     if (userId && storeId) {
-      // Kiểm tra nếu có userId và storeId
       fetchCartData();
     }
-  }, [userId, storeId]); // Gọi lại hàm này nếu userId hoặc storeId thay đổi
+  }, [userId, storeId]);
 
-  // Function to toggle the modal
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
-  };
-
-  // Function to handle editing mode
-  const handleEdit = () => {
-    setIsEditing(true);
-    toggleModal();
-  };
-
-  // Function to handle add new address mode
   const handleAddNew = () => {
     setIsEditing(false);
     setAddress({
@@ -76,124 +62,150 @@ export default function EditAddress() {
       location: "",
       description: "",
     });
-    toggleModal();
+    setModalVisible(true);
   };
 
-  // Function to save the address by calling the checkout API
+  const handleEdit = () => {
+    setIsEditing(true);
+    setModalVisible(true);
+  };
+
   const saveAddress = async () => {
-    if (!address.phone || !address.name || !address.location) {
+    const trimmedPhone = address.phone.trim();
+    const trimmedName = address.name.trim();
+    const trimmedLocation = address.location.trim();
+
+    if (!trimmedPhone || !trimmedName || !trimmedLocation) {
       alert("Vui lòng điền đầy đủ thông tin cần thiết.");
       return;
     }
 
+    const phoneRegex = /^[0-9]{10,}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      alert("Số điện thoại phải có ít nhất 10 chữ số, không chứa ký tự đặc biệt hoặc khoảng trắng.");
+      return;
+    }
+
+    setIsLoading(true);
     try {
       if (isEditing) {
-        // Gọi API cập nhật địa chỉ (updateShippingInfo)
-        const data = await api({
-          method: typeHTTP.PUT, // API cập nhật sử dụng PUT method
-          url: `/cart/update/${userId}/${storeId}`, // Gọi API với userId và storeId
+        await api({
+          method: typeHTTP.PUT,
+          url: `/cart/update/${userId}/${storeId}`,
           body: {
-            deliveryAddress: address.location,
-            receiverName: address.name,
-            receiverPhone: address.phone,
-            description: address.description || "", // Cho phép mô tả trống
+            deliveryAddress: trimmedLocation,
+            receiverName: trimmedName,
+            receiverPhone: trimmedPhone,
+            description: address.description || "",
           },
           sendToken: true,
         });
-        console.log("Cập nhật địa chỉ thành công:", data);
+        console.log("Address updated successfully");
       } else {
-        // Gọi API thêm mới địa chỉ (checkout)
-        const data = await api({
+        await api({
           method: typeHTTP.POST,
-          url: `/cart/checkout/${userId}/${storeId}`, // Gọi API với userId và storeId
+          url: `/cart/checkout/${userId}/${storeId}`,
           body: {
-            deliveryAddress: address.location,
-            receiverName: address.name,
-            receiverPhone: address.phone,
-            description: address.description || "", // Cho phép mô tả trống
+            deliveryAddress: trimmedLocation,
+            receiverName: trimmedName,
+            receiverPhone: trimmedPhone,
+            description: address.description || "",
           },
           sendToken: true,
         });
-        console.log("Thêm địa chỉ thành công:", data);
+        console.log("Address added successfully");
       }
-
-      toggleModal(); // Đóng modal sau khi cập nhật hoặc thêm thành công
+      setModalVisible(false);
     } catch (error) {
-      console.error("Lỗi khi lưu địa chỉ:", error);
-      alert("Đã xảy ra lỗi khi lưu địa chỉ");
+      console.error("Error saving address:", error);
+      alert("Có lỗi xảy ra khi lưu địa chỉ.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
+          <Icon name="arrow-back" size={24} color="#E53935" />
+        </TouchableOpacity>
         <Text style={styles.headerText}>Địa chỉ nhận món</Text>
         <TouchableOpacity onPress={handleAddNew} style={styles.addButton}>
           <Icon name="add-circle" size={24} color="#E53935" />
         </TouchableOpacity>
       </View>
 
-      {/* Address Details */}
-      <View style={styles.addressCard}>
-        <Text style={styles.textLarge}>{address.phone || "Không có dữ liệu"}</Text>
-        <Text style={styles.textLarge}>{address.name || "Không có dữ liệu"}</Text>
-        <Text style={styles.textLarge}>{address.location || "Không có dữ liệu"}</Text>
-        <Text style={styles.textSmall}>{address.description || "Không có dữ liệu"}</Text>
-
-        {/* Edit Button */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity onPress={handleEdit}>
-            <Icon name="edit" size={24} color="#E53935" style={{ marginRight: 10 }} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Modal for adding/editing address */}
-      <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
-        {/* Dùng TouchableOpacity để nhấn bên ngoài modal cũng đóng modal */}
-        <TouchableOpacity activeOpacity={1} style={styles.modalOverlay} onPress={toggleModal}>
-          {/* Modal content */}
-          <View style={styles.modalContainer}>
-            <TouchableOpacity activeOpacity={1}>
-              <KeyboardAvoidingView behavior="padding">
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                  {/* Address Form */}
-                  <Text style={styles.modalTitle}>{isEditing ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}</Text>
-
-                  <TextInput style={styles.input} placeholder="Số điện thoại" value={address.phone} onChangeText={(text) => setAddress({ ...address, phone: text })} />
-                  <TextInput style={styles.input} placeholder="Tên người nhận" value={address.name} onChangeText={(text) => setAddress({ ...address, name: text })} />
-
-                  {/* Địa chỉ nhập từ TextInput thay vì GooglePlacesAutocomplete */}
-                  <TextInput style={styles.input} placeholder="Địa chỉ" value={address.location} onChangeText={(text) => setAddress({ ...address, location: text })} />
-
-                  <TextInput style={styles.input} placeholder="Mô tả (Tùy chọn)" value={address.description} onChangeText={(text) => setAddress({ ...address, description: text })} />
-
-                  {/* Map for displaying only */}
-                  <MapView
-                    style={styles.map}
-                    initialRegion={{
-                      latitude: 10.762622,
-                      longitude: 106.660172,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }}
-                  >
-                    <Marker coordinate={{ latitude: 10.762622, longitude: 106.660172 }} />
-                  </MapView>
-
-                  {/* Save Button */}
-                  <TouchableOpacity
-                    style={styles.saveButton}
-                    onPress={saveAddress} // Gọi hàm saveAddress
-                  >
-                    <Text style={styles.saveButtonText}>Lưu địa chỉ</Text>
-                  </TouchableOpacity>
-                </ScrollView>
-              </KeyboardAvoidingView>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#E53935" style={{ marginTop: 20 }} />
+      ) : (
+        <View style={styles.addressCard}>
+          <Text style={styles.sectionHeader}>Thông tin người nhận</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Số điện thoại:</Text>
+            <Text style={styles.textLarge}>{address.phone || "Không có dữ liệu"}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Tên người nhận:</Text>
+            <Text style={styles.textLarge}>{address.name || "Không có dữ liệu"}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Địa chỉ:</Text>
+            <Text style={styles.textLarge}>{address.location || "Không có dữ liệu"}</Text>
+          </View>
+          <View style={styles.descriptionRow}>
+            <Text style={styles.descriptionLabel}>Mô tả:</Text>
+            <Text style={styles.descriptionText}>{address.description || "Không có dữ liệu"}</Text>
+          </View>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity onPress={handleEdit}>
+              <Icon name="edit" size={24} color="#E53935" />
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Modal */}
+      <Modal animationType="slide" transparent={true} visible={isModalVisible}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <KeyboardAvoidingView behavior="padding">
+              <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <Text style={styles.modalTitle}>{isEditing ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Số điện thoại"
+                  value={address.phone}
+                  onChangeText={(text) => setAddress({ ...address, phone: text })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tên người nhận"
+                  value={address.name}
+                  onChangeText={(text) => setAddress({ ...address, name: text })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Địa chỉ"
+                  value={address.location}
+                  onChangeText={(text) => setAddress({ ...address, location: text })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mô tả (Tùy chọn)"
+                  value={address.description}
+                  onChangeText={(text) => setAddress({ ...address, description: text })}
+                />
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
+                  <Image source={require("../../img/map.png")} style={{ width: "100%", height: 150, borderRadius: 10, resizeMode: "cover" }} />
+                </View>
+                <TouchableOpacity style={styles.saveButton} onPress={saveAddress}>
+                  <Text style={styles.saveButtonText}>Lưu địa chỉ</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </View>
+        </View>
       </Modal>
     </View>
   );

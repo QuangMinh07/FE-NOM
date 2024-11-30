@@ -181,26 +181,36 @@ export default function Orderfood() {
                           numberOfLines={1} // Limit text to 1 line
                           ellipsizeMode="tail" // Add "..." at the end of truncated text
                         >
-                          {food.foodName}
+                          {food.foodName.length > 20 ? `${food.foodName.substring(0, 20)}...` : food.foodName}
                         </Text>
+
                       </TouchableOpacity>
                       {/* Giá combo */}
                       {food.discountedPrice ? (
-                        <View style={{ flexDirection: "row" }}>
+                        <View style={{ flexDirection: "column", alignItems: "flex-end", marginTop:-20 }}>
                           {/* Giá gốc */}
                           <Text
                             style={{
-                              fontSize: width * 0.04,
+                              fontSize: width * 0.035,
                               color: "#888",
                               textDecorationLine: "line-through",
-                              marginRight: 5,
+                              marginBottom: 2, // Add spacing between original and discounted price
                             }}
                           >
                             {food.price.toLocaleString("vi-VN")} VND
                           </Text>
                           {/* Giá giảm */}
-                          <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "#E53935" }}> {food.discountedPrice.toLocaleString("vi-VN")} VND</Text>
+                          <Text
+                            style={{
+                              fontSize: width * 0.04,
+                              fontWeight: "bold",
+                              color: "#E53935",
+                            }}
+                          >
+                            {food.discountedPrice.toLocaleString("vi-VN")} VND
+                          </Text>
                         </View>
+
                       ) : (
                         // Hiển thị giá gốc nếu không giảm giá
                         <Text style={{ fontSize: width * 0.04, fontWeight: "bold", color: "#E53935" }}> {food.price.toLocaleString("vi-VN")} VND</Text>
