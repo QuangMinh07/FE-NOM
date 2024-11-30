@@ -2,13 +2,11 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { OrderManagementScreen,SellerProfileScreen,ChatSellerScreen } from '../SellerUser';
-import HomeSeller from '../SellerUser/HomeSeller'; 
-
+import { OrderManagementScreen, SellerProfileScreen, ChatSellerScreen } from '../SellerUser';
+import HomeSeller from '../SellerUser/HomeSeller';
 
 const Tab = createBottomTabNavigator();
 
-// Tạo cấu hình Tab cho Seller
 function SellerTabs() {
   return (
     <Tab.Navigator
@@ -60,11 +58,11 @@ function SellerTabs() {
                 Đơn Hàng
               </Text>
             );
-          } else if (route.name === "Chat Seller") {
+          } else if (route.name === "Tạo Cửa Hàng") {
             iconComponent = (
               <View style={{ marginTop: 6 }}>
                 <Ionicons
-                  name="chatbubble-outline"
+                  name="storefront-outline"
                   size={24}
                   color={focused ? '#B91C1C' : '#6B7280'}
                   style={{ width: 30 }}
@@ -73,7 +71,7 @@ function SellerTabs() {
             );
             labelComponent = (
               <Text style={{ color: focused ? "#B91C1C" : "#6B7280", marginTop: 4 }}>
-                Tin Nhắn
+                Cửa Hàng
               </Text>
             );
           } else if (route.name === "Hồ sơ Seller") {
@@ -104,9 +102,8 @@ function SellerTabs() {
       })}
     >
       <Tab.Screen name="Trang Chủ Seller" component={HomeSeller} />
-      {/* Thay đổi các component dưới đây với tên trang mới */}
       <Tab.Screen name="Quản lý Đơn Hàng" component={OrderManagementScreen} />
-      <Tab.Screen name="Chat Seller" component={ChatSellerScreen} />
+      <Tab.Screen name="Tạo Cửa Hàng" component={ChatSellerScreen} />
       <Tab.Screen name="Hồ sơ Seller" component={SellerProfileScreen} />
     </Tab.Navigator>
   );
