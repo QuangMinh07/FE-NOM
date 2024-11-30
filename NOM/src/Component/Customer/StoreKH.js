@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Image, Alert, Platform } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
+import { globalContext } from "../../context/globalContext"; // Import context nếu cần
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
@@ -27,8 +28,44 @@ export default function StoreKH() {
   const [firstGroup, setFirstGroup] = useState(null);
   const [remainingGroups, setRemainingGroups] = useState([]);
   const [reviews, setReviews] = useState([]); // State to store reviews
+  const { globalData } = useContext(globalContext);
+  const userId = globalData.user?.id;
+  const [totalPrice, setTotalPrice] = useState(0); // Lưu trữ tổng giá tiền
 
-  // Cập nhật groupedFoods và phân chia các nhóm
+  // Hàm gọi API lấy tổng giá tiền
+  const fetchTotalPrice = useCallback(async () => {
+    try {
+      const response = await api({
+        method: typeHTTP.GET, // Sử dụng HTTP GET
+        url: `/cart/getcart/${userId}/${storeId}`, // Endpoint
+        sendToken: true, // Gửi token nếu cần xác thực
+      });
+
+      if (response && response.cart && response.cart.totalPrice !== undefined) {
+        setTotalPrice(response.cart.totalPrice); // Cập nhật totalPrice
+      } else {
+        setTotalPrice(0); // Nếu không có dữ liệu, đặt giá về 0
+      }
+
+      // console.log("Dữ liệu trả về từ API:", response); // Log dữ liệu trả về từ API
+    } catch (error) {
+      // console.error("Lỗi khi gọi API:", error);
+      setTotalPrice(0); // Xử lý lỗi và đặt giá về 0
+    }
+  }, [userId, storeId]);
+
+  // Gọi hàm khi component render
+  useFocusEffect(
+    useCallback(() => {
+      fetchTotalPrice(); // Gọi hàm mỗi khi màn hình được focus
+    }, [fetchTotalPrice]) // Phụ thuộc vào fetchTotalPrice
+  );
+
+
+
+
+
+
   useEffect(() => {
     const groupedFoodsData = groupFoodsByCategory(foodList, foodGroups) || {};
     setGroupedFoods(groupedFoodsData);
@@ -490,22 +527,32 @@ export default function StoreKH() {
 
                   {/* Dây ruy băng đỏ */}
                   {!food.isAvailable && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        width: "90%",
-                        height: width * 0.05,
-                        backgroundColor: "#E53935",
-                        transform: [{ rotate: "-50deg" }],
-                        bottom: -width * 0.1,
-                        right: -width * 0.12,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Text style={{ color: "#fff", fontSize: width * 0.03, fontWeight: "bold" }}>Hết món</Text>
-                    </View>
+                   <View
+                   style={{
+                     position: "absolute",
+                     width: "135%",
+                     height: width * 0.05,
+                     backgroundColor: "#E53935",
+                     transform: [{ rotate: "-50deg" }],
+                     bottom: -width * 0.1,
+                     right: -width * 0.2,
+                     justifyContent: "center", // Centers content vertically
+                     alignItems: "center", // Centers content horizontally
+                     overflow: "hidden",
+                   }}
+                 >
+                   <Text
+                     style={{
+                       color: "#fff",
+                       fontSize: width * 0.03,
+                       fontWeight: "bold",
+                       textAlign: "center", // Ensures text alignment inside the ribbon
+                     }}
+                   >
+                     Hết món
+                   </Text>
+                 </View>
+                 
                   )}
                 </View>
 
@@ -867,30 +914,36 @@ export default function StoreKH() {
         ))}
       </ScrollView>
 
-      {/* <View
+      <View
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
           backgroundColor: "#E53935",
-          padding: 15,
+          padding: 25,
           flexDirection: "row",
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ color: "#fff", fontSize: 18 }}>20.000 VND</Text>
+        <Text style={{ color: "#fff", fontSize: 18 }}>
+          {totalPrice.toLocaleString("vi-VN")} VND
+        </Text>
         <TouchableOpacity
           style={{
             backgroundColor: "#fff",
-            paddingHorizontal: 20,
+            paddingHorizontal: 30,
             paddingVertical: 10,
             borderRadius: 5,
           }}
+          onPress={async () => {
+           
+            navigation.navigate("Shopping", {storeId});
+          }}
         >
-          <Text style={{ color: "#E53935", fontSize: 16 }}>Mua ngay</Text>
+          <Text style={{ color: "#E53935", fontSize: width * 0.045, fontWeight: "bold", marginLeft: width * 0.02 }}>Mua ngay</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
     </View>
   );
 }

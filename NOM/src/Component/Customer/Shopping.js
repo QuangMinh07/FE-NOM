@@ -76,7 +76,7 @@ export default function Shopping({ route }) {
 
   const updateCartItemOnServer = async (userId, cartId, foodId, quantity, combos = []) => {
     if (!userId || !cartId || !foodId || quantity <= 0) {
-      console.error("Invalid parameters for updateCartItemOnServer:", { userId, cartId, foodId, quantity, combos });
+      // console.error("Invalid parameters for updateCartItemOnServer:", { userId, cartId, foodId, quantity, combos });
       return;
     }
 
@@ -309,7 +309,6 @@ export default function Shopping({ route }) {
       return updatedItems;
     });
   };
-
   const decreaseQuantity = async (index) => {
     setOrderItems((prevItems) => {
       const updatedItems = [...prevItems];
@@ -317,55 +316,79 @@ export default function Shopping({ route }) {
 
       console.log("Decreasing quantity for:", { index, item });
 
-      if (item.food && item.food._id && item.quantity > 1) {
-        // Giảm số lượng món chính
-        item.quantity -= 1;
+      if (item.food && item.food._id) {
+        if (item.quantity === 1) {
+          // Hiển thị thông báo nếu số lượng món giảm về 0
+          Alert.alert(
+            "Xác nhận",
+            `Bạn có chắc muốn xóa món "${item.food.foodName}" khỏi giỏ hàng không?`,
+            [
+              {
+                text: "Hủy",
+                onPress: () => console.log("Hủy xóa món"),
+                style: "cancel",
+              },
+              {
+                text: "Đồng ý",
+                onPress: () => {
+                  const cartId = globalData.cart?._id;
+                  removeItem(item.food._id); // Gọi hàm xóa món
+                  updateCartItemOnServer(userId, cartId, item.food._id, 0); // Đồng bộ với server
+                },
+              },
+            ],
+            { cancelable: true }
+          );
+        } else {
+          // Giảm số lượng món chính
+          item.quantity -= 1;
 
-        // Tính lại giá món chính (ưu tiên giá giảm nếu có)
-        const foodPrice = item.food.discountedPrice ? item.food.discountedPrice : item.food.price;
-        item.price = foodPrice * item.quantity;
+          // Tính lại giá món chính (ưu tiên giá giảm nếu có)
+          const foodPrice = item.food.discountedPrice ? item.food.discountedPrice : item.food.price;
+          item.price = foodPrice * item.quantity;
 
-        // Đồng bộ số lượng món trong combo (nếu có)
-        if (item.combos && item.combos.foods.length > 0) {
-          item.combos.foods = item.combos.foods.map((comboFood) => {
-            // Cập nhật số lượng comboFood
-            const updatedComboFood = {
-              ...comboFood,
-              quantity: item.quantity, // Đồng bộ số lượng combo với món chính
-            };
-            console.log(`Updated combo food quantity:`, updatedComboFood);
-            return updatedComboFood;
-          });
+          // Đồng bộ số lượng món trong combo (nếu có)
+          if (item.combos && item.combos.foods.length > 0) {
+            item.combos.foods = item.combos.foods.map((comboFood) => {
+              // Cập nhật số lượng comboFood
+              const updatedComboFood = {
+                ...comboFood,
+                quantity: item.quantity, // Đồng bộ số lượng combo với món chính
+              };
+              return updatedComboFood;
+            });
 
-          // Cập nhật giá combo
-          item.combos.totalPrice = item.combos.foods.reduce((total, comboFood) => total + comboFood.price * comboFood.quantity, 0);
+            // Cập nhật giá combo
+            item.combos.totalPrice = item.combos.foods.reduce((total, comboFood) => total + comboFood.price * comboFood.quantity, 0);
+          }
+
+          // Cập nhật tổng giá trị (món chính + combo)
+          item.totalPrice = item.price + (item.combos?.totalPrice || 0);
+
+          // Gọi API để đồng bộ dữ liệu
+          const cartId = globalData.cart?._id;
+          updateCartItemOnServer(userId, cartId, item.food._id, item.quantity, item.combos?.foods || [])
+            .then(() => fetchStoreCartItems()) // Đồng bộ lại toàn bộ giỏ hàng
+            .catch((error) => console.error("Error syncing cart:", error));
+
+          setTotalAmount(calculateTotal(updatedItems)); // Cập nhật tổng tiền
         }
-
-        // Cập nhật tổng giá trị (món chính + combo)
-        item.totalPrice = item.price + (item.combos?.totalPrice || 0);
-
-        // Gọi API để đồng bộ dữ liệu
-        const cartId = globalData.cart?._id;
-        updateCartItemOnServer(userId, cartId, item.food._id, item.quantity, item.combos?.foods || [])
-          .then(() => fetchStoreCartItems()) // Đồng bộ lại toàn bộ giỏ hàng
-          .catch((error) => console.error("Error syncing cart:", error));
-
-        setTotalAmount(calculateTotal(updatedItems)); // Cập nhật tổng tiền
       } else {
-        console.error("Item does not have a valid food ID or quantity <= 1:", item);
+        // console.error("Item does not have a valid food ID:", item);
       }
 
       return updatedItems;
     });
   };
 
+
   const calculateTotal = useCallback(() => {
     const total = Array.isArray(orderItems)
       ? orderItems.reduce((accumulator, item) => {
-          const foodPrice = item.price; // Giá món chính
-          const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
-          return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
-        }, 0)
+        const foodPrice = item.price; // Giá món chính
+        const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
+        return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
+      }, 0)
       : 0;
 
     let discount = 0;
@@ -528,6 +551,22 @@ export default function Shopping({ route }) {
           />
 
           <Text style={{ fontSize: 18, color: "#333" }}>Không có thức ăn trong giỏ hàng</Text>
+          {/* Nút Go Back */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              backgroundColor: '#E53935',
+              paddingVertical: 15,
+              paddingHorizontal: 40,
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop:40
+            }}
+          >
+            <Icon name="arrow-back" size={20} color="#fff" style={{ marginRight: 10 }} />
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Quay Lại</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -554,7 +593,22 @@ export default function Shopping({ route }) {
       )}
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>Chi tiết HÓA ĐƠN</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('StoreKH', { storeId })}
+          >
+            <Icon
+              name="arrow-back" // Icon mũi tên quay lại
+              size={24}
+              color="black"
+              style={{ marginRight: 10 }}
+            />
+
+          </TouchableOpacity>
+
+          {/* Tiêu đề */}
+          <Text style={styles.headerText}>Chi tiết HÓA ĐƠN</Text>
+        </View>
       </View>
 
       {/* Main Content */}

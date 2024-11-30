@@ -1,4 +1,3 @@
-// EditAddressStyles.js
 import { StyleSheet, Dimensions } from "react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -36,14 +35,30 @@ export const styles = StyleSheet.create({
     marginHorizontal: 15,
     width: width * 0.9,
   },
+  detailRow: {
+    flexDirection: "row", // Row layout
+    justifyContent: "space-between", // Space between label and value
+    alignItems: "center", // Align items vertically
+    marginVertical: 5, // Space between rows
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1, // Label takes up 1 part of the row
+    textAlign: "left",
+  },
   textLarge: {
     fontSize: 16,
-    color: "#333",
+    color: "#555",
+    flex: 2, // Value takes up 2 parts of the row
+    textAlign: "right", // Align value to the right
   },
   textSmall: {
-    fontSize: 14,
+    fontSize: 120,
     color: "#aaa",
-    marginTop: 5,
+    flex: 2,
+    textAlign: "right", // Align description to the right
   },
   buttonRow: {
     flexDirection: "row",
@@ -102,4 +117,11 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#E53935", // Primary color
+    marginBottom: 10, // Space below the header
+  },
+  
 });

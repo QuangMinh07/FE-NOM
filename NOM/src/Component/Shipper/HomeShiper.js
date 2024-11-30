@@ -1,11 +1,12 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert, Image } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert, Image, Dimensions } from "react-native";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { globalContext } from "../../context/globalContext";
-
+// Lấy kích thước màn hình
+const { width } = Dimensions.get("window");
 // Hàm để định dạng ngày giờ
 const formatDateTime = (dateString) => {
   const date = new Date(dateString);
@@ -278,15 +279,39 @@ export default function HomeShiper() {
             </View>
           )}
         </View>
-
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity onPress={() => navigation.navigate("NotificationsScreenSP")}>
-            <Icon name="notifications" size={24} color="#fff" style={{ marginLeft: 15 }} />
+        
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.navigate("NotificationsScreenSP")}
+          >
+            <Icon
+              name="notifications"
+              size={width * 0.06} 
+              color="#fff"
+              style={{
+                marginLeft: width * -0.01,
+              }}
+            />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("HistoryScreenSP")}>
-            <Icon name="hourglass" size={24} color="#fff" style={{ marginLeft: 15 }} />
+          <TouchableOpacity
+            onPress={() => navigation.navigate("HistoryScreenSP")}
+          >
+            <Icon
+              name="hourglass"
+              size={width * 0.06}
+              color="#fff"
+              style={{
+                marginLeft: width * 0.03,
+              }}
+            />
           </TouchableOpacity>
         </View>
+        
       </View>
 
       <View style={{ padding: 15 }}>

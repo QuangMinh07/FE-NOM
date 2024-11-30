@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Import API module
@@ -31,7 +31,7 @@ export default function HomeSeller() {
   const { globalData, globalHandler } = useContext(globalContext);
 
   const userRole = globalData.user?.roleId || "";
-  
+
   const canManageStaff = userRole === "seller"; // chỉ người bán mới có thể quản lý nhân viên
 
   const fetchReviewCount = useCallback(async () => {
@@ -394,45 +394,45 @@ export default function HomeSeller() {
           <Text style={styles.revenueAmount}>{totalRevenue > 0 ? `${totalRevenue.toLocaleString("vi-VN").replace(/\./g, ",")} VND` : "Không có doanh thu"}</Text>
         </View>
         <ScrollView
-  horizontal={true}
-  showsHorizontalScrollIndicator={false}
-  contentContainerStyle={{
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    paddingHorizontal: 10,
-  }}
-  style={{
-    marginTop: 10,
-  }}
->
-  {/* Nút Thực đơn */}
-  <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={styles.actionButton}>
-    <Ionicons name="restaurant" size={24} color="#fff" style={{ marginRight: 8 }} />
-    <Text style={styles.actionButtonText}>Thực đơn</Text>
-  </TouchableOpacity>
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            paddingHorizontal: 10,
+          }}
+          style={{
+            marginTop: 10,
+          }}
+        >
+          {/* Nút Thực đơn */}
+          <TouchableOpacity onPress={() => navigation.navigate("ListFood")} style={styles.actionButton}>
+            <Ionicons name="restaurant" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.actionButtonText}>Thực đơn</Text>
+          </TouchableOpacity>
 
-  {/* Nút Phản hồi */}
-  <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
-    <Ionicons name="chatbubbles" size={24} color="#fff" style={{ marginRight: 8 }} />
-    <Text style={styles.actionButtonText}>Phản hồi</Text>
-  </TouchableOpacity>
+          {/* Nút Phản hồi */}
+          <TouchableOpacity onPress={() => navigation.navigate("Comment")} style={styles.actionButton}>
+            <Ionicons name="chatbubbles" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.actionButtonText}>Phản hồi</Text>
+          </TouchableOpacity>
 
-  {/* Nút Nhân viên */}
-  <TouchableOpacity
-    onPress={() => (canManageStaff ? navigation.navigate("Staff") : null)}
-    style={[styles.actionButton, !canManageStaff && { backgroundColor: "#d3d3d3" }]}
-    disabled={!canManageStaff}
-  >
-    <Ionicons name="people" size={24} color="#fff" style={{ marginRight: 8 }} />
-    <Text style={styles.actionButtonText}>Nhân viên</Text>
-  </TouchableOpacity>
+          {/* Nút Nhân viên */}
+          <TouchableOpacity
+            onPress={() => (canManageStaff ? navigation.navigate("Staff") : null)}
+            style={[styles.actionButton, !canManageStaff && { backgroundColor: "#d3d3d3" }]}
+            disabled={!canManageStaff}
+          >
+            <Ionicons name="people" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.actionButtonText}>Nhân viên</Text>
+          </TouchableOpacity>
 
-  {/* Nút Ưu đãi */}
-  <TouchableOpacity onPress={() => navigation.navigate("Offers")} style={styles.actionButton}>
-    <Ionicons name="pricetags" size={24} color="#fff" style={{ marginRight: 8 }} />
-    <Text style={styles.actionButtonText}>Giảm giá</Text>
-  </TouchableOpacity>
-</ScrollView>
+          {/* Nút Ưu đãi */}
+          <TouchableOpacity onPress={() => navigation.navigate("Offers")} style={styles.actionButton}>
+            <Ionicons name="pricetags" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.actionButtonText}>Giảm giá</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
 
 
@@ -451,14 +451,111 @@ export default function HomeSeller() {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {foodList.map((food) => (
-                <View key={food._id} style={styles.bestSellerCard}>
-                  <View style={[styles.bestSellerImageContainer, { backgroundColor: placeholderImage ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.bestSellerImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
-                  <Text style={styles.bestSellerFoodName}>{food.foodName}</Text>
-                  <Text style={styles.bestSellerFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                <View
+                  key={food._id}
+                  style={[
+                    styles.bestSellerCard,
+                    { backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2" }, // Change background for unavailable items
+                  ]}
+                >
+                  {/* Food Image */}
+                  <View
+                    style={{
+                      height: 120,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      marginBottom: 10,
+                      position: "relative",
+                      backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3",
+                    }}
+                  >
+                    {food.imageUrl ? (
+                      <Image
+                        source={{ uri: food.imageUrl }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          resizeMode: "cover",
+                        }}
+                      />
+                    ) : (
+                      <Text style={{ color: "#888", fontSize: 12, textAlign: "center" }}>Ảnh món ăn</Text>
+                    )}
+                  </View>
+
+                  {/* Diagonal "Hết món" Ribbon Outside the Image */}
+                  {!food.isAvailable && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: "120%", // Slightly larger than the image/container width
+                        height: 25, // Height of the ribbon
+                        backgroundColor: "#E53935", // Red color
+                        transform: [{ rotate: "-40deg" }], // Diagonal placement
+                        top: 160, // Position the ribbon outside the image but within the white container
+                        left: 30, // Slight offset for alignment
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>Hết món</Text>
+                    </View>
+                  )}
+
+                  {/* Food Name */}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "bold",
+                      marginBottom: 5,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {food.foodName}
+                  </Text>
+
+                  {/* Food Price */}
+                  {food.isDiscounted && food.discountedPrice ? (
+                    <View style={{ flexDirection: "column" }}>
+                      {/* Original Price */}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#888",
+                          textDecorationLine: "line-through",
+                        }}
+                      >
+                        {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                      {/* Discounted Price */}
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: "#E53935",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "#E53935",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                    </Text>
+                  )}
                 </View>
               ))}
             </ScrollView>
           </View>
+
+
 
           {/* Các món khác */}
           <View style={styles.otherFoodsContainer}>
@@ -467,16 +564,57 @@ export default function HomeSeller() {
             <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
               {foodList.map((food) => (
                 <View key={food._id} style={styles.otherFoodCard}>
-                  <View style={[styles.otherFoodImageContainer, { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" }]}>{food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} /> : <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>}</View>
+                  {/* Image Section */}
+                  <View
+                    style={[
+                      styles.otherFoodImageContainer,
+                      { backgroundColor: food.imageUrl ? "transparent" : "#D3D3D3" },
+                    ]}
+                  >
+                    {food.imageUrl ? (
+                      <Image source={{ uri: food.imageUrl }} style={styles.otherFoodImage} />
+                    ) : (
+                      <Text style={{ fontSize: 14, color: "#fff" }}>Ảnh món ăn</Text>
+                    )}
+                  </View>
 
+                  {/* Details Section */}
                   <View style={styles.otherFoodDetails}>
-                    <Text style={styles.otherFoodName}>{food.foodName}</Text>
-                    <Text style={styles.otherFoodPrice}>{food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
+                    <Text style={styles.otherFoodName} numberOfLines={1} ellipsizeMode="tail">
+                      {food.foodName}
+                    </Text>
+
+                    {/* Display Price and Discount */}
+                    {food.isDiscounted && food.discountedPrice ? (
+                      <View style={{ flexDirection: "column" }}>
+                        {/* Original Price */}
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#888",
+                            textDecorationLine: "line-through",
+                            marginRight: 5,
+                          }}
+                        >
+                          {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                        </Text>
+                        {/* Discounted Price */}
+                        <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>
+                          {food.discountedPrice.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                        </Text>
+                      </View>
+                    ) : (
+                      // Display Only Original Price
+                      <Text style={{ fontSize: 14, color: "#E53935", fontWeight: "bold" }}>
+                        {food.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND
+                      </Text>
+                    )}
                   </View>
                 </View>
               ))}
             </ScrollView>
           </View>
+
         </>
       )}
     </ScrollView>

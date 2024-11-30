@@ -277,12 +277,31 @@ const HomeKH = () => {
       {/* Header */}
       <View style={{ backgroundColor: "#E53935", padding: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 140 }}>
         {/* User Information */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={{ width: 50, height: 50, backgroundColor: "#fff", borderRadius: 25, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>{userData ? (userData.fullName || userData.userName).charAt(0) : "N"}</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ProfileScreen')} // Chuyển hướng tới trang ProfileScreen
+          style={{ flexDirection: "row", alignItems: "center" }}
+        >
+          {/* Avatar */}
+          <View
+            style={{
+              width: 50,
+              height: 50,
+              backgroundColor: "#fff",
+              borderRadius: 25,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              {userData ? (userData.fullName || userData.userName).charAt(0) : "N"}
+            </Text>
           </View>
-          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>{userData ? userData.fullName || userData.userName : ""}</Text>
-        </View>
+
+          {/* Tên người dùng */}
+          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>
+            {userData ? userData.fullName || userData.userName : ""}
+          </Text>
+        </TouchableOpacity>
 
         {/* Icons */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -618,6 +637,7 @@ const HomeKH = () => {
               ))}
             </ScrollView>
           </View>
+          
           {/* Banner List */}
           <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>
