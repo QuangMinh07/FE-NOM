@@ -35,7 +35,7 @@ export default function Shopping({ route }) {
       console.log("Deep Link URL:", url);
 
       // Điều hướng dựa trên URL
-      if (url.includes("payment-success")) {
+      if (url.includes("nomapp://payment-success")) {
         navigation.navigate("HomeKH"); // Điều hướng tới màn hình Shopping
       } else if (url.includes("payment-failed")) {
         navigation.navigate("PaymentFailed"); // Điều hướng tới màn hình thất bại

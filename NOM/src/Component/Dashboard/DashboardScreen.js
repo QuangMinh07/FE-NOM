@@ -48,16 +48,19 @@ const DashboardScreen = () => {
       let totalRevenueSum = 0;
       let totalOrderCount = 0;
 
-      orders.forEach((order) => {
-        const orderDate = new Date(order.orderDate);
-        if (orderDate.getFullYear() === selectedYear) {
-          const month = orderDate.getMonth();
-          revenueByMonth[month] += order.totalAmount;
-          ordersCountByMonth[month] += 1;
-          totalRevenueSum += order.totalAmount;
-          totalOrderCount += 1;
-        }
-      });
+      // Lọc và xử lý các đơn hàng có trạng thái "Delivered"
+      orders
+        .filter((order) => order.orderStatus === "Delivered")
+        .forEach((order) => {
+          const orderDate = new Date(order.orderDate);
+          if (orderDate.getFullYear() === selectedYear) {
+            const month = orderDate.getMonth();
+            revenueByMonth[month] += order.totalAmount;
+            ordersCountByMonth[month] += 1;
+            totalRevenueSum += order.totalAmount;
+            totalOrderCount += 1;
+          }
+        });
 
       setRevenueData({
         labels: ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"],
@@ -146,7 +149,7 @@ const DashboardScreen = () => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(67, 160, 71, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              formatYLabel: (yValue) => Math.round(yValue / 10) * 10,
+              // formatYLabel: (yValue) => Math.round(yValue / 10) * 10,
             }}
             style={styles.chart}
           />

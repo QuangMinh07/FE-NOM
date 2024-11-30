@@ -247,7 +247,7 @@ export default function DeliveryODDetails({ navigation }) {
       </Text>
 
       {/* Chi tiết đơn hàng */}
-      <View style={{ paddingHorizontal: 16 }}>
+      <ScrollView style={{ paddingHorizontal: 16 }}>
         {orderDetails && orderDetails.cartSnapshot && orderDetails.cartSnapshot.items ? (
           orderDetails.cartSnapshot.items.map((item, index) => (
             <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
@@ -276,7 +276,7 @@ export default function DeliveryODDetails({ navigation }) {
         ) : (
           <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
         )}
-      </View>
+      </ScrollView>
 
       {/* Tổng hóa đơn */}
       <View
