@@ -2,6 +2,7 @@
   "expo": {
     "name": "NOM FOOD",
     "slug": "NOM",
+    "scheme": "nomapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/img/LogoUD.png",
@@ -16,10 +17,7 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Ứng dụng cần quyền truy cập vào thư viện ảnh để chọn ảnh.",
         "NSUserTrackingUsageDescription": "Ứng dụng cần quyền để cung cấp các thông báo đẩy phù hợp.",
-        "UIBackgroundModes": [
-          "fetch",
-          "remote-notification"
-        ]
+        "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
