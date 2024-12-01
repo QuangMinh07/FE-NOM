@@ -30,6 +30,25 @@ export default function SignUpMailOrPhone({ route }) {
     }
   };
 
+  const requestPhoneOTP = async () => {
+    try {
+      setIsLoading(true); // Hiển thị loading
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/send-phone-otp", // Đường dẫn API để gửi OTP qua số điện thoại
+        body: { phone },
+      });
+
+      Alert.alert("Thành công", response.message);
+      // Điều hướng đến trang OTPPhone và truyền số điện thoại
+      navigation.navigate("OTPPhone", { phone });
+    } catch (error) {
+      Alert.alert("Lỗi", error.response?.data?.message || "Đã xảy ra lỗi, vui lòng thử lại.");
+    } finally {
+      setIsLoading(false); // Ẩn loading
+    }
+  };
+
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF", paddingHorizontal: 20 }}>
       {/* Logo và Slogan */}
@@ -83,7 +102,7 @@ export default function SignUpMailOrPhone({ route }) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate("OTPPhone", { phone })}
+          onPress={requestPhoneOTP}
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
