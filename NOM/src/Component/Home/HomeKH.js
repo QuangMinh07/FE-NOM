@@ -245,6 +245,32 @@ const HomeKH = () => {
     console.log("popularStores data:", popularStores); // Kiểm tra dữ liệu trả về
   }, [popularStores]);
 
+  const handleAddToFavorites = async (storeId) => {
+    try {
+      if (!userId) {
+        alert("Vui lòng đăng nhập để thêm cửa hàng vào danh sách yêu thích.");
+        return;
+      }
+
+      // Gọi API thêm cửa hàng yêu thích
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/add-favorite-store", // Endpoint của API thêm cửa hàng yêu thích
+        body: { userId, storeId }, // Truyền `userId` và `storeId`
+        sendToken: true, // Gửi token xác thực nếu cần
+      });
+
+      if (response.success) {
+        alert("Cửa hàng đã được thêm vào danh sách yêu thích!");
+      } else {
+        alert(response.message || "Không thể thêm cửa hàng vào danh sách yêu thích.");
+      }
+    } catch (error) {
+      // console.error("Lỗi khi thêm cửa hàng yêu thích:", error);
+      alert(error.response?.data?.message || "Đã xảy ra lỗi khi thêm cửa hàng yêu thích.");
+    }
+  };
+
   const categories = [
     { id: 1, name: "Món chính", image: require("../../img/Menu1.png") },
     { id: 2, name: "Ăn kèm", image: require("../../img/Menu2.png") },
@@ -278,7 +304,7 @@ const HomeKH = () => {
       <View style={{ backgroundColor: "#E53935", padding: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 140 }}>
         {/* User Information */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('ProfileScreen')} // Chuyển hướng tới trang ProfileScreen
+          onPress={() => navigation.navigate("ProfileScreen")} // Chuyển hướng tới trang ProfileScreen
           style={{ flexDirection: "row", alignItems: "center" }}
         >
           {/* Avatar */}
@@ -292,15 +318,11 @@ const HomeKH = () => {
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              {userData ? (userData.fullName || userData.userName).charAt(0) : "N"}
-            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>{userData ? (userData.fullName || userData.userName).charAt(0) : "N"}</Text>
           </View>
 
           {/* Tên người dùng */}
-          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>
-            {userData ? userData.fullName || userData.userName : ""}
-          </Text>
+          <Text style={{ color: "#fff", fontSize: 18, marginLeft: 10 }}>{userData ? userData.fullName || userData.userName : ""}</Text>
         </TouchableOpacity>
 
         {/* Icons */}
@@ -472,7 +494,10 @@ const HomeKH = () => {
                         <Text style={{ color: "#888" }}>Ảnh cửa hàng</Text>
                       </View>
                     )}
-                    <TouchableOpacity style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}>
+                    <TouchableOpacity
+                      onPress={() => handleAddToFavorites(store._id)} // Thực hiện hành động thêm cửa hàng yêu thích
+                      style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#fff", padding: 5, borderRadius: 15 }}
+                    >
                       <Ionicons name="heart-outline" size={18} color="#E53935" />
                     </TouchableOpacity>
                   </View>
@@ -637,7 +662,7 @@ const HomeKH = () => {
               ))}
             </ScrollView>
           </View>
-          
+
           {/* Banner List */}
           <Text style={{ fontSize: 18, fontWeight: "bold", padding: 14 }}>Tìm món ngon</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 15 }}>

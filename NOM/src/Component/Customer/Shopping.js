@@ -35,7 +35,13 @@ export default function Shopping({ route }) {
       console.log("Deep Link URL:", url);
 
       // Điều hướng dựa trên URL
-      if (url.includes("nomapp://payment-success")) {
+      // if (url.includes("nomapp://payment-success")) {
+      //   navigation.navigate("HomeKH"); // Điều hướng tới màn hình Shopping
+      // } else if (url.includes("payment-failed")) {
+      //   navigation.navigate("PaymentFailed"); // Điều hướng tới màn hình thất bại
+      // }
+
+      if (url.includes("payment-success")) {
         navigation.navigate("HomeKH"); // Điều hướng tới màn hình Shopping
       } else if (url.includes("payment-failed")) {
         navigation.navigate("PaymentFailed"); // Điều hướng tới màn hình thất bại
@@ -381,14 +387,13 @@ export default function Shopping({ route }) {
     });
   };
 
-
   const calculateTotal = useCallback(() => {
     const total = Array.isArray(orderItems)
       ? orderItems.reduce((accumulator, item) => {
-        const foodPrice = item.price; // Giá món chính
-        const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
-        return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
-      }, 0)
+          const foodPrice = item.price; // Giá món chính
+          const comboPrice = item.combos?.totalPrice || 0; // Giá của combos nếu có
+          return accumulator + foodPrice + comboPrice; // Cộng giá món chính và combo
+        }, 0)
       : 0;
 
     let discount = 0;
@@ -555,17 +560,17 @@ export default function Shopping({ route }) {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={{
-              backgroundColor: '#E53935',
+              backgroundColor: "#E53935",
               paddingVertical: 15,
               paddingHorizontal: 40,
               borderRadius: 8,
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop:40
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 40,
             }}
           >
             <Icon name="arrow-back" size={20} color="#fff" style={{ marginRight: 10 }} />
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Quay Lại</Text>
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Quay Lại</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -593,17 +598,14 @@ export default function Shopping({ route }) {
       )}
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('StoreKH', { storeId })}
-          >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity onPress={() => navigation.navigate("StoreKH", { storeId })}>
             <Icon
               name="arrow-back" // Icon mũi tên quay lại
               size={24}
               color="black"
               style={{ marginRight: 10 }}
             />
-
           </TouchableOpacity>
 
           {/* Tiêu đề */}
