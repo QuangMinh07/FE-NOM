@@ -30,8 +30,11 @@ const SeachAll = () => {
         sendToken: true,
       });
       if (response.success) {
+        // Lọc bỏ các cửa hàng con (dựa trên ký tự `-` trong `storeName`)
+        const filteredStores = response.data.stores.filter((store) => !store.storeName.includes(" - "));
+
         setSearchResults({
-          stores: response.data.stores || [],
+          stores: filteredStores,
           foods: response.data.foods || [],
         });
       } else {

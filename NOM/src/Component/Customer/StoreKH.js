@@ -4,6 +4,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { api, typeHTTP } from "../../utils/api"; // Ensure you import your API utilities
 import { globalContext } from "../../context/globalContext"; // Import context nếu cần
+import Ionicons from "react-native-vector-icons/Ionicons"; // Import icons
 
 const { width, height } = Dimensions.get("window"); // Get device dimensions
 
@@ -31,6 +32,32 @@ export default function StoreKH() {
   const { globalData } = useContext(globalContext);
   const userId = globalData.user?.id;
   const [totalPrice, setTotalPrice] = useState(0); // Lưu trữ tổng giá tiền
+
+  const handleAddToFavorites = async (storeId) => {
+    try {
+      if (!userId) {
+        alert("Vui lòng đăng nhập để thêm cửa hàng vào danh sách yêu thích.");
+        return;
+      }
+
+      // Gọi API thêm cửa hàng yêu thích
+      const response = await api({
+        method: typeHTTP.POST,
+        url: "/user/add-favorite-store", // Endpoint của API thêm cửa hàng yêu thích
+        body: { userId, storeId }, // Truyền `userId` và `storeId`
+        sendToken: true, // Gửi token xác thực nếu cần
+      });
+
+      if (response.success) {
+        alert("Cửa hàng đã được thêm vào danh sách yêu thích!");
+      } else {
+        alert(response.message || "Không thể thêm cửa hàng vào danh sách yêu thích.");
+      }
+    } catch (error) {
+      // console.error("Lỗi khi thêm cửa hàng yêu thích:", error);
+      alert(error.response?.data?.message || "Đã xảy ra lỗi khi thêm cửa hàng yêu thích.");
+    }
+  };
 
   // Hàm gọi API lấy tổng giá tiền
   const fetchTotalPrice = useCallback(async () => {
@@ -60,11 +87,6 @@ export default function StoreKH() {
       fetchTotalPrice(); // Gọi hàm mỗi khi màn hình được focus
     }, [fetchTotalPrice]) // Phụ thuộc vào fetchTotalPrice
   );
-
-
-
-
-
 
   useEffect(() => {
     const groupedFoodsData = groupFoodsByCategory(foodList, foodGroups) || {};
@@ -300,6 +322,29 @@ export default function StoreKH() {
             )}
           </View>
 
+          <TouchableOpacity
+            onPress={() => handleAddToFavorites(storeId)} // Thực hiện hành động thêm cửa hàng yêu thích
+            style={{
+              position: "absolute",
+              top: Platform.OS === "ios" ? height * 0.06 : height * 0.035,
+              right: width * 0.2,
+              backgroundColor: "#fff",
+              borderRadius: width * 0.1,
+              padding: width * 0.03,
+              elevation: 5,
+              ...Platform.select({
+                ios: {
+                  shadowColor: "#000",
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  shadowOffset: { width: 0, height: 2 },
+                },
+              }),
+            }}
+          >
+            <Ionicons name="heart-outline" size={width * 0.06} color="#E53935" />
+          </TouchableOpacity>
+
           {/* Cart Icon */}
           <TouchableOpacity
             style={{
@@ -527,32 +572,31 @@ export default function StoreKH() {
 
                   {/* Dây ruy băng đỏ */}
                   {!food.isAvailable && (
-                   <View
-                   style={{
-                     position: "absolute",
-                     width: "135%",
-                     height: width * 0.05,
-                     backgroundColor: "#E53935",
-                     transform: [{ rotate: "-50deg" }],
-                     bottom: -width * 0.1,
-                     right: -width * 0.2,
-                     justifyContent: "center", // Centers content vertically
-                     alignItems: "center", // Centers content horizontally
-                     overflow: "hidden",
-                   }}
-                 >
-                   <Text
-                     style={{
-                       color: "#fff",
-                       fontSize: width * 0.03,
-                       fontWeight: "bold",
-                       textAlign: "center", // Ensures text alignment inside the ribbon
-                     }}
-                   >
-                     Hết món
-                   </Text>
-                 </View>
-                 
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: "135%",
+                        height: width * 0.05,
+                        backgroundColor: "#E53935",
+                        transform: [{ rotate: "-50deg" }],
+                        bottom: -width * 0.1,
+                        right: -width * 0.2,
+                        justifyContent: "center", // Centers content vertically
+                        alignItems: "center", // Centers content horizontally
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontSize: width * 0.03,
+                          fontWeight: "bold",
+                          textAlign: "center", // Ensures text alignment inside the ribbon
+                        }}
+                      >
+                        Hết món
+                      </Text>
+                    </View>
                   )}
                 </View>
 
@@ -612,7 +656,7 @@ export default function StoreKH() {
                 <TouchableOpacity
                   key={food._id || index}
                   style={{
-                    backgroundColor: food.isAvailable ? "#fff" : "#FEE2E2", // Nền đổi màu nếu không có sẵn
+                    backgroundColor: food._id === highlightedFoodId ? "#FFE0B2" : food.isAvailable ? "#fff" : "#FEE2E2", // Đổi màu nền khi được highlight
                     padding: 10,
                     borderRadius: 10,
                     borderWidth: 1,
@@ -926,9 +970,7 @@ export default function StoreKH() {
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ color: "#fff", fontSize: 18 }}>
-          {totalPrice.toLocaleString("vi-VN")} VND
-        </Text>
+        <Text style={{ color: "#fff", fontSize: 18 }}>{totalPrice.toLocaleString("vi-VN")} VND</Text>
         <TouchableOpacity
           style={{
             backgroundColor: "#fff",
@@ -937,8 +979,7 @@ export default function StoreKH() {
             borderRadius: 5,
           }}
           onPress={async () => {
-           
-            navigation.navigate("Shopping", {storeId});
+            navigation.navigate("Shopping", { storeId });
           }}
         >
           <Text style={{ color: "#E53935", fontSize: width * 0.045, fontWeight: "bold", marginLeft: width * 0.02 }}>Mua ngay</Text>

@@ -164,7 +164,7 @@ export default function UpdateInformation() {
         throw new Error("Upload failed");
       }
     } catch (error) {
-      console.error("Lỗi khi upload ảnh:", error);
+      // console.error("Lỗi khi upload ảnh:", error);
       Alert.alert("Lỗi", "Đã xảy ra lỗi khi upload ảnh.");
       throw error;
     }
@@ -172,6 +172,12 @@ export default function UpdateInformation() {
 
   const handleSubmit = async () => {
     try {
+      // Kiểm tra tất cả các trường trước khi cập nhật
+      if (!formData.fullName.trim() || !formData.phone.trim() || !formData.email.trim() || !formData.dateOfBirth.trim() || !formData.gender.trim() || !formData.state.trim()) {
+        Alert.alert("Lỗi", "Tất cả các trường không được bỏ trống!");
+        return;
+      }
+
       setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       let imageUrl = formData.profilePictureURL;
 
@@ -184,9 +190,9 @@ export default function UpdateInformation() {
         method: typeHTTP.PUT,
         url: "/user/update",
         body: {
-          phone: formData.phone,
-          email: formData.email,
-          fullName: formData.fullName,
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          fullName: formData.fullName.trim(),
         },
         sendToken: true,
       });
@@ -195,9 +201,9 @@ export default function UpdateInformation() {
         method: typeHTTP.PUT,
         url: "/userPersonal/update-personal-info",
         body: {
-          dateOfBirth: parseDate(formData.dateOfBirth),
-          gender: formData.gender,
-          state: formData.state,
+          dateOfBirth: parseDate(formData.dateOfBirth.trim()),
+          gender: formData.gender.trim(),
+          state: formData.state.trim(),
           profilePictureURL: imageUrl,
         },
         sendToken: true,
@@ -206,7 +212,17 @@ export default function UpdateInformation() {
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
       navigation.navigate("InformationUser");
     } catch (error) {
-      Alert.alert("Lỗi", "Cập nhật thông tin thất bại.");
+      if (error.response && error.response.data) {
+        const errorMessage = error.response.data.error || "Cập nhật thông tin thất bại.";
+        // console.error("Lỗi từ backend:", error.response.data); // Log chi tiết
+        Alert.alert("Lỗi", errorMessage); // Hiển thị Alert
+      } else if (error.request) {
+        // console.error("Lỗi từ yêu cầu gửi:", error.request); // Log lỗi request
+        Alert.alert("Lỗi", "Không thể kết nối tới server.");
+      } else {
+        // console.error("Lỗi không xác định:", error.message); // Log lỗi không xác định
+        Alert.alert("Lỗi", "Đã xảy ra lỗi không xác định.");
+      }
     } finally {
       setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }

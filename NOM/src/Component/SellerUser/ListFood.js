@@ -287,11 +287,11 @@ export default function ListFood({ navigation }) {
       });
 
       // Log toàn bộ phản hồi để kiểm tra cấu trúc
-      console.log("Response from API:", response);
+      // console.log("Response from API:", response);
 
       // Kiểm tra nếu response và response.foodGroups tồn tại
       if (response && response.foodGroups) {
-        console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
+        // console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
         setFoodGroups(response.foodGroups); // Cập nhật state với danh sách nhóm món từ MongoDB
       } else {
         console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");

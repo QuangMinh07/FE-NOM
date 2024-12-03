@@ -7,14 +7,51 @@ import { globalContext } from "../../context/globalContext";
 export default function MessagesScreen() {
   const [selectedTab, setSelectedTab] = useState("Trò chuyện"); // Quản lý tab được chọn
   const [chatData, setChatData] = useState([]); // State để lưu dữ liệu trò chuyện từ API
+  const [ordersWithoutReview, setOrdersWithoutReview] = useState([]); // Đơn hàng chưa được đánh giá
   const navigation = useNavigation(); // Để điều hướng
   const { globalData } = useContext(globalContext);
 
   useEffect(() => {
     if (selectedTab === "Trò chuyện") {
       fetchChatRooms();
+    } else if (selectedTab === "Thông báo") {
+      fetchOrdersWithoutReview();
     }
-  }, [selectedTab, chatData]); // thêm chatData vào dependencies
+  }, [selectedTab, chatData, ordersWithoutReview]); // thêm chatData vào dependencies
+
+  const fetchOrdersWithoutReview = async () => {
+    try {
+      // Lấy tất cả các đơn hàng
+      const response = await api({
+        method: typeHTTP.GET,
+        url: `/storeOrder/get-all-orders`,
+        sendToken: true,
+      });
+
+      const orders = response.allOrdersDetails || [];
+
+      const validOrders = orders.filter((order) => order.orderStatus !== "Cancelled");
+      const ordersToCheck = [];
+
+      // Kiểm tra từng đơn hàng
+      for (const order of validOrders) {
+        const reviewCheck = await api({
+          method: typeHTTP.GET,
+          url: `/orderReview/check/${order.orderId}`,
+          sendToken: true,
+        });
+
+        // Nếu đơn hàng chưa được đánh giá, thêm vào danh sách
+        if (!reviewCheck.exists) {
+          ordersToCheck.push(order);
+        }
+      }
+
+      setOrdersWithoutReview(ordersToCheck); // Lưu danh sách đơn hàng chưa có đánh giá
+    } catch (error) {
+      // console.error("Lỗi khi kiểm tra đánh giá đơn hàng:", error);
+    }
+  };
 
   const fetchChatRooms = async () => {
     try {
@@ -47,11 +84,6 @@ export default function MessagesScreen() {
       // console.error("Lỗi khi lấy danh sách phòng chat:", error);
     }
   };
-
-  const notificationData = [
-    { id: "1", title: "Đánh giá trải nghiệm của bạn", description: "Cửa hàng Cơm Tấm", date: "01/11/2024" },
-    { id: "2", title: "Cửa hàng", description: "Cửa hàng", date: "01/11/2024" },
-  ];
 
   const renderChatItem = ({ item }) => {
     const userRole = item.userId === globalData.user.id ? "customer" : "shipper";
@@ -116,13 +148,21 @@ export default function MessagesScreen() {
           <Text style={{ fontSize: 14, color: "#777" }}>{item.message}</Text>
         </View>
         {/* Ngày ở góc trên phải */}
-        <Text style={{ fontSize: 12, color: "#999", position: "absolute", right: 10, top: 10 }}>{item.date}</Text>
+        <Text style={{ fontSize: 12, color: "#999", position: "absolute", right: 10, top: 10 }}>
+          {new Date(item.date).toLocaleString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </Text>
       </TouchableOpacity>
     );
   };
 
   const renderNotificationItem = ({ item }) => (
-    <View
+    <TouchableOpacity
       style={{
         backgroundColor: "#fff",
         padding: 15,
@@ -136,6 +176,10 @@ export default function MessagesScreen() {
         elevation: 5,
         flexDirection: "row",
         alignItems: "center",
+      }}
+      onPress={() => {
+        console.log("Navigating to RatingScreen with orderId:", item.orderId, "and userId:", item.user.userId);
+        navigation.navigate("RatingScreen", { orderId: item.orderId, userId: item.user.userId });
       }}
     >
       {/* Khung tròn màu đỏ với chữ 'NOM' */}
@@ -153,12 +197,27 @@ export default function MessagesScreen() {
         <Text style={{ color: "#fff", fontWeight: "bold" }}>NOM</Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.title}</Text>
-        <Text style={{ fontSize: 14, color: "#777" }}>{item.description}</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", width: 180 }}>{item.store.storeName}</Text>
+        <Text style={{ fontSize: 14, color: "#777", width: 150 }}>
+          {item.foods.map((food) => food.foodName).join(", ").length > 25
+            ? item.foods
+                .map((food) => food.foodName)
+                .join(", ")
+                .slice(0, 25) + "..."
+            : item.foods.map((food) => food.foodName).join(", ")}
+        </Text>
       </View>
       {/* Ngày ở góc trên phải */}
-      <Text style={{ fontSize: 12, color: "#999", position: "absolute", right: 10, top: 10 }}>{item.date}</Text>
-    </View>
+      <Text style={{ fontSize: 12, color: "#999", position: "absolute", right: 10, top: 10 }}>
+        {new Date(item.orderDate).toLocaleString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -182,7 +241,7 @@ export default function MessagesScreen() {
       {/* Danh sách trò chuyện hoặc thông báo */}
       {selectedTab === "Trò chuyện" ? (
         chatData.length > 0 ? (
-          <FlatList data={chatData} renderItem={renderChatItem} keyExtractor={(item) => item.id} />
+          <FlatList data={chatData} renderItem={renderChatItem} keyExtractor={(item) => item.id || item.roomId} />
         ) : (
           <View
             style={{
@@ -208,7 +267,7 @@ export default function MessagesScreen() {
           </View>
         )
       ) : (
-        <FlatList data={notificationData} renderItem={renderNotificationItem} keyExtractor={(item) => item.id} />
+        <FlatList data={ordersWithoutReview} renderItem={renderNotificationItem} keyExtractor={(item) => item.orderId} />
       )}
     </View>
   );
