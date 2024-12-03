@@ -17,11 +17,23 @@ const RatingScreen = () => {
   const [rating, setRating] = useState(4); // Default rating value
   const [feedback, setFeedback] = useState("");
 
+  const forbiddenWords = ["xấu", "dốt", "ngu", "điên", "khốn", "chó", "mẹ mày", "bố mày", "đm", "vl", "vcl", "clgt", "dm", "đcm", "cmm", "mml", "vc", "đĩ", "ngu dốt", "khốn nạn", "khốn kiếp", "bần tiện", "đồ chó", "đồ điên", "đồ ngu", "đồ dốt", "mất dạy", "bẩn thỉu", "tồi tệ", "vô học", "vô đạo đức", "hèn nhát", "bẩn bựa", "đểu", "đê tiện", "vô liêm sỉ", "bỉ ổi", "khốn nạn", "cút", "biến", "chửi bới", "nhục nhã", "vô trách nhiệm"];
+
   const handleRatingPress = (value) => {
     setRating(value);
   };
 
+  const containsForbiddenWords = (text) => {
+    const lowerCaseText = text.toLowerCase();
+    return forbiddenWords.some((word) => lowerCaseText.includes(word));
+  };
+
   const handleSubmitRating = async () => {
+    if (containsForbiddenWords(feedback)) {
+      Alert.alert("Lỗi", "Vui lòng không sử dụng từ ngữ không phù hợp trong góp ý.");
+      return;
+    }
+
     try {
       // Gửi yêu cầu đến API để đánh giá đơn hàng và cửa hàng
       const response = await api({

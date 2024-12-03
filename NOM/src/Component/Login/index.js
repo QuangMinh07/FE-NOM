@@ -10,8 +10,6 @@ import OTPPhone from "../Login/OTPPhone";
 import Route from "../Login/Route";
 import SignUpSeller from "../Login/SignUpSeller";
 import SignUpShiper from "../Login/SignUpShiper";
+import OTPMailOrPhone from "../Login/OTPMailOrPhone";
 
-
-
-
-export { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone ,ForgotPassword,ResetPassword,OTPMail,OTPPhone, Route, SignUpSeller,SignUpShiper };
+export { WelcomeScreen, Log, Login, SignUp, SignUpMailOrPhone, ForgotPassword, ResetPassword, OTPMail, OTPPhone, Route, SignUpSeller, SignUpShiper, OTPMailOrPhone };

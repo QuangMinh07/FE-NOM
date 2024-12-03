@@ -24,6 +24,10 @@ export default function AddEat() {
   // Lấy storeId từ globalData
   const storeId = globalData.storeData?._id; // Lấy storeId từ GlobalContext
 
+  useEffect(() => {
+    globalHandler.setSellingTime([]); // Xóa dữ liệu thời gian bán hàng cũ
+  }, []);
+
   const getFoodGroups = async () => {
     if (!storeId) {
       console.error("storeId không tồn tại");
@@ -38,14 +42,14 @@ export default function AddEat() {
       });
 
       // Log toàn bộ phản hồi để kiểm tra cấu trúc
-      console.log("Response from API:", response);
+      // console.log("Response from API:", response);
 
       // Kiểm tra nếu response và response.foodGroups tồn tại
       if (response && response.foodGroups) {
-        console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
+        // console.log("Danh sách nhóm món từ MongoDB:", response.foodGroups);
         setFoodGroups(response.foodGroups); // Cập nhật state với danh sách nhóm món từ MongoDB
       } else {
-        console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
+        // console.error("Không tìm thấy nhóm món hoặc dữ liệu không hợp lệ");
       }
     } catch (error) {
       // Kiểm tra xem error.response có tồn tại không
@@ -88,7 +92,7 @@ export default function AddEat() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedImageUri = result.assets[0].uri; // Lấy URI của ảnh
-        console.log("Image URI:", selectedImageUri);
+        // console.log("Image URI:", selectedImageUri);
 
         setImage(selectedImageUri); // Lưu URI ảnh vào state để hiển thị
         setModalVisible(false); // Đóng modal sau khi ảnh được chọn
@@ -105,14 +109,9 @@ export default function AddEat() {
 
   // Hàm gọi API thêm món ăn mới
   const addFoodItem = async () => {
-    console.log("Global Data:", globalData); // Kiểm tra toàn bộ dữ liệu từ context
-    console.log("Store ID:", storeId); // Kiểm tra giá trị của storeId
+    // console.log("Global Data:", globalData); // Kiểm tra toàn bộ dữ liệu từ context
+    // console.log("Store ID:", storeId); // Kiểm tra giá trị của storeId
     setIsLoading(true); // Bật loading khi bắt đầu quá trình thêm món ăn
-
-    if (!selectedGroup._id) {
-      Alert.alert("Lỗi", "Vui lòng chọn nhóm món.");
-      return;
-    }
 
     if (!storeId) {
       Alert.alert("Lỗi", "Không tìm thấy thông tin cửa hàng");
@@ -129,9 +128,11 @@ export default function AddEat() {
       formData.append("foodGroup", selectedGroup._id);
       formData.append("isAvailable", isAvailable);
 
-      // Thêm sellingTime (nếu có)
-      if (globalData.sellingTime) {
+      if (globalData.sellingTime && globalData.sellingTime.length > 0) {
         formData.append("sellingTime", JSON.stringify(globalData.sellingTime));
+        // console.log("Đã gửi giờ bán:", globalData.sellingTime);
+      } else {
+        // console.log("Không có giờ bán được chọn. Sẽ không gửi sellingTime.");
       }
 
       // Thêm ảnh vào formData nếu có ảnh
@@ -152,8 +153,10 @@ export default function AddEat() {
         isMultipart: true, // Bật multipart để gửi FormData
       });
 
+      console.log("API Response:", response); // Log phản hồi từ backend
+
       if (response && response.message === "Thêm món ăn thành công") {
-        Alert.alert("Thành công", "Món ăn đã được thêm!");
+        Alert.alert("Thành công", response.note ? `Món ăn đã được thêm!\n\nLưu ý: ${response.note}` : "Món ăn đã được thêm!");
 
         // Cập nhật foods trong GlobalContext
         const updatedFoods = globalData.foods ? [...globalData.foods, response.food] : [response.food];
@@ -165,8 +168,20 @@ export default function AddEat() {
         Alert.alert("Lỗi", response.message || "Không thể thêm món ăn.");
       }
     } catch (error) {
-      console.error("Lỗi khi thêm món ăn:", error);
-      Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
+      // Phân tích lỗi từ backend
+      if (error.response) {
+        // Lỗi từ backend
+        // console.error("Lỗi từ backend:", error.response.data);
+        Alert.alert("Lỗi", error.response.data.message || "Lỗi không xác định từ server.");
+      } else if (error.request) {
+        // Lỗi từ request nhưng không nhận được phản hồi
+        // console.error("Không nhận được phản hồi từ server:", error.request);
+        Alert.alert("Lỗi", "Không thể kết nối đến server. Vui lòng thử lại.");
+      } else {
+        // Lỗi khác trong quá trình gọi API
+        // console.error("Lỗi khi gửi yêu cầu:", error.message);
+        Alert.alert("Lỗi", "Có lỗi xảy ra trong quá trình thêm món ăn.");
+      }
     } finally {
       setIsLoading(false); // Tắt loading sau khi xử lý xong
     }

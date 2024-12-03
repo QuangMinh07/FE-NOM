@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // import * as Notifications from "expo-notifications";
 
-import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper } from "./src/Component/Login";
+import { WelcomeScreen, Log, Login, SignUp, ForgotPassword, ResetPassword, OTPMail, OTPPhone, SignUpSeller, SignUpMailOrPhone, Route, SignUpShiper, OTPMailOrPhone } from "./src/Component/Login";
 import { OrdersScreen, MessagesScreen, ProfileScreen } from "./src/Component/Home";
 import { HomeShiper, DeliveryODDetails, HistoryScreenSP, NotificationsScreenSP, ProfileShipper } from "./src/Component/Shipper";
 
@@ -14,8 +14,8 @@ import { CustomerNotice, FavoriteFood, Seemore, CustomerChat } from "./src/Compo
 import { RatingScreen } from "./src/Component/Rating";
 import { DashboardScreen } from "./src/Component/Dashboard";
 
-import { Seach,SeachAll, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess,SearchByGroup,ShoppingAll,CommentDetails} from "./src/Component/Customer";
-import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails,Offers } from "./src/Component/SellerUser";
+import { Seach, SeachAll, StoreKH, Shopping, EditAddress, Select, Orderfood, ReviewFood, OrderingProcess, SearchByGroup, ShoppingAll, CommentDetails } from "./src/Component/Customer";
+import { LoginSeller, TermsDetails, TimeClose, Comment, Staff, UpdateHome, ListFood, AddEat, AddDishGroup, TimeScheduleSell, DishDetails, SellerProfileScreen, ChatSellerScreen, OrderManagementScreen, ImagePickerScreen, InvoiceDetails, Offers } from "./src/Component/SellerUser";
 import { UpdateAccount, InformationUser, Information, UpdateInformation } from "./src/Component/Profile";
 import { GlobalContext } from "./src/context/globalContext";
 import { api, typeHTTP } from "./src/utils/api";
@@ -256,6 +256,7 @@ const App = () => {
 
             <Stack.Screen name="RatingScreen" component={RatingScreen} />
             <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
+            <Stack.Screen name="OTPMailOrPhone" component={OTPMailOrPhone} />
           </Stack.Navigator>
         </NavigationContainer>
       </GlobalContext>
