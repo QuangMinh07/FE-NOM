@@ -14,6 +14,7 @@ export default function DeliveryODDetails({ navigation }) {
   const { globalData } = useContext(globalContext);
   const [storeDetails, setStoreDetails] = useState(null); // State để lưu thông tin cửa hàng
   const [reviewCount, setReviewCount] = useState(0); // State để lưu tổng số lượng đánh giá
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   const userRole = globalData?.user?.roleId; // Lấy role từ dữ liệu global
 
@@ -97,6 +98,7 @@ export default function DeliveryODDetails({ navigation }) {
     }
 
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const response = await api({
         method: typeHTTP.PUT,
         url: `/storeOrder/update-status/${storeId}/${userId}`, // Sử dụng storeId từ orderDetails
@@ -110,6 +112,8 @@ export default function DeliveryODDetails({ navigation }) {
       navigation.navigate("HomeShiper");
     } catch (error) {
       console.error("Lỗi xảy ra:", error);
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
@@ -146,6 +150,23 @@ export default function DeliveryODDetails({ navigation }) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
       {/* Header */}
       <View
         style={{

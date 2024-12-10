@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, Dimensions, TouchableOpacity, SafeAreaView, Modal, Pressable, ScrollView, StatusBar } from "react-native";
+import { View, Text, Dimensions, TouchableOpacity, SafeAreaView, Modal, Pressable, ScrollView, StatusBar, ActivityIndicator } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +16,7 @@ const InvoiceDetails = () => {
   const route = useRoute(); // Retrieve orderId from params
   const { globalData } = useContext(globalContext); // Phải được gọi ngay từ đầu
   const [orderDetails, setOrderDetails] = useState(null); // Order details data
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   // Chỉ truy cập storeId và userId sau khi globalData được khởi tạo
   const storeId = globalData?.storeData?._id; // Sử dụng ?. để kiểm tra null/undefined
@@ -48,6 +49,7 @@ const InvoiceDetails = () => {
     }
 
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const response = await api({
         method: typeHTTP.PUT,
         url: `/storeOrder/update-status/${storeId}/${userId}`, // Cập nhật URL API để truyền storeId và userId
@@ -62,6 +64,8 @@ const InvoiceDetails = () => {
     } catch (error) {
       console.error("Lỗi xảy ra:", error);
       // Handle error
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
@@ -86,6 +90,23 @@ const InvoiceDetails = () => {
   };
   return (
     <View style={{ flex: 1, backgroundColor: "#E53935" }}>
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
       {/* Set the StatusBar to make it translucent */}
       <StatusBar backgroundColor="#E53935" barStyle="light-content" translucent={true} />
 
