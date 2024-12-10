@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, TextInput, Modal, Alert, Button } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, TextInput, Modal, Alert, Button, ActivityIndicator } from "react-native";
 import React, { useState, useContext, useCallback } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable
@@ -18,6 +18,7 @@ export default function OrderManagementScreen({ navigation }) {
   const [cancelReason, setCancelReason] = useState(""); // Lý do hủy đơn
   const [currentOrder, setCurrentOrder] = useState(null); // Đơn hàng đang hủy
   const [historyOrders, setHistoryOrders] = useState([]); // Lưu trữ danh sách đơn hàng lịch sử (đã hủy)
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   const storeId = globalData.storeData?._id;
   const userId = globalData.user?.id;
@@ -56,6 +57,7 @@ export default function OrderManagementScreen({ navigation }) {
 
   const handleConfirmOrder = async (orderId) => {
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const response = await api({
         method: typeHTTP.PUT,
         url: `/storeOrder/update-status/${storeId}/${userId}`, // Cập nhật URL API để truyền storeId và userId
@@ -81,6 +83,8 @@ export default function OrderManagementScreen({ navigation }) {
         console.error("Lỗi khi gửi yêu cầu:", error.message);
         alert("Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.");
       }
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
@@ -92,12 +96,8 @@ export default function OrderManagementScreen({ navigation }) {
 
   // Hàm để hủy đơn hàng
   const handleCancelOrder = async () => {
-    if (!cancelReason) {
-      Alert.alert("Lý do hủy", "Vui lòng nhập lý do hủy đơn hàng.");
-      return;
-    }
-
     try {
+      setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
       const response = await api({
         method: typeHTTP.POST,
         url: `/OrderCancellation/cancel/${currentOrder.user.userId}/${currentOrder.orderId}`,
@@ -112,11 +112,32 @@ export default function OrderManagementScreen({ navigation }) {
       }
     } catch (error) {
       console.error("Lỗi khi hủy đơn hàng:", error);
+    } finally {
+      setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
     }
   };
 
   // Hàm render đơn hàng mới (Pending)
   const renderNewOrders = () => {
+    if (isLoading) {
+      return (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      );
+    }
     if (newOrders.length === 0) {
       return (
         <View style={{ paddingHorizontal: width * 0.05 }}>
@@ -303,7 +324,7 @@ export default function OrderManagementScreen({ navigation }) {
       </View> */}
 
       {/* Tabs */}
-      <View style={{  flexDirection: "row", justifyContent: "space-around", backgroundColor: "#fff", paddingVertical: 20 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: "#fff", paddingVertical: 20 }}>
         {tabs.map((tab) => (
           <TouchableOpacity key={tab} onPress={() => setSelectedTab(tab)} style={{ paddingBottom: 10, borderBottomWidth: selectedTab === tab ? 4 : 0, borderBottomColor: "#E53935" }}>
             <Text style={{ color: selectedTab === tab ? "#E53935" : "#6B7280", fontSize: selectedTab === tab ? 18 : 16, fontWeight: selectedTab === tab ? "bold" : "normal" }}>{tab}</Text>

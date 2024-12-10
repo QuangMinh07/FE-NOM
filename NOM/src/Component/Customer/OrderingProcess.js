@@ -25,6 +25,8 @@ const OrderingProcess = () => {
   const [hasCheckedReview, setHasCheckedReview] = useState(false); // Cờ để ngăn việc kiểm tra lại review
   const [cancelledOrders, setCancelledOrders] = useState([]); // Trạng thái mới để lưu đơn hàng đã hủy
   const [cancellationDate, setCancellationDate] = useState(null); // Thêm trạng thái cho cancellationDate
+  const [showReportButton, setShowReportButton] = useState(false); // Trạng thái để quản lý hiển thị nút báo cáo
+  const [countdown, setCountdown] = useState(60); // Đếm ngược 60 giây
 
   const steps = [
     { label: "Đang chờ duyệt", visible: true },
@@ -46,6 +48,38 @@ const OrderingProcess = () => {
     }).format(date);
   };
 
+  // Theo dõi trạng thái order và kích hoạt đếm ngược khi trạng thái là "Received"
+  useEffect(() => {
+    console.log("Order details:", orderDetails);
+    if (orderDetails?.orderStatus === "Received") {
+      const interval = setInterval(() => {
+        setCountdown((prev) => prev - 1); // Giảm dần thời gian đếm ngược
+      }, 1000);
+
+      const timeout = setTimeout(() => {
+        if (orderDetails?.orderStatus === "Received") {
+          setShowReportButton(true); // Hiện nút báo cáo sau 1 phút
+        }
+        clearInterval(interval); // Dừng đếm ngược
+      }, 60000); // Sau 60 giây
+
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(interval); // Dọn dẹp khi component unmount hoặc trạng thái thay đổi
+      };
+    } else {
+      setShowReportButton(false); // Ẩn nút báo cáo nếu trạng thái không phải là "Received"
+      setCountdown(60); // Reset đếm ngược khi trạng thái thay đổi
+    }
+  }, [orderDetails?.orderStatus]);
+
+  // Hàm xử lý khi nhấn nút báo cáo
+  const handleReportOrder = () => {
+    setShowReportButton(false); // Ẩn nút báo cáo sau khi nhấn
+    Alert.alert("Báo cáo", "Đơn hàng đã được báo cáo. Chúng tôi sẽ xử lý sớm.");
+    // Có thể thêm API để gửi báo cáo ở đây
+  };
+
   // API call to get order details
   const fetchOrderDetails = useCallback(async () => {
     try {
@@ -56,7 +90,7 @@ const OrderingProcess = () => {
       });
       setOrderDetails(response.orderDetails); // Save order details in state
     } catch (error) {
-      console.error("Error fetching order details:", error);
+      // console.error("Error fetching order details:", error);
     }
   });
 
@@ -333,9 +367,7 @@ const OrderingProcess = () => {
                         <View style={{ marginLeft: width * 0.05, marginTop: height * 0.01 }}>
                           {item.combos.foods.map((comboFood, comboIndex) => (
                             <View key={comboIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.005 }}>
-                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>
-                                {comboFood.foodName.length > 20 ? `${comboFood.foodName.slice(0, 20)}...` : comboFood.foodName}
-                              </Text>
+                              <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.foodName.length > 20 ? `${comboFood.foodName.slice(0, 20)}...` : comboFood.foodName}</Text>
                               <Text style={{ fontSize: width * 0.035, color: "#666" }}>{comboFood.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                             </View>
                           ))}
@@ -348,7 +380,6 @@ const OrderingProcess = () => {
                 <Text>Đang tải danh sách món ăn...</Text> // Display if data is still loading
               )}
             </View>
-
           </TouchableOpacity>
         </ScrollView>
 
@@ -363,9 +394,7 @@ const OrderingProcess = () => {
                     <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: height * 0.01 }}>
                       <View style={{ flexDirection: "column" }}>
                         <View style={{ flexDirection: "row" }}>
-                          <Text style={{ fontSize: width * 0.04, width: 170 }}>
-                            {`${item.quantity}x ${item.foodName.length > 30 ? `${item.foodName.slice(0, 30)}...` : item.foodName}`}
-                          </Text>
+                          <Text style={{ fontSize: width * 0.04, width: 170 }}>{`${item.quantity}x ${item.foodName.length > 30 ? `${item.foodName.slice(0, 30)}...` : item.foodName}`}</Text>
 
                           <Text style={{ fontSize: width * 0.04, paddingLeft: 30 }}>{item.price.toLocaleString("vi-VN").replace(/\./g, ",")} VND</Text>
                         </View>
@@ -619,6 +648,14 @@ const OrderingProcess = () => {
             ) : null}
           </Pressable>
         </Modal>
+
+        {/* {orderDetails?.orderStatus === "Received" && !showReportButton && <Text style={{ textAlign: "center", marginVertical: 10, color: "gray" }}>Đơn hàng đang chờ chuyển sang trạng thái "Delivered". Vui lòng chờ {countdown} giây...</Text>} */}
+
+        {showReportButton && (
+          <TouchableOpacity onPress={handleReportOrder} style={{ backgroundColor: "#E53935", paddingVertical: 15, borderRadius: 5, alignItems: "center", marginTop: 20 }}>
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Báo cáo</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );

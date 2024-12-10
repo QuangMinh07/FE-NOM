@@ -68,6 +68,7 @@ export default function HomeShiper() {
   const [shipperInfo, setShipperInfo] = useState(null); // State to store shipperInfo data
   const [userData, setUserData] = useState(null);
   const [showSplash, setShowSplash] = useState(true); // Trạng thái kiểm soát Splash Screen
+  const [isLoading, setIsLoading] = useState(false); // Thêm state cho trạng thái tải
 
   // Hiển thị Splash Screen trong 2 giây
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function HomeShiper() {
     if (acceptedOrderId === null) {
       // Chỉ cho phép chấp nhận đơn hàng nếu chưa có đơn hàng nào đang ở trạng thái "Shipped"
       try {
+        setIsLoading(true); // Hiển thị vòng tròn loading khi bắt đầu submit
         const order = orders.find((order) => order.orderId === orderId);
         const storeId = order.store?.storeId;
         const userId = globalData.user?.id;
@@ -189,6 +191,8 @@ export default function HomeShiper() {
       } catch (error) {
         console.error("Lỗi khi chấp nhận đơn hàng:", error);
         Alert.alert("Lỗi", "Không thể chấp nhận đơn hàng. Vui lòng thử lại.");
+      } finally {
+        setIsLoading(false); // Tắt vòng tròn loading sau khi xử lý xong
       }
     }
   };
@@ -230,6 +234,23 @@ export default function HomeShiper() {
   }
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      {isLoading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Tối màu nền nhưng vẫn hiển thị loading
+            zIndex: 999, // Đảm bảo loading hiển thị trên cùng
+          }}
+        >
+          <ActivityIndicator size="large" color="#E53935" />
+        </View>
+      )}
       <View style={{ backgroundColor: "#E53935", padding: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 140 }}>
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
@@ -279,28 +300,24 @@ export default function HomeShiper() {
             </View>
           )}
         </View>
-        
+
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
           }}
         >
-          <TouchableOpacity
-            onPress={() => navigation.navigate("NotificationsScreenSP")}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate("NotificationsScreenSP")}>
             <Icon
               name="notifications"
-              size={width * 0.06} 
+              size={width * 0.06}
               color="#fff"
               style={{
                 marginLeft: width * -0.01,
               }}
             />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("HistoryScreenSP")}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate("HistoryScreenSP")}>
             <Icon
               name="hourglass"
               size={width * 0.06}
@@ -311,7 +328,6 @@ export default function HomeShiper() {
             />
           </TouchableOpacity>
         </View>
-        
       </View>
 
       <View style={{ padding: 15 }}>
