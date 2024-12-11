@@ -59,7 +59,7 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage }) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         quality: 0.5,
       });
@@ -73,9 +73,13 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage }) {
       } else {
         Alert.alert("Lỗi", "Không thể chọn ảnh.");
       }
+      closeEditModal();
     } catch (error) {
       console.error("Lỗi khi chọn ảnh:", error);
       Alert.alert("Lỗi", "Đã xảy ra lỗi khi chọn ảnh.");
+    } finally {
+      // Đảm bảo modal luôn được đóng trong mọi trường hợp
+      closeEditModal();
     }
   };
 
@@ -202,7 +206,6 @@ export default function ImagePickerScreen({ selectedImage, setSelectedImage }) {
               }}
               onPress={() => {
                 openImageLibrary();
-                closeEditModal();
               }}
             >
               <Text style={{ color: "#fff", fontSize: 16 }}>Chọn từ thư viện</Text>

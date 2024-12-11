@@ -221,7 +221,6 @@ export default function CommentDetails({ navigation }) {
               ))}
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
                 <TouchableOpacity
-                  onPress={() => toggleLike(review.id)}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
