@@ -68,12 +68,12 @@ export default function Comment() {
   const handleReplySubmit = async () => {
     if (!replyInput.trim() || !replyingTo) return;
 
-    const reviewToReply = storeReviews.find((review) => review._id === replyingTo);
-    const userId = reviewToReply?.user?._id; // Lấy userId từ review
+    const userId = globalData.user?.id; // Lấy userId từ globalData
+
     console.log("Sending reply:", { replyText: replyInput, userId });
 
     if (!userId) {
-      console.error("Không tìm thấy userId từ review:", reviewToReply);
+      console.error("Không tìm thấy userId trong globalData:", globalData);
       return;
     }
 
