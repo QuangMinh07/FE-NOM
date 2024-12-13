@@ -419,29 +419,31 @@ export default function ListFood({ navigation }) {
       }
 
       try {
-        await api({
+        const response = await api({
           method: typeHTTP.DELETE,
-          url: `/foodgroup/delete-foodgroup/${groupId}`, // Đường dẫn API xóa nhóm món
-          sendToken: true, // Gửi token để xác thực
+          url: `/foodgroup/delete-foodgroup/${groupId}`,
+          sendToken: true,
         });
+
+        console.log("API Response:", response);
 
         // Cập nhật danh sách nhóm món, loại bỏ nhóm món vừa xóa
         const updatedFoodGroups = foodGroups.filter((group) => group._id !== groupId);
         setFoodGroups(updatedFoodGroups);
 
-        // Lấy lại danh sách món ăn để đồng bộ
-        const storeId = globalData.storeData?._id;
-        if (storeId) {
-          const response = await api({
-            method: typeHTTP.GET,
-            url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn
-            sendToken: true,
-          });
+        // // Lấy lại danh sách món ăn để đồng bộ
+        // const storeId = globalData.storeData?._id;
+        // if (storeId) {
+        //   const response = await api({
+        //     method: typeHTTP.GET,
+        //     url: `/food/get-foodstore/${storeId}`, // API lấy danh sách món ăn
+        //     sendToken: true,
+        //   });
 
-          if (response && response.foods) {
-            setFoodList(response.foods); // Cập nhật danh sách món ăn sau khi xóa nhóm món
-          }
-        }
+        //   if (response && response.foods) {
+        //     setFoodList(response.foods); // Cập nhật danh sách món ăn sau khi xóa nhóm món
+        //   }
+        // }
 
         Alert.alert("Thành công", "Nhóm món đã được xóa khỏi danh sách.", [{ text: "OK" }]);
         // Gọi lại tìm kiếm nếu đang có từ khóa
