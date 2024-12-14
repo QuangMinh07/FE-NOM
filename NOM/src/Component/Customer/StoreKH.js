@@ -517,6 +517,7 @@ export default function StoreKH() {
                   marginRight: width * 0.03, // Khoảng cách giữa các phần tử
                   width: width * 0.4, // Chiều rộng động của khung món ăn
                   overflow: "hidden",
+                  opacity: isOpen ? 1 : 0.5, // Làm mờ khi cửa hàng đóng cửa
                 }}
                 onPress={() => {
                   if (food.isAvailable) {
@@ -527,7 +528,7 @@ export default function StoreKH() {
                     console.warn("Food is not available!");
                   }
                 }}
-                disabled={!food.isAvailable}
+                disabled={!food.isAvailable || !isOpen}
               >
                 {/* Placeholder cho ảnh */}
                 <View
@@ -665,6 +666,7 @@ export default function StoreKH() {
                     width: width * 0.55,
                     position: "relative", // Để thêm ruy băng lên ngoài khung
                     overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+                    opacity: isOpen ? 1 : 0.5, // Làm mờ khi cửa hàng đóng cửa
                   }}
                   onPress={() => {
                     if (food.isAvailable) {
@@ -679,7 +681,7 @@ export default function StoreKH() {
                       console.warn("Food is not available!");
                     }
                   }}
-                  disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
+                  disabled={!food.isAvailable || !isOpen} // Vô hiệu hóa nếu không có sẵn
                 >
                   {/* Placeholder cho ảnh */}
                   <View
@@ -850,6 +852,7 @@ export default function StoreKH() {
                     alignItems: "center",
                     position: "relative", // Để thêm lớp phủ và ruy băng
                     overflow: "hidden", // Đảm bảo không tràn ra khỏi TouchableOpacity
+                    opacity: isOpen ? 1 : 0.5, // Làm mờ khi cửa hàng đóng cửa
                   }}
                   onPress={() => {
                     if (food.isAvailable) {
@@ -864,7 +867,7 @@ export default function StoreKH() {
                       console.warn("Food is not available!");
                     }
                   }}
-                  disabled={!food.isAvailable} // Vô hiệu hóa nếu không có sẵn
+                  disabled={!food.isAvailable || !isOpen} // Vô hiệu hóa nếu không có sẵn
                 >
                   <View
                     style={{
