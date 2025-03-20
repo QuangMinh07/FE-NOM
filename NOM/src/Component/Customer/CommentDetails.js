@@ -255,7 +255,7 @@ export default function CommentDetails({ navigation }) {
                       marginBottom: 5,
                     }}
                   >
-                    Phản hồi từ quán
+                    Phản hồi từ quán an
                   </Text>
                   <Text style={{ fontSize: 12, color: "#666" }}>{reply.replyText}</Text>
                   <Text style={{ fontSize: 10, color: "#aaa", marginTop: 5 }}>
